@@ -1,0 +1,17 @@
+.DS_Store
+
+application/cache/*
+!application/cache/index.html
+!application/cache/.htaccess
+
+application/logs/*
+!application/logs/index.html
+!application/logs/.htaccess
+
+system/*
+
+application/views/cache/*
+application/trashbin/*
+uploads/*
+freehandcache/*
+captcha/*

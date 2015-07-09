@@ -1,0 +1,16 @@
+SELECT
+		laz_sheets1.header,
+		laz_sheets1.redirect,
+		laz_sheets1.parent,
+		laz_sheets1.id,
+		COUNT(`laz_sheets3`.id) as child
+		FROM
+		laz_sheets laz_sheets1
+		LEFT OUTER JOIN laz_sheets ON (laz_sheets1.parent = laz_sheets.id)
+		LEFT OUTER JOIN `laz_sheets` `laz_sheets3` ON (laz_sheets1.id = `laz_sheets3`.parent)
+		WHERE
+		(laz_sheets.id = ?) AND
+		(laz_sheets1.active = 1)
+		GROUP BY
+		laz_sheets1.id
+		ORDER BY `laz_sheets`.`pageorder`
