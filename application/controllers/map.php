@@ -21,22 +21,31 @@ class Map extends CI_Controller {
 	}
 
 	public function type($type){
+		$map_header = "";
+		$result = $this->db->query("SELECT 
+			CONCAT_WS( ' - ', `objects_groups`.name, `locations_types`.name ) AS name
+			FROM
+			`locations_types`
+			INNER JOIN `objects_groups` ON (`locations_types`.object_group = `objects_groups`.id)
+			WHERE `locations_types`.`id` = ? 
+			LIMIT 1", array($type));
+		if($result->num_rows()){
+			$row = $result->row(0);
+			$map_header = $row->name;
+		}
 		$act = array(
-			'footer'		=> "",
+			'footer'		=> $this->load->view('frontend/page_footer', array(), true),
 			'otype'			=> $type,
 			'mapset'		=> 0,
 			'menu'			=> $this->load->view('cache/menus/menu', array(), true),
 			'keywords'		=> $this->config->item('map_keywords'),
-			'map_header'	=> "Объекты по типам",
+			'map_header'	=> $map_header,
+			'switches'		=> 'switches = {}',
+			'selector'		=> '<div class="altSelector">'.$map_header.'</div>',
 			'map_center'	=> $this->config->item('map_center'),
 			'title'			=> $this->config->item('site_title_start')." Интерактивная карта"
 		);
-		$this->load->view('frontend/frontend_typemap', $act);
-	}
-
-	public function own($mapset = 1){
-		$act = $this->mapdata($mapset);
-		$this->load->view('frontend/frontend_ownmap', $act);
+		$this->load->view('frontend/frontend_map2', $act);
 	}
 }
 

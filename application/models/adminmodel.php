@@ -48,7 +48,9 @@ class Adminmodel extends CI_Model{
 			if($result->num_rows()){
 				foreach ($result->result_array() as $row){
 					$row['obj_group'] = $obj_group;
-					array_push($output, $this->load->view("admin/libraryitem1", $row, true));
+					$row['img']  = '<img src="'.$this->config->item("api").'/images/folder.png" alt="">';
+					$row['link'] = '/admin/library/'.$obj_group.'/'.$row['id'];
+					array_push($output, $this->load->view("admin/libraryitem", $row, true));
 				}
 			}
 		}else{
@@ -63,11 +65,20 @@ class Adminmodel extends CI_Model{
 			ORDER BY title", array($loc_type));
 			if($result->num_rows()){
 				foreach ($result->result_array() as $row){
-					array_push($output, $this->load->view("admin/libraryitem2", $row, true));
+					$row['img']  = '<img src="'.$this->config->item("api").'/images/location_pin.png" alt="">';
+					$row['link'] = '/editor/forms/'.$row['id'];
+					array_push($output, $this->load->view("admin/libraryitem", $row, true));
 				}
 			}
+			$row = array(
+				'img'   => '<img src="'.$this->config->item("api").'/images/location_pin.png" alt="">',
+				'name'  => 'Добавить объект',
+				'link'  => '/editor/forms/0/'.$loc_type,
+				'title' => "Добавить новый объект этого класса"
+			);
+			array_push($output, $this->load->view("admin/libraryitem", $row, true));
 		}
-		$out['library']	= implode($output, "\n");
+		$out['library'] = implode($output, "\n");
 		return $this->load->view("admin/library", $out, true);
 	}
 
@@ -552,7 +563,6 @@ class Adminmodel extends CI_Model{
 		}
 		return $out;
 	}
-	//$sheet_id = $this->find_initial_sheet($root);
 	
 	function _sheet_tree($root = 0, $sheet_id = 1){
 		$tree="";
@@ -942,8 +952,6 @@ class Adminmodel extends CI_Model{
 ######################### end of map content section ############################
 #
 ######################### start of menu content section ############################
-
 }
-#
 /* End of file adminmodel.php */
 /* Location: ./application/controllers/adminmodel.php */

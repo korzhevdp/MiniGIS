@@ -20,10 +20,11 @@ class Mapmodel extends CI_Model{
 			'keywords'   => $this->config->item('maps_keywords'),
 			'map_header' => $row->name,
 			'content'    => "",
-			'footer'     => "",
+			'footer'     => $this->load->view('frontend/page_footer', array(), true),
 			'mapset'     => $mapset,
 			'menu'       => $this->load->view('cache/menus/menu', array(), true).$this->usefulmodel->admin_menu(),
 			'selector'   => $this->load->view('cache/menus/selector_'.$mapset, array(), true),
+			'switches'   => $this->load->view('cache/menus/selector_'.$mapset."_switches", array(), true),
 			'title'      => $this->config->item('site_title_start')." Интерактивная карта"
 		);
 	}

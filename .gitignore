@@ -1,6 +1,9 @@
 .DS_Store
 
+install/*
+cert/*
 application/cache/*
+application/cert/*
 !application/cache/index.html
 !application/cache/.htaccess
 

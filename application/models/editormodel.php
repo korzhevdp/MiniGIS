@@ -45,12 +45,13 @@ class Editormodel extends CI_Model{
 	}
 	
 	public function get_summary($location, $type = 0){
+		///$this->output->enable_profiler(TRUE);
 		$output = array(
 			'id' => 0,
 			'location_name'		=> '',
 			'contact_info'		=> '',
 			'address'			=> '',
-			'active'			=> '',
+			'active'			=> '0',
 			'type'				=> $type,
 			'description'		=> '',
 			'pr_type'			=> 1,

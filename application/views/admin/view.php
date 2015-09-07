@@ -7,66 +7,7 @@
 	<script type="text/javascript" src="<?=$this->config->item('api');?>/bootstrap/js/bootstrap.js"></script>
 	<link href="<?=$this->config->item('api');?>/bootstrap/css/bootstrap.css" rel="stylesheet">
 	<link href="<?=$this->config->item('api');?>/jqueryui/css/jqueryui.css" rel="stylesheet">
-	<style type="text/css">
-		body{
-			padding:0px;
-			margin:0px;
-		}
-		.navTable{
-			border:none;
-			width:100%
-		}
-		.navbar{
-			vertical-align:top;
-		}
-		a.brand img{
-			width:24px;
-			height:24px;
-			border:none;
-		}
-		td.menu_col{
-			width:190px;
-			vertical-align:top;
-		}
-		#operations_menu li{
-			margin-left:0px;
-			font-size:12px;
-			line-height:16px;
-		}
-		td.content{
-			vertical-align:top;
-			padding-left:30px;
-		}
-		label.add-on{
-			font-size:12px !important;
-			display:inline-block !important;
-			width:120px !important;
-			text-align:left !important;
-			text-indent:5px;
-			margin-bottom:2px;
-
-		}
-		.input-prepend{
-			margin-bottom:0px;
-			line-height:16px;
-		}
-		.input-prepend input[type=checkbox]{
-			margin-top: 9px;
-			margin-left:20px;
-		}
-		.input-prepend input[type=text]{
-			font-size:12px !important;
-			height:26px;
-			width: 345px;
-			padding:1px 8px;
-		}
-		.input-prepend select{
-			font-size:12px !important;
-			line-height:16px;
-			width: 364px;
-			padding: 1px 8px;
-		}
-	</style>
+	<link href="<?=$this->config->item('api');?>/css/admin.css" rel="stylesheet">
 </head>
 
 <body>

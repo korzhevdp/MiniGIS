@@ -13,15 +13,16 @@ class Usermodulemodel extends CI_Model{
 			FROM
 			`objects_groups`
 			WHERE
-			`objects_groups`.`id` = ?",array($obj_group));
+			`objects_groups`.`id` = ?", array($obj_group));
 			if($result->num_rows()){
 				$row = $result->row();
 				array_unshift($output,'<h2><a href="/usermodules/library/'.$obj_group.'">'.$row->name.'</a></h2><hr>');
 			}
-			$result=$this->db->query("SELECT 
+			$result = $this->db->query("SELECT 
 			locations_types.id,
+			locations_types.object_group as obj_group,
 			locations_types.name AS `title`,
-			IF(LENGTH(locations_types.name) > 19, CONCAT(LEFT(locations_types.name,16),'...'),locations_types.name) AS name
+			IF(LENGTH(locations_types.name) > 40, CONCAT(LEFT(locations_types.name, 37), '...'), locations_types.name) AS name
 			FROM
 			locations_types
 			WHERE
@@ -30,18 +31,15 @@ class Usermodulemodel extends CI_Model{
 			ORDER BY title", array($obj_group));
 
 			if($result->num_rows()){
-				foreach ($result->result() as $row){
-					$string = '<li class="span1" style="margin-left:5px;overflow:hidden;width:150px;">
-						<div class="thumbnail">
-							<a href="/usermodules/library/'.$obj_group.'/'.$row->id.'" title="'.$row->title.'"><img src="'.$this->config->item('api').'/images/folder.png" alt="">
-							<p>'.$row->name.'</p></a>
-						</div>
-					</li>';
-					array_push($output,$string);
+				foreach ($result->result_array() as $row){
+					$row['img']  = '<img src="'.$this->config->item("api").'/images/folder.png" alt="">';
+					$row['link'] = '/usermodules/library/'.$obj_group.'/'.$row['id'];
+					array_push($output, $this->load->view("admin/libraryitem", $row, true));
 				}
 			}
 		}else{
-			$result=$this->db->query("SELECT 
+			$result=$this->db->query("SELECT
+			locations_types.object_group as obj_group,
 			`locations_types`.`id` AS `tid`,
 			`locations_types`.name AS `tp_name`,
 			`objects_groups`.`id` AS `oid`,
@@ -49,42 +47,35 @@ class Usermodulemodel extends CI_Model{
 			FROM
 			`locations_types`
 			INNER JOIN `objects_groups` ON (`locations_types`.object_group = `objects_groups`.id)
-			WHERE `locations_types`.`id` = ?",array($loc_type));
+			WHERE `locations_types`.`id` = ?", array($loc_type));
 			if($result->num_rows()){
-				$row=$result->row();
+				$row = $result->row();
 				array_unshift($output,'<h2><a href="/usermodules/library/'.$row->oid.'">'.$row->ob_name.'</a> / <a href="/usermodules/library/'.$row->oid.'/'.$row->tid.'">'.$row->tp_name.'</a></h2><hr>');
 			}
 			$result=$this->db->query("SELECT 
-			IF(LENGTH(`locations`.location_name) > 19, CONCAT(LEFT(`locations`.location_name,16),'...'),`locations`.location_name) AS name,
+			IF(LENGTH(`locations`.location_name) > 40, CONCAT(LEFT(`locations`.location_name, 37), '...'), `locations`.location_name) AS name,
 			`locations`.location_name AS title,
 			`locations`.id
 			FROM
 			`locations`
 			WHERE `locations`.`owner` = ? AND
 			`locations`.`type` = ?
-			ORDER BY title", array($this->session->userdata('user_id'),$loc_type));
+			ORDER BY title", array($this->session->userdata('user_id'), $loc_type));
 			if($result->num_rows()){
-				foreach ($result->result() as $row){
-					$string = '<li class="span1" style="margin-left:5px;overflow:hidden;width:150px;">
-						<div class="thumbnail">
-							<a href="/editor/forms/'.$row->id.'" title="'.$row->title.'"><img src="'.$this->config->item('api').'/images/folder.png" alt="">
-							<p>'.$row->name.'</p></a>
-						</div>
-					</li>';
-					array_push($output,$string);
+				foreach ($result->result_array() as $row){
+					$row['img']  = '<img src="'.$this->config->item("api").'/images/location_pin.png" alt="">';
+					$row['link'] = '/editor/forms/'.$row['id'];
+					array_push($output, $this->load->view("admin/libraryitem", $row, true));
 				}
 			}
-			$final_item = '<li style="margin-left:5px;overflow:hidden;width:150px;">
-			<div class="thumbnail">
-				<a href="/editor/forms/0/'.$loc_type.'" title="Добавить новый объект этого класса"><h1>ADD</h1>
-				<p>Добавить объект</p></a>
-			</div>
-			</li>';
-			array_push($output, $final_item);
+			$row = array(
+				'img'   => '<img src="'.$this->config->item("api").'/images/location_pin.png" alt="">',
+				'name'  => 'Добавить объект',
+				'link'  => '/editor/forms/0/'.$loc_type,
+				'title' => "Добавить новый объект этого класса"
+			);
+			array_push($output, $this->load->view("admin/libraryitem", $row, true));
 		}
-
-
-
 		array_push($output,"</ul>");
 		return implode($output,"\n");
 	}

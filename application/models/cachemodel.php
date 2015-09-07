@@ -333,13 +333,14 @@ class Cachemodel extends CI_Model{
 		# пишем в файл (следите за путями)
 		$this->load->helper('file');
 		$scr = array();
-		foreach($sws as $key => $val){
-			array_push($scr, "\n\t'".$key."': {\n\t\t".implode($val, ",\n\t\t")."\n\t}");
+		foreach($sws as $val){
+			array_push($scr, implode($val, ",\n\t"));
 		}
 		//print_r($sws);
 		//print_r($scr);
 		//print "writing application/views/cache/menus/selector_".$mapset.".php<br>";
-		write_file('application/views/cache/menus/selector_'.$mapset.'.php', implode($table,"\n")."\n<script type=\"text/javascript\">\n switches = { ".implode($scr, ",\n")."\n};\n</script>");
+		write_file('application/views/cache/menus/selector_'.$mapset.'.php', implode($table,"\n"));
+		write_file('application/views/cache/menus/selector_'.$mapset.'_switches.php', "switches = {\n\t".implode($scr, ",\n")."\n}");
 		//exit;
 	}
 

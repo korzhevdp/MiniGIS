@@ -6,7 +6,7 @@ class Ajax extends CI_Controller{
 
 //include("settings.inc");
 
-	public function select_all_locations($type_strict=0,$layer=1){
+	public function select_all_locations($type_strict=0, $layer=1){
 		if($type_strict){
 			$locations=Array();
 			$result=$this->db->query('SELECT 
@@ -24,7 +24,7 @@ class Ajax extends CI_Controller{
 				return $this->_rno();
 			}
 		}else{
-			return $this->_build_result(array(),0,$layer,0);
+			return $this->_build_result(array(), 0, $layer, 0);
 		}
 	}
 
@@ -40,7 +40,7 @@ class Ajax extends CI_Controller{
 			$row=$result->row();
 			$out = $row->str;
 		}else{
-			$out = "zy.ac.node.length = 0;";
+			$out = "return false";
 		}
 		print $out;
 	}
@@ -400,10 +400,13 @@ class Ajax extends CI_Controller{
 	}
 
 ###################################################### NEW CONCEPT ################
+	public function send_warning($text){
+		return true;
+	}
+
 	public function get_map_content(){
 		//$this->output->enable_profiler(TRUE);
 		$map_content = array();
-		$mapset      = $this->input->post('mapset');
 		$result      = $this->db->query("SELECT 
 		`map_content`.a_layers,
 		`map_content`.a_types,
@@ -413,7 +416,7 @@ class Ajax extends CI_Controller{
 		`map_content`
 		WHERE
 		`map_content`.`active` AND
-		`map_content`.`id` = ?", array($mapset));
+		`map_content`.`id` = ?", array($this->input->post('mapset')));
 		if($result->num_rows()){
 			array_push($map_content, "ac = {");
 			$row = $result->row();
@@ -430,7 +433,8 @@ class Ajax extends CI_Controller{
 			array_push($map_content, "};");
 			print implode($map_content, "\n");
 		}else{
-			print "alert('Кажется, приключилась страшная ошибка. Наши специалисты уже работают над ней. Попробуйте открыть карту чуть позже')";
+			send_warning("Ошибка целостности в ajax/get_map_content()".$this->db->last_query());
+			print "console.log('Кажется, приключилась страшная ошибка. Наши специалисты уже работают над ней. Попробуйте открыть карту чуть позже')";
 		}
 	}
 
@@ -457,26 +461,22 @@ class Ajax extends CI_Controller{
 		(locations_types.object_group = ?) AND
 		(locations.active = 1) AND
 		(users_admins.active = 1) AND
-		(LENGTH(locations.coord_y) > 3)",array($this->config->item('maps_def_loc'),$layers_array));
+		(LENGTH(locations.coord_y) > 3)
+		ORDER BY locations.id ASC",array($this->config->item('maps_def_loc'),$layers_array));
 		$out = array();
 		//$ats=array();
 		if($result->num_rows()){
 			foreach($result->result() as $row){
-				//(!in_array("zy.ac.".$row->array." = [];",$ats)) ? array_push($ats,"zy.ac.".$row->array." = [];") : "";
 				$image  = (strlen($row->img)) ? $row->img : "nophoto.gif";
 				$string = "\t".$row->id.": { img: '".$image."', description: '".$row->address."', name: '".$row->location_name."', attr: '".$row->attr."', coord: '".$row->coord_y."', pr: ".$row->pr_type.", contact: '".$row->contact_info."', link: '".$row->link."' }";
 				array_push($out, $string);
 			}
-
-			//return "Нихрена не выбралось";
-			//array_unshift($out,"zy.ac.".$row->array." = [];");
 		}
 		return implode($out, ",\n");
 	}
 
 	public function get_active_type($types_array){
-		// на самом деле $types_array всегда будет состоять из одной цифры, так что будьте спокойнее, милорд!
-		// на самом деле $layers_array всегда будет состоять из одной цифры, так что будьте спокойнее, милорд!
+		// на самом деле $types_array и $layers_array всегда будут состоять из одной цифры, так что будьте спокойнее, милорд!
 		// Layer - эквивалент object_group;
 		$result=$this->db->query("SELECT 
 		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
@@ -498,17 +498,16 @@ class Ajax extends CI_Controller{
 		(locations.`type` = ?) AND
 		(locations.active = 1) AND 
 		(users_admins.active = 1) AND 
-		(LENGTH(locations.coord_y) > 3)", array( $this->config->item('maps_def_loc'), $types_array ) );
+		(LENGTH(locations.coord_y) > 3)
+		ORDER BY locations.id ASC", array( $this->config->item('maps_def_loc'), $types_array ) );
 		$out = array();
 		$ats = array();
 		if($result->num_rows()){
 			foreach($result->result() as $row){
-				//(!in_array("zy.ac.".$row->array." = [];",$ats)) ? array_push($ats,"zy.ac.".$row->array." = [];") : "";
 				$image  = (strlen($row->img)) ? $row->img : "nophoto.gif";
 				$string = "\t".$row->id.": { img: '".$image."', description: '".$row->address."', name: '".$row->location_name."', attr: '".$row->attr."', coord: '".$row->coord_y."', pr: ".$row->pr_type.", contact: '".$row->contact_info."', link: '".$row->link."' }";
 				array_push($out, $string);
 			}
-			//array_unshift($out,"zy.ac = [];");
 		}
 		return implode($out, ",\n");
 	}
@@ -538,14 +537,11 @@ class Ajax extends CI_Controller{
 		AND (users_admins.active AND LENGTH(locations.coord_y) > 3)", array($this->config->item('maps_def_loc'), $types_array));
 		$out = array();
 		if($result->num_rows()){
-			//$ats = array();
 			foreach($result->result() as $row){
-				//(!in_array("zy.bg.".$row->array." = new Array();",$ats)) ? array_push($ats,"zy.bg.".$row->array." = new Array();") : "";
 				$image  = (strlen($row->img)) ? $row->img : "nophoto.gif";
 				$string = "\t".$row->id.": { img: '".$image."', description: '".$row->address."', name: '".$row->location_name."', attr: '".$row->attr."', coord: '".$row->coord_y."', pr: ".$row->pr_type.", contact: '".$row->contact_info."', link: '".$row->link."' }";
 				array_push($out, $string);
 			}
-			//array_unshift($out,implode($ats,"\n"));
 		}
 		return implode($out, ",\n");
 	}
@@ -581,9 +577,7 @@ class Ajax extends CI_Controller{
 				$string = $row->id.": { img: '".$image."', description: '".$row->address."', name: '".$row->location_name."', attr: '".$row->attr."', coord: '".$row->coord_y."', pr: ".$row->pr_type.", contact: '".$row->contact_info."', link: '".$row->link."'}";
 				array_push($out, $string);
 			}
-			//array_unshift($out,"zy.ac.".$row->array." = [];");
 		}
-		//header('Content-type: text/html; charset=windows-1251');
 		return "data = { ".implode($out, ",\n")."}";
 	}
 	
