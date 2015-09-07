@@ -1,4 +1,4 @@
-<h1>Комментарии <small>и вопросы</small></h1>
+<h1>РљРѕРјРјРµРЅС‚Р°СЂРёРё <small>Рё РІРѕРїСЂРѕСЃС‹</small></h1>
 <?=$comments;?>
 
 <SCRIPT TYPE="text/javascript">
@@ -10,13 +10,13 @@ function swc(lid,mod){
 		success: function(data){
 			if(data=='show'){
 				$("#comm" + lid).removeClass("disabled").addClass("enabled");
-				$("#stat" + lid).html('<span class="label label-success">Показывается</span>');
+				$("#stat" + lid).html('<span class="label label-success">РџРѕРєР°Р·С‹РІР°РµС‚СЃСЏ</span>');
 				$("#s" + lid).css('display','none');
 				$("#h" + lid).css('display','inline');
 			}
 			if(data=='hide'){
 				$("#comm" + lid).removeClass("enabled").addClass("disabled");
-				$("#stat" + lid).html('<span class="label label-warning">Не показывается</span>');
+				$("#stat" + lid).html('<span class="label label-warning">РќРµ РїРѕРєР°Р·С‹РІР°РµС‚СЃСЏ</span>');
 				$("#s" + lid).css('display','inline');
 				$("#h" + lid).css('display','none');
 			}

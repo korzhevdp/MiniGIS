@@ -1,14 +1,14 @@
-<h1>Управление фотографиями. <small>non-tested Beta</small></h1>
+<h1>РЈРїСЂР°РІР»РµРЅРёРµ С„РѕС‚РѕРіСЂР°С„РёСЏРјРё. <small>non-tested Beta</small></h1>
 
 <div class="well span9">
 	<?=$locations;?>
 </div>
 
 <div class="btn-group span6">
-	<button class="btn" onclick="rotate_cw()"><i class="icon-arrow-left"></i>&nbsp;Повернуть</button>
-	<button class="btn" onclick="rotate_ccw()"><i class="icon-arrow-right"></i>&nbsp;Повернуть</button>
-	<button class="btn" onclick=""><i class="icon-eye-open"></i>&nbsp;Показывать</button>
-	<button class="btn" onclick=""><i class="icon-eye-close"></i>&nbsp;Не показывать</button>
+	<button class="btn" onclick="rotate_cw()"><i class="icon-arrow-left"></i>&nbsp;РџРѕРІРµСЂРЅСѓС‚СЊ</button>
+	<button class="btn" onclick="rotate_ccw()"><i class="icon-arrow-right"></i>&nbsp;РџРѕРІРµСЂРЅСѓС‚СЊ</button>
+	<button class="btn" onclick=""><i class="icon-eye-open"></i>&nbsp;РџРѕРєР°Р·С‹РІР°С‚СЊ</button>
+	<button class="btn" onclick=""><i class="icon-eye-close"></i>&nbsp;РќРµ РїРѕРєР°Р·С‹РІР°С‚СЊ</button>
 </div>
 
 <div class="well span9" id="sortable"></div>
@@ -18,19 +18,19 @@
 </div>
 
 <div class="well span9">
-	Размещение: <span class="attribute" id="current_location">Не выбрано</span><br>
-	Изображение: <span class="attribute" id="current_file">Нет</span><br>
-	Размер: <span class="attribute" id="current_dimensions">0x0 px.</span>
+	Р Р°Р·РјРµС‰РµРЅРёРµ: <span class="attribute" id="current_location">РќРµ РІС‹Р±СЂР°РЅРѕ</span><br>
+	РР·РѕР±СЂР°Р¶РµРЅРёРµ: <span class="attribute" id="current_file">РќРµС‚</span><br>
+	Р Р°Р·РјРµСЂ: <span class="attribute" id="current_dimensions">0x0 px.</span>
 </div>
 
 <form method=post action="" id="exec_form">
-	Комментарий к фотографии: <input type="text" id="pic_comment" name="pic_comment" value="">
+	РљРѕРјРјРµРЅС‚Р°СЂРёР№ Рє С„РѕС‚РѕРіСЂР°С„РёРё: <input type="text" id="pic_comment" name="pic_comment" value="">
 	<input type="hidden" id="pic_name" name="pic_name" value="">
 	<input type="hidden" name="frm_img_order" id="frm_img_order" value="">
-	<button class="btn btn-primary btn-small span4" type="submit" id="submit_button">Сохранить порядок фотографий</button>
+	<button class="btn btn-primary btn-small span4" type="submit" id="submit_button">РЎРѕС…СЂР°РЅРёС‚СЊ РїРѕСЂСЏРґРѕРє С„РѕС‚РѕРіСЂР°С„РёР№</button>
 </form>
 
-<script type="text/javascript" src="/jscript/photoeditor.js"></script>
+<script type="text/javascript" src="<?=$this->config->item("api");?>/jscript/photoeditor.js"></script>
 <script type="text/javascript">
 <!--
 	<?=$list;?>;

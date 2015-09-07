@@ -124,13 +124,14 @@ class Usermodulemodel extends CI_Model{
 	}
 
 	function _photoeditor_list($location_id){
-		$pics=array("var imgs=[];");
+		$pics = array();
 		$result=$this->db->query("SELECT 
 		`images`.`filename`,
+		`images`.`id`,
 		`images`.`orig_filename`,
 		`images`.`full`,
-		`images`.`pre`,
-		`images`.`ico`,
+		`images`.`mid`,
+		`images`.`small`,
 		`images`.`location_id`,
 		`images`.`order`,
 		`images`.`comment`,
@@ -138,25 +139,26 @@ class Usermodulemodel extends CI_Model{
 		FROM
 		images
 		WHERE
-		(`images`.`owner_id` = ?) OR
-		(`images`.`location_id` = ? AND `images`.`owner_id` = 'frontend_user')
+		(`images`.`owner_id` = ?) 
+		OR (`images`.`location_id` = ? 
+		AND `images`.`owner_id` = 'frontend_user')
 		ORDER BY
 		`images`.`location_id`,
-		`images`.`order`", array($this->session->userdata('user_id'),$location_id));
+		`images`.`order`", array( $this->session->userdata('user_id'), $location_id ));
 		if($result->num_rows() ){
 			foreach ($result->result() as $row){
-				array_push($pics,"imgs.push({
-				lid : ".$row->location_id.",
-				d800 : '".$row->full."',
-				d128 : '".$row->pre."',
-				d32 : '".$row->ico."',
-				file : '".$row->filename."',
-				cm : '".$row->comment."',
+				array_push($pics, $row->id.": {
+				lid   : ".$row->location_id.",
+				d800  : '".$row->full."',
+				d128  : '".$row->mid."',
+				d32   : '".$row->small."',
+				file  : '".$row->filename."',
+				cm    : '".$row->comment."',
 				ofile : '".$row->orig_filename."',
-				act : ".$row->active)."});";
+				act   : ".$row->active." }");
 			}
 		}
-		return "\n".implode($pics,"\n");
+		return "var imgs = {\n".implode($pics,",\n")."\n}";
 	}
 
 	function _photoeditor_locations(){
