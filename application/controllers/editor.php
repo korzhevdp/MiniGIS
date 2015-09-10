@@ -13,45 +13,154 @@ class Editor extends CI_Controller{
 		}
 	}
 
-	public function forms($location = 0, $type = 0){
-		$output = array();
-		//$location = (!$location || !$this->usefulmodel->check_owner($location)) ? $this->session->userdata('init_loc') : $location;
-		$output = $this->editormodel->starteditor($location, $type);
-		$output['menu']=$this->load->view('admin/menu', '', true);
+	public function edit($location = 0){
+		$output = $this->editormodel->starteditor("edit", $location);
+		if($this->session->userdata('user_class') == md5("secret_userclass1")){
+			$supermenu = $this->usefulmodel->semantics_supermenu();
+			$output['menu'] .= $this->load->view('admin/supermenu', $supermenu, true);
+		}
+		$this->load->view('editor/view', $output);
+	}
+
+	public function add($type = 0){
+		if ($this->session->userdata("c_l") !== 0){
+			$this->load->helper("url");
+			redirect("editor/edit/".$this->session->userdata("c_l"));
+		}
+		
+		$output = $this->editormodel->starteditor("add", $type);
 		if($this->session->userdata('user_class') == md5("secret_userclass1")){
 			$supermenu=$this->usefulmodel->semantics_supermenu();
 			$output['menu'].=$this->load->view('admin/supermenu', $supermenu, true);
 		}
-		$this->load->view('editor/view',$output);
+		$this->load->view('editor/view', $output);
+	}
+
+	public function checkdatafullness(){
+		if (
+			$this->input->post('ttl')          !== FALSE ||
+			$this->input->post('attr')         !== FALSE ||
+			$this->input->post('name')         !== FALSE ||
+			$this->input->post('address')      !== FALSE ||
+			$this->input->post('active')       !== FALSE ||
+			$this->input->post('contact')      !== FALSE ||
+			$this->input->post('type')         !== FALSE ||
+			$this->input->post('pr')           !== FALSE ||
+			$this->input->post('coords')       !== FALSE ||
+			$this->input->post('coords_array') !== FALSE ||
+			$this->input->post('coords_aux')   !== FALSE
+		) {
+			return true;
+		}
+		$this->usefulmodel->insert_audit("Неполный набор данных при сохранении объекта: #".$this->input->post('ttl'));
+		return false;
+	}
+
+	public function createobject(){
+		// creating new 
+		$result = $this->db->query("INSERT INTO
+		`locations`(
+			`locations`.location_name,
+			`locations`.owner,
+			`locations`.`type`,
+			`locations`.style_override,
+			`locations`.contact_info,
+			`locations`.address,
+			`locations`.coord_y,
+			`locations`.coord_array,
+			`locations`.coord_obj,
+			`locations`.`date`,
+			`locations`.parent,
+			`locations`.active,
+			`locations`.comments
+		) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?)", array(
+			$this->input->post('name'),
+			$this->session->userdata("user_id"),
+			$this->input->post('type'),
+			$this->input->post('attr'),
+			$this->input->post('contact'),
+			$this->input->post('address'),
+			$this->input->post('coords'),
+			$this->input->post('coords_array'),
+			$this->input->post('coords_aux'),
+			//NOW(),
+			0,
+			$this->input->post('active'),
+			$this->input->post('comments')
+		));
+		
+		$location_id = $this->db->insert_id();
+		
+		$this->db->query("INSERT INTO 
+		`properties_assigned` (
+			`properties_assigned`.`location_id`,
+			`properties_assigned`.`property_id`,
+			`properties_assigned`.`value`
+		) VALUES (?, (
+			SELECT 
+			locations_types.pl_num
+			FROM
+			locations_types
+			WHERE 
+			locations_types.id = ?
+		), 1)", array(
+			$location_id,
+			$this->input->post("type")
+		));
+		$this->session->set_userdata("c_l", $location_id);
+		return $location_id;
 	}
 
 	public function saveobject(){
-		//$this->output->enable_profiler(TRUE);
-		//return false;
-		if($this->input->post('id')){
-			if (!$this->usefulmodel->check_owner($this->input->post('id'))){
-				print "владелец не совпадает";
+		$location_id = $this->input->post('ttl');
+		if (!$this->checkdatafullness()){
+			print "data = { ttl : ".$location_id." }";
+			return false;
+		}
+
+		if ($location_id == 0 && $location_id !== FALSE) {
+			$location_id = $this->createobject();
+		} else {
+			if (!$this->usefulmodel->check_owner($location_id)){
+				$this->usefulmodel->insert_audit("При сохранении объекта: #".$location_id." - владелец не совпадает");
 				redirect('admin/library');
 			}
-			/*
-			if($this->input->post('id') !== $this->session->userdata("c_l")){
-				print "подмена целевого объекта";
-				redirect('admin/library');
+			if($location_id !== $this->session->userdata("c_l")){
+				$this->usefulmodel->insert_audit("При сохранении объекта: #".$location_id." - подмена целевого объекта (".$this->session->userdata("c_l").")");
 			}
-			*/
+
 			$result = $this->db->query("UPDATE
-			`locations`
+			`locations` 
 			SET
+			`locations`.location_name = ?,
+			`locations`.owner = ?,
 			`locations`.`type` = ?,
-			`locations`.`coord_y` = ?,
-			`locations`.`active` = ?
+			`locations`.style_override = ?,
+			`locations`.contact_info = ?,
+			`locations`.address = ?,
+			`locations`.coord_y = ?,
+			`locations`.coord_array = ?,
+			`locations`.coord_obj = ?,
+			`locations`.parent = ?,
+			`locations`.active = ?,
+			`locations`.comments = ?
 			WHERE
-			`locations`.`id` = ?", array(
-				$this->input->post("type"),
-				$this->input->post("coord_y"),
-				$this->input->post("active"),
-				$this->input->post('id')
+			`locations`.id = ?", array(
+				$this->input->post('name'),
+				$this->session->userdata("user_id"),
+				$this->input->post('type'),
+				$this->input->post('attr'),
+				$this->input->post('contact'),
+				$this->input->post('address'),
+				$this->input->post('coords'),
+				$this->input->post('coords_array'),
+				$this->input->post('coords_aux'),
+				0,
+				$this->input->post('active'),
+				$this->input->post('comments'),
+				$location_id
 			));
+
 			$result = $this->db->query("DELETE
 			FROM `properties_assigned`
 			WHERE
@@ -66,95 +175,123 @@ class Editor extends CI_Controller{
 					WHERE `locations_types`.id = ?)
 				) AND `locations_types`.`pl_num`
 			)", array(
-				$this->input->post('id'),
+				$location_id,
 				$this->input->post("type")
 			));
+
 			$result = $this->db->query("INSERT INTO `properties_assigned` (
 				`properties_assigned`.`location_id`,
 				`properties_assigned`.`property_id`,
 				`properties_assigned`.`value`
 			) VALUES (?, (SELECT locations_types.pl_num FROM locations_types where locations_types.id = ?), 1)", array(
-				$this->input->post('id'),
+				$location_id,
 				$this->input->post("type")
 			));
 		}
 
 		$this->load->model('cachemodel');
-		$this->cachemodel->cache_location($this->input->post('id'));
-		$this->load->helper('url');
-		redirect("editor/forms/".$this->input->post('id'));
+		$this->cachemodel->cache_location($location_id);
+		$this->usefulmodel->insert_audit("Объект: #".$location_id." - успешно сохранён и кэширован");
+		print "data = { ttl : ".$location_id." }";
 	}
 
 	public function saveprops(){
 		//$this->output->enable_profiler(TRUE);
+		//return false;
+		if (!$this->checkdatafullness()){
+			return false;
+		}
+		$location_id = $this->input->post('ttl');
+		if ($location_id == 0 && $location_id !== FALSE) {
+			$location_id = $this->createobject();
+		} else {
+			$result = $this->db->query("UPDATE
+			`locations` 
+			SET
+			`locations`.location_name = ?,
+			`locations`.owner = ?,
+			`locations`.`type` = ?,
+			`locations`.style_override = ?,
+			`locations`.contact_info = ?,
+			`locations`.address = ?,
+			`locations`.coord_y = ?,
+			`locations`.coord_array = ?,
+			`locations`.coord_obj = ?,
+			`locations`.parent = ?,
+			`locations`.active = ?,
+			`locations`.comments = ?
+			WHERE
+			`locations`.id = ?", array(
+				$this->input->post('name'),
+				$this->session->userdata("user_id"),
+				$this->input->post('type'),
+				$this->input->post('attr'),
+				$this->input->post('contact'),
+				$this->input->post('address'),
+				$this->input->post('coords'),
+				$this->input->post('coords_array'),
+				$this->input->post('coords_aux'),
+				0,
+				$this->input->post('active'),
+				$this->input->post('comments'),
+				$location_id
+			));
+		}
 		$output = array();
 		$ids    = array();
 		$checks = $this->input->post("check");
 		$text   = $this->input->post("te");
 		$tarea  = $this->input->post("ta");
-		/*
-		addr	Адрес объекта
-		lid	578
-		name	Новый объект
-		style	twirl#metroMoscowIcon
-		*/
-		$result = $this->db->query("UPDATE
-		`locations`
-		SET
-		`locations`.location_name = ?,
-		`locations`.address = ?,
-		`locations`.style_override = ?,
-		`locations`.contact_info = ?
-		WHERE
-		`locations`.`id` = ?", array(
-			$this->input->post("name"),
-			$this->input->post("addr"),
-			$this->input->post("style"),
-			$this->input->post("cont"),
-			$this->input->post("lid")
-		));
-
 
 		if($checks && sizeof($checks)){
 			foreach($checks as $val){
-				array_push($output, '('.$this->input->post("lid").', '.$val.', 1)');
+				array_push($output, '('.$location_id.', '.$val.', 1)');
 				array_push($ids, $val);
 			}
 		}
 		if($text && sizeof($text)){
-			foreach($text as $key=>$val){
-				array_push($output, '('.$this->input->post("lid").', '.$key.', \''.$val.'\')');
+			foreach($text as $key => $val){
+				array_push($output, '('.$location_id.', '.$key.', \''.$val.'\')');
 				array_push($ids, $key);
 			}
 		}
 		if($tarea && sizeof($tarea)){
-			foreach($tarea as $key=>$val){
-				array_push($output, '('.$this->input->post("lid").', '.$key.', \''.$val.'\')');
+			foreach($tarea as $key => $val){
+				array_push($output, '('.$location_id.', '.$key.', \''.$val.'\')');
 				array_push($ids, $key);
 			}
 		}
+		//print sizeof($ids)." -- ".$location_id;
 		if(sizeof($ids)){
+			// page number of the property
 			$result = $this->db->query("SELECT DISTINCT `properties_list`.page FROM `properties_list` WHERE `properties_list`.`id` IN(".implode($ids, ",").")");
 			if($result->num_rows() == 1){
-				$row = $result->row(0);
+				// Идентификаторы свойств принадлежат одной странице. Флуд параметров не детектед.
 				//print "OK! page: ".$row->page;
-				$page = $row->page;
+				$row = $result->row(0);
+				
 				$this->db->query("DELETE FROM
 				properties_assigned
-				WHERE properties_assigned.property_id IN (
+				WHERE
+				properties_assigned.property_id IN (
 					SELECT properties_list.id FROM properties_list WHERE properties_list.page = ?
-				) AND properties_assigned.location_id = ?", array($page, $this->input->post("lid")));
+				)
+				AND properties_assigned.location_id = ?", array($row->page, $location_id));
+				
 				$this->db->query("INSERT INTO properties_assigned (
 					properties_assigned.location_id,
 					properties_assigned.property_id,
 					properties_assigned.value
 				) VALUES ".implode($output, ",\n"));
+				//print implode($output, ",\n");
 			}else{
-				print "NO! Flooding page: ".$row->page;
+				// Идентификаторы свойств принадлежат более чем одной странице. Флуд параметров.
+				// print "NO! Flooding page: ".$row->page;
+				print "data = { ttl : ".$location_id." }";
 				return false;
 			}
 		}
-//		print implode($output);
+		print "data = { ttl : ".$location_id." }";
 	}
 
 	public function geosemantics($mode=1){
@@ -172,18 +309,17 @@ class Editor extends CI_Controller{
 	####################################################
 	#AJAX-SECTION
 
-	public function get_property_page($obj_group, $location, $page){
+	public function get_property_page(){
 		if(!$this->session->userdata('user_id')){
 			print "Время работы в текущей сессии истекло.<br>Завершите работу и введите имя пользователя и пароль заново";
 			exit;
 		}
-		//$this->load->model('usefulmodel');
-		//$this->load->model('editormodel');
-		if($location && !$this->usefulmodel->check_owner($location)){
+		if($this->input->post("loc") && !$this->usefulmodel->check_owner($this->input->post("loc"))){
 			print "У вас нет прав просматривать наборы свойств по этому объекту";
 			return false;
 		}
-		print $this->editormodel->show_form_content($obj_group, $location, $page);
+		//$this->output->enable_profiler(TRUE);
+		print $this->editormodel->show_form_content($this->input->post("group"), $this->input->post("loc"), $this->input->post("page"));
 	}
 
 	public function get_context(){

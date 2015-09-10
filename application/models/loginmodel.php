@@ -133,10 +133,11 @@ class Loginmodel extends CI_Model{
 		if(!sizeof($errors)){
 			return true;
 		}else{
-			$act['captcha']   = $this->_captcha_make();
-			$act['reg']       = 1;
-			$advice           = "";
-			$act['errorlist'] = '<div class="errorlist_header">Допущены следующие ошибки:</div>'.implode($errors, "");
+			$act = array(
+				'captcha'   => $this->_captcha_make(),
+				'reg'       => 1,
+				'errorlist' => '<div class="errorlist_header">Допущены следующие ошибки: </div>'.implode($errors, "")
+			);
 			$this->load->view('login/login_view2', $act);
 		}
 	}

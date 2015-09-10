@@ -66,14 +66,14 @@ class Adminmodel extends CI_Model{
 			if($result->num_rows()){
 				foreach ($result->result_array() as $row){
 					$row['img']  = '<img src="'.$this->config->item("api").'/images/location_pin.png" alt="">';
-					$row['link'] = '/editor/forms/'.$row['id'];
+					$row['link'] = '/editor/edit/'.$row['id'];
 					array_push($output, $this->load->view("admin/libraryitem", $row, true));
 				}
 			}
 			$row = array(
 				'img'   => '<img src="'.$this->config->item("api").'/images/location_pin.png" alt="">',
 				'name'  => 'Добавить объект',
-				'link'  => '/editor/forms/0/'.$loc_type,
+				'link'  => '/editor/add/'.$loc_type,
 				'title' => "Добавить новый объект этого класса"
 			);
 			array_push($output, $this->load->view("admin/libraryitem", $row, true));

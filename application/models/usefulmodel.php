@@ -83,6 +83,19 @@ class Usefulmodel extends CI_Model{
 		return $out;
 	}
 
+	public function insert_audit($text){
+		$result = $this->db->query("INSERT INTO 
+		`audit`(
+			`audit`.`user`,
+			`audit`.`text`,
+			`audit`.`object`
+		) VALUES( ?, ?, ? )", array(
+			$this->session->userdata('user_id'), 
+			$text, 
+			$this->session->userdata("c_l")
+		));
+	}
+	################################################################################
 	public function create_db($db_name){
 		$this->db->query("CREATE DATABASE ?
 			CHARACTER SET 'utf8'

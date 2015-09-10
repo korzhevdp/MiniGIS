@@ -202,6 +202,7 @@ class Cachemodel extends CI_Model{
 
 	//кэширование навигатора
 	public function cache_selector_content($mapset = 1){
+		$this->output->enable_profiler(TRUE);
 		$this->load->helper('form');
 		$result=$this->db->query("SELECT 
 		map_content.a_layers,
@@ -243,10 +244,10 @@ class Cachemodel extends CI_Model{
 		}
 
 		if($map_content->a_layers){
-			$where = "(properties_list.object_group = ?) AND";
+			$where = "(properties_list.object_group = ?)";
 			$searchplace = $map_content->a_layers;
 		}else{
-			$where = "(properties_list.id = (SELECT locations_types.pl_num FROM locations_types WHERE (locations_types.id = ?))) AND";
+			$where = "(properties_list.id = (SELECT locations_types.pl_num FROM locations_types WHERE (locations_types.id = ?)))";
 			$searchplace = $map_content->a_types;
 		}
 
@@ -279,11 +280,11 @@ class Cachemodel extends CI_Model{
 				//['group'] исключать нельзя, ввиду неоднозначности трактовки элемента checkbox: как объединительный (И), так и объединительно-исключающий (ИЛИ) контекст поиска
 			}
 		}
-		//print_r($output[111]);
+		//return false;
+		//print_r($output);
 		//print sizeof($output[111]);
 		$query->free_result();
 		$sws = array();
-
 		foreach($output as $key => $val){
 			$backcounter = sizeof($val);
 			$ea          = array();
@@ -305,7 +306,7 @@ class Cachemodel extends CI_Model{
 						array_push($element, '<li class="itemcontainer" obj="'.$obj.'"><input type="text">'.$val3['name']."</li>");
 						array_push($sws[$val3['label']], $obj.': { value: "", fieldtype: "text", alg: "'.$val3['alg'].'", text: "'.form_prep($val3['name']).'" }');
 					break;
-					case 'select' :
+					case 'select':
 						array_push($values, '<option value="'.$obj.'">'.$val3['name'].'</option>');
 						--$backcounter;
 						if(!$backcounter){
@@ -313,7 +314,8 @@ class Cachemodel extends CI_Model{
 						}
 						array_push($sws[$val3['label']], $obj.': { value: 0, fieldtype: "select", alg: "'.$val3['alg'].'" , text: "'.form_prep($val3['name']).'" }');
 					break;
-					case 'checkbox' :
+					case 'checkbox':
+						//print $obj." - ".$val3['name']." ".$val3['alg']."<br>";
 						$tabstr='<li class="itemcontainer" obj="'.$obj.'"><img src="'.$this->config->item('api').'/images/clean_grey.png" alt=" ">'.$val3['name'].'</li>';
 						array_push($ea, $tabstr);
 						array_push($sws[$val3['label']], $obj.': { value: 0, fieldtype: "checkbox", alg: "'.$val3['alg'].'", text: "'.form_prep($val3['name']).'" }');

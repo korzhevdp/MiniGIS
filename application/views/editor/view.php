@@ -132,6 +132,16 @@
 			cursor:pointer;
 			margin-left:4px;
 		}
+		div.console{
+			position:absolute;
+			top:150px;
+			left:50px;
+			width:300px;
+			height:700px;
+			background-color:#ffffff;
+			z-index: 100000;
+			display: none;
+		}
 	</style>
 </head>
 
@@ -205,6 +215,8 @@
 		<a href="#" id="loadSelectedObjects" class="btn btn-primary">Загрузить точки</a>
 	</div>
 </div>
+
+<!-- <div class="console"><pre>&nbsp;&nbsp;</pre></div> -->
 
 <script type="text/javascript">
 <!--

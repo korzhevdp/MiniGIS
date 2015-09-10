@@ -12,6 +12,7 @@ class Admin extends CI_Controller{
 			$this->load->model('usefulmodel');
 			$this->load->model('adminmodel');
 			$this->load->library('upload');
+			$this->session->set_userdata("c_l", 0);
 		}
 	}
 
@@ -26,7 +27,7 @@ class Admin extends CI_Controller{
 	}
 
 	function library($obj_group=1, $loc_type=0){
-		//$this->output->enable_profiler(TRUE);
+		$this->output->enable_profiler(TRUE);
 		$output['menu']=$this->load->view('admin/menu','',true);
 		if($this->session->userdata('user_class') == md5("secret_userclass1")){
 			$supermenu=$this->usefulmodel->semantics_supermenu();

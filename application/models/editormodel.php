@@ -4,85 +4,100 @@ class Editormodel extends CI_Model{
 		parent::__construct();
 	}
 	
-	public function starteditor($location = 0, $type = 0){
+	public function starteditor($mode = "edit", $id = 0){
 		//$this->output->enable_profiler(TRUE);
-		if(!$location){
-			if( $this->db->query("INSERT INTO
-			`locations`(
-				owner,
-				`type`,
-				`date`
-			) VALUES( ?, ?, NOW() )", array(
-				$this->session->userdata("user_id"),
-				$type
-			))){
-				$location = $this->db->insert_id();
-			}else{
-
+		if ($mode == "edit") {
+			if ($id) {
+				if(!$this->usefulmodel->check_owner($id)){
+					$this->load->helper("url");
+					redirect("admin/library");
+				}
+				$data = $this->get_summary("location", $id);
+				$output = array(
+					//'pr_type'			=> $data['pr_type'],
+					'content'			=> $this->load->view('editor/summary', $data, true),
+					'panel'				=> $this->load->view('editor/btncontrol1', $data, true),
+					'baspointstypes'	=> $this->get_bas_points_types(),
+					'menu'				=> $this->load->view('admin/menu', '', true)
+				);
 			}
-			$result = $this->db->query("INSERT INTO `properties_assigned` (
-				`properties_assigned`.`location_id`,
-				`properties_assigned`.`property_id`,
-				`properties_assigned`.`value`
-			) VALUES (?, (SELECT locations_types.pl_num FROM locations_types WHERE locations_types.id = ?), 1)", array(
-				$location,
-				$type
-			));
+			$this->session->set_userdata('c_l', $id);
 		}
-		if(!$this->usefulmodel->check_owner($location)){
-			$this->load->helper("url");
-			redirect("admin/library");
+		if ($mode == "add") {
+			$data = $this->get_summary("type", $id);
+			$output = array(
+				//'pr_type'			=> $data['pr_type'];
+				'content'			=> $this->load->view('editor/summary', $data, true),
+				'panel'				=> $this->load->view('editor/btncontrol1', $data, true),
+				'baspointstypes'	=> $this->get_bas_points_types(),
+				'menu'				=> $this->load->view('admin/menu', '', true)
+			);
 		}
-		$data = $this->get_summary($location, $type);
-		$output = array(
-			//'pr_type'			=> $data['pr_type'];
-			'content'			=> $this->load->view('editor/summary', $data, true),
-			'panel'				=> $this->load->view('editor/btncontrol1', $data, true),
-			'baspointstypes'	=> $this->get_bas_points_types()
-		);
-		$this->session->set_userdata('c_l', $location);
 		return $output;
 	}
 	
-	public function get_summary($location, $type = 0){
-		///$this->output->enable_profiler(TRUE);
+	public function get_summary($type, $id){
 		$output = array(
 			'id' => 0,
-			'location_name'		=> '',
-			'contact_info'		=> '',
-			'address'			=> '',
-			'active'			=> '0',
-			'type'				=> $type,
-			'description'		=> '',
+			'location_name'		=> 'Новое имя',
+			'contact_info'		=> 'Контактная информация',
+			'address'			=> 'Новый адрес',
+			'active'			=> 0,
+			'type'				=> 0,
+			'typelist'			=> 0,
+			'description'		=> 'Новое описание',
 			'pr_type'			=> 1,
-			'typeslist'			=> '',
-			'attributes'		=> "twirl#lightblueStretchyIcon",
-			'style_override'	=> "twirl#lightblueStretchyIcon",
-			'coord_y'			=> $this->session->userdata('map_center')
+			'attributes'		=> "not defined",
+			'style_override'	=> "not defined",
+			'coord_y'			=> 0,
+			'comments'			=> 0
 		);
 
-		$result = $this->db->query("SELECT
-		locations.id,
-		locations.location_name,
-		locations.address,
-		locations.active,
-		locations.`type`,
-		locations.coord_y,
-		locations.contact_info,
-		`locations_types`.name as `description`,
-		IF(LENGTH(locations.style_override) > 0, locations.style_override,`locations_types`.attributes) as attributes,
-		`locations_types`.pr_type,
-		`locations_types`.object_group
-		FROM
-		`locations_types`
-		INNER JOIN locations ON (`locations_types`.id = locations.`type`)
-		WHERE
-		(locations.id = ?)", array($location));
-		if($result->num_rows()){
-			$output = $result->row_array();
+		if ($type == "location") {
+			$result = $this->db->query("SELECT
+			locations.id,
+			locations.location_name,
+			locations.address,
+			locations.active,
+			locations.`type`,
+			locations.coord_y,
+			locations.contact_info,
+			`locations_types`.name AS `description`,
+			IF(LENGTH(locations.style_override) > 0, locations.style_override,`locations_types`.attributes) AS attributes,
+			`locations_types`.pr_type,
+			`locations_types`.object_group,
+			`locations`.comments
+			FROM
+			`locations_types`
+			INNER JOIN locations ON (`locations_types`.id = locations.`type`)
+			WHERE
+			(locations.id = ?)", array($id));
+			if($result->num_rows()){
+				$output = $result->row_array();
+			}
+		}
+		
+		if ($type == "type") {
+			$result = $this->db->query("SELECT 
+			locations_types.object_group,
+			locations_types.attributes,
+			locations_types.pr_type
+			FROM
+			locations_types
+			WHERE
+			(locations_types.id = ?)
+			LIMIT 1", array($id));
+			if($result->num_rows()){
+				$row = $result->row(0);
+				$output['object_group']   = $row->object_group;
+				$output['pr_type']        = $row->pr_type;
+				$output['attributes']     = $row->attributes;
+				$output['style_override'] = $row->attributes;
+				$output['type']           = $id;
+			}
 		}
 
-		$output['typelist'] = array();
+		$typelist = array();
 		$result = $this->db->query("SELECT
 		`locations_types`.id,
 		`locations_types`.pr_type,
@@ -96,12 +111,12 @@ class Editormodel extends CI_Model{
 			foreach($result->result() as $row){
 				$selected = ($output['type'] == $row->id) ? ' selected="selected"' : "";
 				$string   = '<option value="'.$row->id.'" ref="'.$row->pr_type.'" apply="'.$row->app.'"'.$selected.'>'.$row->name.'</option>';
-				array_push($output['typelist'], $string);
+				array_push($typelist, $string);
 			}
 		}
-		$output['typelist'] = implode($output['typelist'], "\n");
+		$output['typelist'] = implode($typelist, "\n");
 
-		$output['pagelist'] = array();
+		$pagelist = array();
 		$result = $this->db->query("SELECT 
 		MAX(`properties_list`.page) as `maxpage`
 		FROM
@@ -114,14 +129,14 @@ class Editormodel extends CI_Model{
 				$button = ($i == 1)
 					? '<button type="button" class="btn btn-info btn-small displayMain" title="Перейти к началу">'.$i.'</button>'
 					: '<button type="button" class="btn btn-info btn-small displayPage" title="Перейти к странице '.$i.'" ref="'.implode(array($output['object_group'], $output['id'], $i), "/").'">'.$i.'</button>';
-				array_push($output['pagelist'], $button);
+				array_push($pagelist, $button);
 				$i++;
 			}
-			//$output['maxpage'] = $row->maxpage;
 		}
-		$output['pagelist'] = implode($output['pagelist'], "&nbsp;");
+		$output['pagelist'] = implode($pagelist, "&nbsp;");
 		$output['liblink']  = implode(array($output['object_group'], $output['type']), "/");
 		//print_r($output);
+		//exit;
 		return $output;
 	}
 
@@ -243,93 +258,94 @@ class Editormodel extends CI_Model{
 	}
 
 	function show_form_content($object_group = 1, $location_id = 0, $page = 1, $columns = 2){
+		//print $location_id;
 		//$this->load->helper('array');
 		$assigned = ($location_id) ? $this->get_assigned_properties($location_id) : array();
 		$output   = array();
 		$query    = $this->db->query('SELECT
-			properties_list.id,
-			properties_list.`row`,
-			properties_list.element,
-			properties_list.label,
-			properties_list.selfname,
-			properties_list.fieldtype,
-			properties_list.parameters
-			FROM
-			properties_list
-			WHERE
-			properties_list.object_group = ?
-			AND properties_list.active = 1
-			AND properties_list.page = ?
-			ORDER BY
-			properties_list.`row`,
-			properties_list.element,
-			properties_list.cat,
-			properties_list.selfname', array($object_group, $page));
-			if ($query->num_rows() ){
-				foreach ($query->result() as $row){
-					if(!isset($output[$row->row]))							{ $output[$row->row] = array(); }
-					if(!isset($output[$row->row]['label']))					{ $output[$row->row]['label'] = $row->label; }
-					if(!isset($output[$row->row][$row->element]))			{ $output[$row->row][$row->element] = array(); }
-					if(!isset($output[$row->row][$row->element][$row->id]))	{ $output[$row->row][$row->element][$row->id] = array(); }
+		properties_list.id,
+		properties_list.`row`,
+		properties_list.element,
+		properties_list.label,
+		properties_list.selfname,
+		properties_list.fieldtype,
+		properties_list.parameters
+		FROM
+		properties_list
+		WHERE
+		properties_list.object_group = ?
+		AND properties_list.active = 1
+		AND properties_list.page = ?
+		ORDER BY
+		properties_list.`row`,
+		properties_list.element,
+		properties_list.cat,
+		properties_list.selfname', array($object_group, $page));
+		if ($query->num_rows() ){
+			foreach ($query->result() as $row){
+				if(!isset($output[$row->row]))							{ $output[$row->row] = array(); }
+				if(!isset($output[$row->row]['label']))					{ $output[$row->row]['label'] = $row->label; }
+				if(!isset($output[$row->row][$row->element]))			{ $output[$row->row][$row->element] = array(); }
+				if(!isset($output[$row->row][$row->element][$row->id]))	{ $output[$row->row][$row->element][$row->id] = array(); }
 
-					$output[$row->row][$row->element][$row->id]['name']       = $row->selfname;
-					$output[$row->row][$row->element][$row->id]['fieldtype']  = $row->fieldtype;
-					$output[$row->row][$row->element][$row->id]['parameters'] = $row->parameters;
-				}
+				$output[$row->row][$row->element][$row->id]['name']       = $row->selfname;
+				$output[$row->row][$row->element][$row->id]['fieldtype']  = $row->fieldtype;
+				$output[$row->row][$row->element][$row->id]['parameters'] = $row->parameters;
 			}
-			//print_r($assigned);
-			$table = array();
-			foreach($output as $key => $val){
-				$element		= array();
-				$elementarray	= array();
-				foreach($val as $key2 => $val2){
-					if($key2 !== "label"){
-						$values			= array();// исключительно для случая, если элемент типа select
-						$backcounter	= sizeof($val2);
-						foreach($val2 as $obj => $val3){
-							$value   = "";
-							$options = array();
-							if(isset($assigned[$obj])){
-								$value = $assigned[$obj];
-							}
-
-							switch ($val3['fieldtype']){
-								case 'text' :
-									$sting      = '<input type="text" ref="'.$obj.'" id="param_'.$obj.'" '.$val3['parameters'].' value="'.$value.'">'.$val3['name'];
+		}
+		//print_r($assigned);
+		$table = array();
+		foreach($output as $key => $val){
+			$element		= array();
+			$elementarray	= array();
+			foreach($val as $key2 => $val2){
+				if($key2 !== "label"){
+					$values			= array();// исключительно для случая, если элемент типа select
+					$backcounter	= sizeof($val2);
+					foreach($val2 as $obj => $val3){
+						$value   = "";
+						$options = array();
+						if(isset($assigned[$obj])){
+							$value = $assigned[$obj];
+						}
+						switch ($val3['fieldtype']){
+							case 'text' :
+								$sting      = '<input type="text" ref="'.$obj.'" id="param_'.$obj.'" '.$val3['parameters'].' value="'.$value.'">'.$val3['name'];
+								array_push($element,$string);
+							break;
+							case 'textarea' :
+								$string     = $val3['name'].'<textarea ref="'.$obj.'" id="param_'.$obj.'" '.$val3['parameters'].' rows="5" cols="20">'.(strlen($value) ? $value : '').'</textarea>';
+								array_push($element,$string);
+							break;
+							case 'select' :
+								$selected   = (isset($assigned[$obj])) ? 'selected="selected"' : "";
+								array_push($values,'<option value="'.$obj.'" '.$selected.'>'.$val3['name'].'</option>');
+								--$backcounter;
+								if(!$backcounter){
+									$string = '<select name="sel_'.$obj.'" id="sel_'.$obj.'">'.implode($values,"\n").'</select>';
 									array_push($element,$string);
-								break;
-								case 'textarea' :
-									$string     = $val3['name'].'<textarea ref="'.$obj.'" id="param_'.$obj.'" '.$val3['parameters'].' rows="5" cols="20">'.(strlen($value) ? $value : '').'</textarea>';
-									array_push($element,$string);
-								break;
-								case 'select' :
-									$selected   = (isset($assigned[$obj])) ? 'selected="selected"' : "";
-									array_push($values,'<option value="'.$obj.'" '.$selected.'>'.$val3['name'].'</option>');
-									--$backcounter;
-									if(!$backcounter){
-										$string = '<select name="sel_'.$obj.'" id="sel_'.$obj.'">'.implode($values,"\n").'</select>';
-										array_push($element,$string);
-									}
-								break;
-								case 'checkbox' :
-									$value      = (isset($assigned[$obj])) ? 'checked="checked"' : '';
-									array_push($elementarray,'<label title="'.$val['label'].' - '.$val3['name'].'" for="p'.$obj.'"><input type="checkbox" id="p'.$obj.'" name="param[]" '.$value.' value="'.$obj.'">'.$val3['name'].'</label>');
-									--$backcounter;
-									if (!$backcounter){
-										array_push($element, implode($elementarray,"\n"));
-									}
-								break;
-							}
+								}
+							break;
+							case 'checkbox' :
+								$value      = (isset($assigned[$obj])) ? 'checked="checked"' : '';
+								array_push($elementarray,'<label title="'.$val['label'].' - '.$val3['name'].'" for="p'.$obj.'"><input type="checkbox" id="p'.$obj.'" name="param[]" '.$value.' value="'.$obj.'">'.$val3['name'].'</label>');
+								--$backcounter;
+								if (!$backcounter){
+									array_push($element, implode($elementarray,"\n"));
+								}
+							break;
 						}
 					}
 				}
-				(!strlen($val['label'])) ? $val['label'] = "&nbsp;" : "";
-				array_push($table, '<fieldset style="width:99%">
-				<legend>
-					'.$val['label'].
-				'</legend>'.implode($element, "\n").
-				'</fieldset>');
 			}
+			(!strlen($val['label'])) ? $val['label'] = "&nbsp;" : "";
+			array_push($table, '<fieldset style="width:99%">
+			<legend>
+				'.$val['label'].
+			'</legend>'.implode($element, "\n").
+			'</fieldset>');
+		}
+
 		return implode($table,"\n");
 	}
 
