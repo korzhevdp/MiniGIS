@@ -38,6 +38,12 @@ class Cachemodel extends CI_Model{
 				case 3 :
 					$act['statmap'] = "http://static-maps.yandex.ru/1.x/?l=map&size=128,128&pl=c:ec473fFF,f:FF660020,w:3,".$act['coord_y'];
 				break;
+				case 4 :
+					$act['statmap'] = "";
+				break;
+				case 5 :
+					$act['statmap'] = "";
+				break;
 			}
 		}
 		
@@ -249,24 +255,7 @@ class Cachemodel extends CI_Model{
 		// типы объектов активного слоя выбраны в массив
 		// выбираем прочие признаки
 
-		if($map_content->a_layers && strlen($map_content->a_layers)){
-			$result = $this->db->query('SELECT
-			CONCAT(properties_list.page, properties_list.`row`, properties_list.element) AS marker,
-			properties_list.label,
-			properties_list.selfname,
-			properties_list.algoritm AS alg,
-			properties_list.fieldtype,
-			properties_list.id
-			FROM
-			properties_list
-			WHERE
-			properties_list.object_group IN ('.$map_content->a_layers.')
-			AND properties_list.searchable
-			AND properties_list.active
-			ORDER BY
-			properties_list.label,
-			properties_list.selfname');
-		} else {
+		if(!strlen($map_content->a_layers)) {
 			$result = $this->db->query('SELECT
 			CONCAT(properties_list.page, properties_list.`row`, properties_list.element) AS marker,
 			properties_list.label,
@@ -290,7 +279,6 @@ class Cachemodel extends CI_Model{
 			properties_list.label,
 			properties_list.selfname');
 		}
-
 
 		if($result->num_rows()){
 			foreach ($result->result() as $row){
@@ -321,8 +309,15 @@ class Cachemodel extends CI_Model{
 				}
 				$options = array();
 				$element = array();
-				if(!isset($val['label'])){ $val['label'] = $val3['label']; } // проброс параметра "наружу"
-				if(!isset($sws[$val3['label']])){ $sws[$val3['label']] = array(); }
+				if (!isset($val['label'])) {
+					$val['label'] = $val3['label']; // проброс параметра "наружу"
+				} 
+				if (!isset($sws[$val3['label']])) {
+					$sws[$val3['label']] = array(); 
+				}
+				if (!isset($val3['alg'])) {
+					$val3['alg'] = "u"; 
+				}
 				switch ($val3['fieldtype']){
 					case 'text':
 						array_push($element, '<li class="itemcontainer" obj="'.$obj.'"><input type="text">'.$val3['name']."</li>");

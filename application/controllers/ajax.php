@@ -407,6 +407,7 @@ class Ajax extends CI_Controller{
 	public function get_map_content(){
 		//$this->output->enable_profiler(TRUE);
 		$map_content = array();
+		$map_content2 = array();
 		$result      = $this->db->query("SELECT 
 		`map_content`.a_layers,
 		`map_content`.a_types,
@@ -418,20 +419,18 @@ class Ajax extends CI_Controller{
 		`map_content`.`active` AND
 		`map_content`.`id` = ?", array($this->input->post('mapset')));
 		if($result->num_rows()){
-			array_push($map_content, "ac = {");
 			$row = $result->row();
 			if($row->a_layers){
-				array_push($map_content, $this->get_active_layer($row->a_layers));
+				$map_content = $map_content + $this->get_active_layer($row->a_layers);
 			}
 			if($row->a_types){
-				array_push($map_content, $this->get_active_type($row->a_types));
+				$map_content = $map_content + $this->get_active_type($row->a_types);
 			}
-			array_push($map_content, "};\nbg = {");
 			if($row->b_layers || $row->b_types){
-				array_push($map_content, $this->get_bkg_types($row->b_layers, $row->b_types));
+				$map_content2 = $map_content2 + $this->get_bkg_types($row->b_layers, $row->b_types);
 			}
-			array_push($map_content, "};");
-			print implode($map_content, "\n");
+			//print_r($map_content);
+			print "ac = {\n".implode($map_content, ",\n")."};\nbg = {".implode($map_content2, ",\n")."\n};";
 		}else{
 			send_warning("Ошибка целостности в ajax/get_map_content()".$this->db->last_query());
 			print "console.log('Кажется, приключилась страшная ошибка. Наши специалисты уже работают над ней. Попробуйте открыть карту чуть позже')";
@@ -439,7 +438,6 @@ class Ajax extends CI_Controller{
 	}
 
 	public function get_active_layer($layers_array){
-		// на самом деле $layers_array всегда будет состоять из одной цифры, так что будьте спокойнее, милорд!
 		// Layer - эквивалент object_group;
 		$result = $this->db->query("SELECT
 		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
@@ -473,7 +471,7 @@ class Ajax extends CI_Controller{
 				array_push($out, $string);
 			}
 		}
-		return implode($out, ",\n");
+		return $out;
 	}
 
 	public function get_active_type($types_array){
@@ -509,7 +507,7 @@ class Ajax extends CI_Controller{
 				array_push($out, $string);
 			}
 		}
-		return implode($out, ",\n");
+		return $out;
 	}
 
 	public function get_bkg_types($layers_array, $types_array){
@@ -543,7 +541,7 @@ class Ajax extends CI_Controller{
 				array_push($out, $string);
 			}
 		}
-		return implode($out, ",\n");
+		return $out;
 	}
 	
 	public function select_by_type($type){
