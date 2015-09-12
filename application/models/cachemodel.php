@@ -201,9 +201,8 @@ class Cachemodel extends CI_Model{
 	}
 
 	//кэширование навигатора
-	public function cache_selector_content($mapset = 1){
-		$this->output->enable_profiler(TRUE);
-		$this->load->helper('form');
+	public function cache_selector_content($mapset = 1, $mode = "file"){
+		//$this->output->enable_profiler(TRUE);
 		$result=$this->db->query("SELECT 
 		map_content.a_layers,
 		map_content.a_types
@@ -213,12 +212,13 @@ class Cachemodel extends CI_Model{
 		if($result->num_rows()){
 			$map_content = $result->row();
 		}
+		$result->free_result();
 
 		$output = array();
 		$table  = array();
-
+		// если есть целые активные слои, сперва выбираем список объектов входящих в эти слои.
 		if($map_content->a_layers){
-			$query=$this->db->query("SELECT 
+			$result = $this->db->query("SELECT 
 			locations_types.name AS selfname,
 			'checkbox' AS fieldtype,
 			locations_types.pl_num AS id,
@@ -227,48 +227,73 @@ class Cachemodel extends CI_Model{
 			`properties_list`
 			INNER JOIN locations_types ON (`properties_list`.id = locations_types.pl_num)
 			WHERE
-			(locations_types.object_group = ?) AND 
+			(locations_types.object_group IN (".$map_content->a_layers.")) AND 
 			(locations_types.pl_num > 0)
 			ORDER BY
-			properties_list.selfname", array($map_content->a_layers));
-			if($query->num_rows()){
-				foreach ($query->result() as $row){
-					if(!isset($output[111])){ $output[111] = array(); }
-					if(!isset($output[111][$row->id])){ $output[111][$row->id] = array(); }
-					$output[111][$row->id]['label']     = $row->label;
-					$output[111][$row->id]['name']      = $row->selfname;
-					$output[111][$row->id]['fieldtype'] = $row->fieldtype;
-					$output[111][$row->id]['group']     = "u";
+			properties_list.selfname");
+			if($result->num_rows()){
+				foreach ($result->result() as $row){
+					if(!isset($output['z11'])){ $output['z11'] = array(); }
+					if(!isset($output['z11'][$row->id])){ 
+						$output['z11'][$row->id] = array(
+							'label'      => $row->label,
+							'name'       => $row->selfname,
+							'fieldtype'  => $row->fieldtype,
+							'group'      => "u"
+						);
+					}
 				}
 			}
 		}
+		$result->free_result();
+		// типы объектов активного слоя выбраны в массив
+		// выбираем прочие признаки
 
-		if($map_content->a_layers){
-			$where = "(properties_list.object_group = ?)";
-			$searchplace = $map_content->a_layers;
-		}else{
-			$where = "(properties_list.id = (SELECT locations_types.pl_num FROM locations_types WHERE (locations_types.id = ?)))";
-			$searchplace = $map_content->a_types;
+		if($map_content->a_layers && strlen($map_content->a_layers)){
+			$result = $this->db->query('SELECT
+			CONCAT(properties_list.page, properties_list.`row`, properties_list.element) AS marker,
+			properties_list.label,
+			properties_list.selfname,
+			properties_list.algoritm AS alg,
+			properties_list.fieldtype,
+			properties_list.id
+			FROM
+			properties_list
+			WHERE
+			properties_list.object_group IN ('.$map_content->a_layers.')
+			AND properties_list.searchable
+			AND properties_list.active
+			ORDER BY
+			properties_list.label,
+			properties_list.selfname');
+		} else {
+			$result = $this->db->query('SELECT
+			CONCAT(properties_list.page, properties_list.`row`, properties_list.element) AS marker,
+			properties_list.label,
+			properties_list.selfname,
+			properties_list.algoritm AS alg,
+			properties_list.fieldtype,
+			properties_list.id
+			FROM
+			properties_list
+			WHERE
+			properties_list.id IN (
+				SELECT locations_types.pl_num
+				FROM
+				locations_types
+				WHERE
+				locations_types.id IN ('.$map_content->a_types.')
+			)
+			AND properties_list.searchable
+			AND properties_list.active
+			ORDER BY
+			properties_list.label,
+			properties_list.selfname');
 		}
 
-		$query=$this->db->query('SELECT
-		CONCAT(properties_list.page, properties_list.`row`, properties_list.element) AS marker,
-		properties_list.label,
-		properties_list.selfname,
-		properties_list.algoritm as alg,
-		properties_list.fieldtype,
-		properties_list.id
-		FROM
-		properties_list
-		WHERE
-		'.$where.'
-		--properties_list.searchable AND
-		--properties_list.active
-		ORDER BY
-		properties_list.label,
-		properties_list.selfname', array($searchplace) );
-		if($query->num_rows()){
-			foreach ($query->result() as $row){
+
+		if($result->num_rows()){
+			foreach ($result->result() as $row){
 				if(!isset($output[$row->marker])){ $output[$row->marker] = array(); }
 				if(!isset($output[$row->marker][$row->id])){ $output[$row->marker][$row->id] = array(); }
 				if(!isset($output[$row->marker]['label'])){
@@ -280,10 +305,7 @@ class Cachemodel extends CI_Model{
 				//['group'] исключать нельзя, ввиду неоднозначности трактовки элемента checkbox: как объединительный (И), так и объединительно-исключающий (ИЛИ) контекст поиска
 			}
 		}
-		//return false;
-		//print_r($output);
-		//print sizeof($output[111]);
-		$query->free_result();
+		$result->free_result();
 		$sws = array();
 		foreach($output as $key => $val){
 			$backcounter = sizeof($val);
@@ -302,9 +324,9 @@ class Cachemodel extends CI_Model{
 				if(!isset($val['label'])){ $val['label'] = $val3['label']; } // проброс параметра "наружу"
 				if(!isset($sws[$val3['label']])){ $sws[$val3['label']] = array(); }
 				switch ($val3['fieldtype']){
-					case 'text' :
+					case 'text':
 						array_push($element, '<li class="itemcontainer" obj="'.$obj.'"><input type="text">'.$val3['name']."</li>");
-						array_push($sws[$val3['label']], $obj.': { value: "", fieldtype: "text", alg: "'.$val3['alg'].'", text: "'.form_prep($val3['name']).'" }');
+						array_push($sws[$val3['label']], $obj.': { value: "", fieldtype: "text", alg: "'.$val3['alg'].'", text: "'.$val3['name'].'" }');
 					break;
 					case 'select':
 						array_push($values, '<option value="'.$obj.'">'.$val3['name'].'</option>');
@@ -312,13 +334,12 @@ class Cachemodel extends CI_Model{
 						if(!$backcounter){
 							array_push($element, '<li class="itemcontainer" obj="'.$obj.'"><select><option value="0">Выберите вариант</option>'."\n".implode($values,"\n").'</select></li>');
 						}
-						array_push($sws[$val3['label']], $obj.': { value: 0, fieldtype: "select", alg: "'.$val3['alg'].'" , text: "'.form_prep($val3['name']).'" }');
+						array_push($sws[$val3['label']], $obj.': { value: 0, fieldtype: "select", alg: "'.$val3['alg'].'" , text: "'.$val3['name'].'" }');
 					break;
 					case 'checkbox':
-						//print $obj." - ".$val3['name']." ".$val3['alg']."<br>";
 						$tabstr='<li class="itemcontainer" obj="'.$obj.'"><img src="'.$this->config->item('api').'/images/clean_grey.png" alt=" ">'.$val3['name'].'</li>';
 						array_push($ea, $tabstr);
-						array_push($sws[$val3['label']], $obj.': { value: 0, fieldtype: "checkbox", alg: "'.$val3['alg'].'", text: "'.form_prep($val3['name']).'" }');
+						array_push($sws[$val3['label']], $obj.': { value: 0, fieldtype: "checkbox", alg: "'.$val3['alg'].'", text: "'.$val3['name'].'" }');
 						--$backcounter;
 						if (!$backcounter){
 							array_push($element, "<ul>\n".implode($ea, "\n")."\n</ul>");
@@ -332,21 +353,30 @@ class Cachemodel extends CI_Model{
 			######## конец переключателей
 		}
 
-		# пишем в файл (следите за путями)
-		$this->load->helper('file');
+
 		$scr = array();
 		foreach($sws as $val){
 			array_push($scr, implode($val, ",\n\t"));
 		}
 		//print_r($sws);
 		//print_r($scr);
-		//print "writing application/views/cache/menus/selector_".$mapset.".php<br>";
-		write_file('application/views/cache/menus/selector_'.$mapset.'.php', implode($table,"\n"));
-		write_file('application/views/cache/menus/selector_'.$mapset.'_switches.php', "switches = {\n\t".implode($scr, ",\n")."\n}");
-		//exit;
+		$selector = implode($table, "\n");
+		$switches = "switches = {\n\t".implode($scr, ",\n")."\n}";
+		if ($mode === "file"){
+			// print "writing application/views/cache/menus/selector_".$mapset.".php<br>";
+			// пишем в файл (следите за путями)
+			$this->load->helper('file');
+			write_file('application/views/cache/menus/selector_'.$mapset.'.php', $selector);
+			write_file('application/views/cache/menus/selector_'.$mapset.'_switches.php', $switches);
+		} else {
+			print "Активные слои объектов: ".$map_content->a_layers."<br>Активные типы объектов: ".$map_content->a_types;
+			print "<hr>";
+			print_r($output);
+			print "<hr>";
+			print '<link href="http://api.korzhevdp.com/css/frontend.css" rel="stylesheet" media="screen" type="text/css">'.$selector."<br><hr><br>".$switches;
+		}
 	}
 
-	//надо найти где это!!!
 	function _build_object_lists(){
 		$result=$this->db->query("SELECT 
 		GROUP_CONCAT(CONCAT('<option value=\"',locations_types.id,'\">',locations_types.name,'</option>') SEPARATOR '') as `list`,

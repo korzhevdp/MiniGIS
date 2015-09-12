@@ -458,13 +458,14 @@ class Ajax extends CI_Controller{
 		INNER JOIN objects_groups ON (locations_types.object_group = objects_groups.id)
 		INNER JOIN users_admins ON (locations.owner = users_admins.uid)
 		WHERE
-		(locations_types.object_group = ?) AND
-		(locations.active = 1) AND
-		(users_admins.active = 1) AND
-		(LENGTH(locations.coord_y) > 3)
-		ORDER BY locations.id ASC",array($this->config->item('maps_def_loc'),$layers_array));
+		locations_types.object_group IN (".$layers_array.")
+		AND locations.active
+		AND users_admins.active
+		AND LENGTH(locations.coord_y) > 3
+		ORDER BY locations.id ASC", array(
+			$this->config->item('maps_def_loc')
+		));
 		$out = array();
-		//$ats=array();
 		if($result->num_rows()){
 			foreach($result->result() as $row){
 				$image  = (strlen($row->img)) ? $row->img : "nophoto.gif";
@@ -476,7 +477,6 @@ class Ajax extends CI_Controller{
 	}
 
 	public function get_active_type($types_array){
-		// на самом деле $types_array и $layers_array всегда будут состоять из одной цифры, так что будьте спокойнее, милорд!
 		// Layer - эквивалент object_group;
 		$result=$this->db->query("SELECT 
 		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
@@ -495,11 +495,11 @@ class Ajax extends CI_Controller{
 		INNER JOIN objects_groups ON (locations_types.object_group = objects_groups.id)
 		INNER JOIN users_admins ON (locations.owner = users_admins.uid)
 		WHERE
-		(locations.`type` = ?) AND
-		(locations.active = 1) AND 
-		(users_admins.active = 1) AND 
-		(LENGTH(locations.coord_y) > 3)
-		ORDER BY locations.id ASC", array( $this->config->item('maps_def_loc'), $types_array ) );
+		locations.`type` IN (".$types_array.")
+		AND locations.active
+		AND users_admins.active
+		AND LENGTH(locations.coord_y) > 3
+		ORDER BY locations.id ASC", array( $this->config->item('maps_def_loc')) );
 		$out = array();
 		$ats = array();
 		if($result->num_rows()){

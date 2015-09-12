@@ -245,14 +245,14 @@ $config['encryption_key'] = 'АПР"7№6GHuyr97#';
 |
 */
 $config['sess_cookie_name']     = 'modx_session';
-$config['sess_expiration']      = 1800;
+$config['sess_expiration']      = 7200;
 $config['sess_expire_on_close'] = TRUE;
 $config['sess_encrypt_cookie']  = TRUE;
 $config['sess_use_database']    = TRUE;
 $config['sess_table_name']      = 'modx_sessions';
 $config['sess_match_ip']        = TRUE;
 $config['sess_match_useragent'] = TRUE;
-$config['sess_time_to_update']  = 1000;
+$config['sess_time_to_update']  = 7200;
 
 /*
 |--------------------------------------------------------------------------
@@ -279,7 +279,7 @@ $config['cookie_secure']	= FALSE;
 | COOKIE data is encountered
 |
 */
-$config['global_xss_filtering'] = TRUE;
+$config['global_xss_filtering'] = FALSE;
 
 /*
 |--------------------------------------------------------------------------

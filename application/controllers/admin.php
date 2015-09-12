@@ -16,7 +16,7 @@ class Admin extends CI_Controller{
 		}
 	}
 
-	function index(){
+	public function index() {
 		$output['menu']      = $this->load->view('admin/menu', '', true);
 		if($this->session->userdata('user_class') == md5("secret_userclass1")){
 			$supermenu       = $this->usefulmodel->semantics_supermenu();
@@ -26,7 +26,7 @@ class Admin extends CI_Controller{
 		$this->load->view('admin/view', $output);
 	}
 
-	function library($obj_group=1, $loc_type=0){
+	public function library($obj_group=1, $loc_type=0) {
 		$this->output->enable_profiler(TRUE);
 		$output['menu']=$this->load->view('admin/menu','',true);
 		if($this->session->userdata('user_class') == md5("secret_userclass1")){
@@ -37,7 +37,7 @@ class Admin extends CI_Controller{
 		$this->load->view('admin/view', $output);
 	}
 
-	function sheets($mode, $sheet_id="0"){
+	public function sheets($mode, $sheet_id="0") {
 		$output['menu']=$this->load->view('admin/menu','',true);
 		if($this->session->userdata('user_class') == md5("secret_userclass1")){
 			$supermenu=$this->usefulmodel->semantics_supermenu();
@@ -60,33 +60,40 @@ class Admin extends CI_Controller{
 		$this->load->view('admin/view',$output);
 	}
 
-	function maps(){
+	public function maps(){
 		/* modes: show, save, new */
-		$mapset = ($this->input->post('map_view')) ? $this->input->post('map_view') : 1;
-		$output = array(
-			'content'	=> $this->load->view('admin/map_content', $this->adminmodel->mc_show($mapset), true),
-			'menu'		=> $this->load->view('admin/menu', array(), true)
-		);
-		if($this->session->userdata('user_class') == md5("secret_userclass1")){
-			$output['menu'] .= $this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true);
-		}else{
-			$this->session->sess_destroy();
-			redirect('admin');
-		}
+		//$this->output->enable_profiler(TRUE);
+		$mapset = ($this->input->post('map_view')) ? $this->input->post('map_view') : 0;
 		if($this->input->post('save')){
 			$this->adminmodel->mc_save();
 			$this->cachemodel->cache_selector_content($this->input->post('mapset'));
 			$this->cachemodel->menu_build(1, $this->config->item('mod_housing_root'), $this->config->item('mod_gis'));
 		}
 		if($this->input->post('new')){
+			return false;
 			$mapsetid = $this->adminmodel->mc_new();
 			$this->cachemodel->cache_selector_content($mapsetid);
 			$this->cachemodel->menu_build(1, $this->config->item('mod_housing_root'), $this->config->item('mod_gis'));
 		}
+		$output = array(
+			'content'	=> $this->load->view('admin/map_content', $this->adminmodel->mc_show($mapset), true),
+			'menu'		=> $this->load->view('admin/menu', array(), true)
+		);
+		if($this->session->userdata('user_class') == md5("secret_userclass1")) {
+			$output['menu'] .= $this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true);
+		} else {
+			$this->session->sess_destroy();
+			redirect('admin');
+		}
+
 		$this->load->view('admin/view', $output);
 	}
 
-	function gis($obj=0){
+	public function maps_save(){
+		/**/
+	}
+
+	public function gis($obj = 0){
 		if($this->session->userdata('user_class') == md5("secret_userclass1")){
 			$output = array(
 				'menu'		=> $this->load->view('admin/menu', '', true).$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true),
@@ -99,7 +106,7 @@ class Admin extends CI_Controller{
 		}
 	}
 
-	function gis_save(){
+	public function gis_save(){
 		//$this->output->enable_profiler(TRUE);
 		$this->adminmodel->gis_save();
 		$result = $this->db->query("SELECT 
@@ -120,7 +127,7 @@ class Admin extends CI_Controller{
 		redirect("admin/gis");
 	}
 
-	function semantics($obj_group=1, $obj=0){
+	public function semantics($obj_group = 1, $obj = 0){
 		if($this->session->userdata('user_class') == md5("secret_userclass1")){
 			$supermenu = $this->usefulmodel->semantics_supermenu();
 			$values         = $this->adminmodel->show_semantics_values($obj_group, $obj);
@@ -136,15 +143,15 @@ class Admin extends CI_Controller{
 		}
 	}
 
-	function save_semantics(){
+	public function save_semantics(){
 		$this->adminmodel->save_semantics();
 	}
 
-	function sync($location_id=0){ //mod_housing
+	public function sync($location_id = 0){ //mod_housing
 		($location_id == 'all') ? $this->adminmodel->_params_sync_all() : $this->adminmodel->_params_sync_traversal($location_id);
 	}
 
-	function usermanager($id=0,$mode='show'){
+	public function usermanager($id=0,$mode='show'){
 		if($this->session->userdata('user_class') == md5("secret_userclass1")){
 			if($mode == 'show'){
 				$supermenu=$this->usefulmodel->semantics_supermenu();
@@ -180,6 +187,10 @@ class Admin extends CI_Controller{
 		WHERE 
 		properties_list.id = ?", array($prop));
 		redirect('admin/semantics/'.$group);
+	}
+
+	public function cachemap($mapset = 1, $mode = "file"){
+		$this->cachemodel->cache_selector_content($mapset, $mode);
 	}
 }
 /* End of file admin.php */

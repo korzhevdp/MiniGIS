@@ -779,46 +779,63 @@ class Adminmodel extends CI_Model{
 #
 ######################### end of comments section ############################
 ######################### start of map content section ############################
-	function mc_show($mapset = 1){
-		$objects   = array();
-		$markers   = array();
-		$options   = array(1 => "Не задано ни одного представления");
+	function mc_show($mapset = 0){
+		//$this->output->enable_profiler(TRUE);
+		$mapcontent   = array(
+			'a_layers' => '',
+			'a_types'  => '',
+			'b_layers' => '',
+			'b_types'  => '',
+			'disabled_layers' => array()
+		);
+		$options   = array('<option value = "0">Выберите представление карты</option>');
+		$setname   = "";
 		$a_types   = array();
 		$b_types   = array();
-		$ab_layers = array();
-		$af_layers = array();
+		$cf_layers   = array();
+		$cb_layers   = array();
+		$cf_types   = array();
+		$cb_types   = array();
 		$groups    = array();
-		$this->load->helper('form');
-		########### выборка свойств слоёв
-		$result = $this->db->query("SELECT 
-		`map_content`.id,
+		########### выборка списка  слоёв
+		$result = $this->db->query("SELECT
 		`map_content`.name,
-		`map_content`.a_layers,
-		`map_content`.a_types,
-		`map_content`.b_layers,
-		`map_content`.b_types
+		`map_content`.id
 		FROM
 		`map_content`
-		WHERE
-		`map_content`.`active`
-		ORDER BY 
-		`map_content`.name");
+		ORDER BY `map_content`.name ASC");
 		if($result->num_rows()){
-			foreach($result->result() as $row){
-				$soptions[$row->id] = ($row->id == $mapset) 
-					? '<option value="'.$row->id.'" selected="selected">'.$row->name."</option>" 
-					: '<option value="'.$row->id.'">'.$row->name."</option>";
-				$options[$row->id] = $row->name;
-				$markers[$row->id]['af_layers'] = explode(",", $row->a_layers);
-				$markers[$row->id]['af_types']  = explode(",", $row->a_types);
-				$markers[$row->id]['ab_layers'] = explode(",", $row->b_layers);
-				$markers[$row->id]['ab_types']  = explode(",", $row->b_types);
+			foreach($result->result() as $row) {
+				$selected = "";
+				if ($row->id == $mapset) {
+					$selected = ' selected="selected"';
+					$setname = $row->name;
+				}
+				$string   = '<option value="'.$row->id.'"'.$selected.'>'.$row->name.'</option>';
+				array_push($options, $string);
+			}
+		}
+		########### выборка свойств слоёв
+		if ($mapset) {
+			$result = $this->db->query("SELECT
+			`map_content`.a_layers,
+			`map_content`.b_layers,
+			`map_content`.a_types,
+			`map_content`.b_types
+			FROM
+			`map_content`
+			WHERE
+			`map_content`.id = ?
+			ORDER BY 
+			`map_content`.name
+			LIMIT 1", ($mapset));
+			if($result->num_rows()){
+				$mapcontent = $result->row_array(0);
+				$mapcontent['disabled_layers'] = array();
 			}
 		}
 		###########
-		#
 		############# формирование таблиц слоёв (активный/фоновый)
-		#
 		$result = $this->db->query("SELECT
 		`objects_groups`.id,
 		`objects_groups`.name,
@@ -826,26 +843,20 @@ class Adminmodel extends CI_Model{
 		FROM
 		`objects_groups`");
 		if($result->num_rows()){
-			$checked = ($markers[$mapset]['af_layers']) ? 'checked="checked"' : '';
-			array_push($af_layers, '<label class="radio span4" style="margin-left:0px"><input type="radio" name="f_layer" id="frontl_0" value="0" '.$checked.'><b>Показывать объекты по типам</b></label>');
-
 			foreach($result->result() as $row){
-				$active_a = ($row->active) ? "" : "DISABLED";
-				$active_b = ($row->active) ? "" : "DISABLED";
-				(isset($markers[$mapset]) && in_array($row->id,$markers[$mapset]['af_layers'])) ? $active_b = "DISABLED" : "";
-				$checked_a = (isset($markers[$mapset]) && in_array($row->id, $markers[$mapset]['af_layers'])) ? 1 : 0;
-				$checked_b = (isset($markers[$mapset]) && in_array($row->id, $markers[$mapset]['ab_layers'])) ? 1 : 0;
-				$id_b = ($active_b) ? "blayer_" : "dis_blayer_";
 				# активный слой
-				array_push($af_layers,'<label class="radio span4" style="margin-left:0px">'.form_radio("f_layer", $row->id, $checked_a, 'id="frontl_'.$row->id.'"'.$active_a).$row->name.'</label>');
+				array_push($cf_layers,'<li><label class="checkbox" for="a_layer'.$row->id.'"><input type="checkbox" class="a_layers" name="a_layer[]" value="'.$row->id.'" ref="'.$row->id.'" id="a_layer'.$row->id.'">'.$row->name.'</label></li>');
 				# фоновый слой
-				array_push($ab_layers,'<label class="checkbox span4" style="margin-left:0px">'.form_checkbox("b_layer[]", $row->id, $checked_b, 'id="'.$id_b.$row->id.'"'.$active_b).$row->name.'</label>');
+				array_push($cb_layers,'<li><label class="checkbox" for="b_layer'.$row->id.'"><input type="checkbox" class="b_layers" name="b_layer[]" value="'.$row->id.'" ref="'.$row->id.'" id="b_layer'.$row->id.'">'.$row->name.'</label></li>');
+				if (!$row->active) {
+					array_push($mapcontent['disabled_layers'], $row->id);
+				}
 			}
+			array_push($cf_layers, '<li><label class="checkbox" for="a_layer0"><input type="checkbox" id="a_layer0" ref="0" value="0"><b>Показывать объекты по типам</b></label></li>');
 		}
 		#
 		############# формирование таблиц типов (активный/фоновый слой)
 		#
-
 		$result = $this->db->query("SELECT 
 		`locations_types`.id,
 		`locations_types`.`name`,
@@ -856,63 +867,66 @@ class Adminmodel extends CI_Model{
 		INNER JOIN `locations_types` ON (`objects_groups`.id = `locations_types`.object_group)
 		WHERE
 		`locations_types`.`pl_num`");
-		
 		if($result->num_rows()){
-			# в $a_types и $b_types помещаются объекты переднего плана. Помещаются в соответствии с группой объектов с соответствующие подмассивы, потом из них будут формироваться выходные таблицы
-
+			# В $a_types и $b_types помещаются объекты переднего плана.
+			# Помещаются в соответствии с группой объектов с соответствующие подмассивы, потом из них будут формироваться выходные таблицы.
 			foreach($result->result() as $row){
-
 				//disabled если: 1. Выбран активным слоем
-				$checked_a =  (isset($markers[$mapset]) && in_array($row->id,$markers[$mapset]['af_types'])) ? 'checked="checked"' : '';
-				$disabled_a = (isset($markers[$mapset]) && $row->gid == $markers[$mapset]['af_layers']) ? 'disabled="disabled"' : '';
-				$checked_b =  (isset($markers[$mapset]) && (in_array($row->id,$markers[$mapset]['ab_types']) || in_array($row->gid,$markers[$mapset]['ab_layers']))) ? 'checked="checked"' : '';
-				$disabled_b = (isset($markers[$mapset]) && (in_array($row->gid,$markers[$mapset]['ab_layers']) || in_array($row->gid,$markers[$mapset]['af_layers']))) ? 'disabled="disabled"' : "";
-
 				# активный слой
-				(!isset($a_types[$row->gid])) ? $a_types[$row->gid] = array() : '';
-				array_push($a_types[$row->gid],'<label class="radio span3" style="margin-left:0px;display:block;">
-				<input type="radio" name="f_type" value="'.$row->id.'" id="frontt_'.$row->id.'"'.$disabled_a.'>'.$row->name.'</label>');
+				if (!isset($a_types[$row->gid])) {
+					$a_types[$row->gid] = array();
+				}
+				array_push($a_types[$row->gid],'<label class="checkbox"><input type="checkbox" class="a_types" name="a_type[]" value="'.$row->id.'" id="atype'.$row->id.'" ref="'.$row->id.'">'.$row->name.'</label>');
 				# фоновый слой
-				(!isset($b_types[$row->gid])) ? $b_types[$row->gid] = array() : '';
-				array_push($b_types[$row->gid],'<label class="checkbox span3" style="margin-left:0px;display:block;">
-				<input type="checkbox" name="b_type[]" value="'.$row->id.'" id="btype_'.$row->id.'" '.$checked_b.' '.$disabled_b.'>'.$row->name.'</label>');
+				if (!isset($b_types[$row->gid])) {
+					$b_types[$row->gid] = array();
+				}
+				array_push($b_types[$row->gid],'<label class="checkbox"><input type="checkbox" class="b_types" name="b_type[]" value="'.$row->id.'" id="btype'.$row->id.'" ref="'.$row->id.'">'.$row->name.'</label>');
 				$groups[$row->gid] = $row->group;
 
 			}
-			# обратная сортировка и оформление таблиц
-			$ab_types=Array();
-			$af_types=Array();
-			
+			# окончательная сортировка и оформление списков
+			$cf_types = array();
+			$cb_types = array();
 			foreach($a_types as $gid => $table){
-				array_push($af_types,'<div class="object_list" id="atab'.$gid.'" style="margin-left:0px;clear:both;border-top: 1px solid #eeeeee"><h5>'.$groups[$gid].'</h5>');
-				array_push($af_types, implode($table,"\n"));
-				(!sizeof($table)) ? array_push($af_types, 'Не было создано ни одного объекта') : "";
-				array_push($af_types,'</div>');
+				array_push($cf_types,'<li class="object_list atab" id="atab'.$gid.'"><h5>'.$groups[$gid].'</h5>');
+				array_push($cf_types, implode($table,"\n"));
+				if (!sizeof($table)) {
+					array_push($cf_types, 'Не было создано ни одного объекта');
+				};
+				array_push($cf_types,'</li>');
 			}
 			foreach($b_types as $gid => $table){
-				array_push($ab_types,'<div class="object_list bfl" style="margin-left:0px;clear:both;" id="btab'.$gid.'"><h5>'.$groups[$gid].'</h5>');
-				array_push($ab_types, implode($table,"\n"));
-				(!sizeof($table)) ? array_push($ab_types, 'Не было создано ни одного объекта') : "";
-				array_push($ab_types,'</div>');
+				array_push($cb_types,'<li class="object_list btab" id="btab'.$gid.'"><h5>'.$groups[$gid].'</h5>');
+				array_push($cb_types, implode($table,"\n"));
+				if (!sizeof($table)) {
+					array_push($cb_types, 'Не было создано ни одного объекта');
+				}
+				array_push($cb_types,'</li>');
 			}
-			
 		}
 		#форма выбора слоя началась
-		$objects['mapset']    = $mapset;
-		$objects['options']   = implode($soptions,  "\n");
-		$objects['mapname']   = $options[$mapset];
-		$objects['af_layers'] = implode($af_layers, "\n");
-		$objects['ab_layers'] = implode($ab_layers, "\n");
-		$objects['af_types']  = implode($af_types,  "\n");
-		$objects['ab_types']  = implode($ab_types,  "\n");
-		return $objects;
+		return array(
+			'mapset'    => $mapset,
+			'mapname'   => $setname,
+			'a_layers'  => $mapcontent['a_layers'],
+			'a_types'   => $mapcontent['a_types'],
+			'b_layers'  => $mapcontent['b_layers'],
+			'b_types'   => $mapcontent['b_types'],
+			'disabled_layers' => implode($mapcontent['disabled_layers'], ", "),
+			'options'   => implode($options,   "\n"),
+			'ca_layers' => implode($cf_layers, "\n"),
+			'cb_layers' => implode($cb_layers, "\n"),
+			'ca_types'  => implode($cf_types,  "\n"),
+			'cb_types'  => implode($cb_types,  "\n")
+		);
 	}
 
 	function mc_new(){
-		$f_layer = ($this->input->post('f_layer')) ? $this->input->post('f_layer') : "0";
-		$f_type  = ($this->input->post('f_type'))  ? $this->input->post('f_type')  : "0";
-		$b_layer = ($this->input->post('b_layer')) ? implode($this->input->post('b_layer'), ",") : "0";
-		$b_type  = ($this->input->post('b_type'))  ? implode($this->input->post('b_type'), ",")  : "0";
+		$a_layers = ($this->input->post('a_layer') !== FALSE && is_array($this->input->post('a_layer'))) ? implode($this->input->post('a_layer'), ",") : "0";
+		$a_types  = ($this->input->post('a_type')  !== FALSE && is_array($this->input->post('a_type')))  ? implode($this->input->post('a_type'), ",")  : "0";
+		$b_layers = ($this->input->post('b_layer') !== FALSE && is_array($this->input->post('a_layer'))) ? implode($this->input->post('b_layer'), ",") : "0";
+		$b_types  = ($this->input->post('b_type')  !== FALSE && is_array($this->input->post('b_type')))  ? implode($this->input->post('b_type'), ",")  : "0";
 
 		$this->db->query("INSERT INTO
 		`map_content`(
@@ -923,31 +937,37 @@ class Adminmodel extends CI_Model{
 			`map_content`.name,
 			`map_content`.active
 		) VALUES ( ?, ?, ?, ?, ?, 1 )", array(
-			$f_layer,
-			$f_type,
-			$b_type,
-			$b_layer,
+			$a_layers,
+			$a_types,
+			$b_types,
+			$b_layers,
 			$this->input->post('mapset_name')
 		));
 		return $this->db->insert_id();
 	}
 
 	function mc_save(){
-		$f_layer = ($this->input->post('f_layer')) ? $this->input->post('f_layer') : "0";
-		$f_type = ($this->input->post('f_type')) ? $this->input->post('f_type') : "0";
-		$b_layer = ($this->input->post('b_layer')) ? implode($this->input->post('b_layer'),",") : "0";
-		$b_type = ($this->input->post('b_type')) ? implode($this->input->post('b_type'),",") : "0";
-
+		$a_layers = ($this->input->post('a_layer') !== FALSE && is_array($this->input->post('a_layer'))) ? implode($this->input->post('a_layer'), ",") : "0";
+		$a_types  = ($this->input->post('a_type')  !== FALSE && is_array($this->input->post('a_type')))  ? implode($this->input->post('a_type'), ",")  : "0";
+		$b_layers = ($this->input->post('b_layer') !== FALSE && is_array($this->input->post('a_layer'))) ? implode($this->input->post('b_layer'), ",") : "0";
+		$b_types  = ($this->input->post('b_type')  !== FALSE && is_array($this->input->post('b_type')))  ? implode($this->input->post('b_type'), ",")  : "0";
 		$this->db->query("UPDATE
 		`map_content`
 		SET
-		a_layers = ?,
-		a_types = ?,
-		b_types = ?,
-		b_layers = ?,
-		name = ?
+		`map_content`.a_layers = ?,
+		`map_content`.a_types  = ?,
+		`map_content`.b_types  = ?,
+		`map_content`.b_layers = ?,
+		`map_content`.name     = ?
 		WHERE
-		(`map_content`.id = ?)",array($f_layer,$f_type,$b_type,$b_layer,$this->input->post('mapset_name'),$this->input->post('mapset')));
+		`map_content`.id = ?", array(
+			$a_layers,
+			$a_types,
+			$b_types,
+			$b_layers,
+			$this->input->post('mapset_name'),
+			$this->input->post('mapset')
+		));
 	}
 ######################### end of map content section ############################
 #
