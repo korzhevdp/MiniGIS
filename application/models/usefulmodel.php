@@ -24,22 +24,32 @@ class Usefulmodel extends CI_Model{
 	}
 
 	public function rent_menu(){
+		//return $this->admin_menu();
+		/*
 		if($this->session->userdata('user_class') == md5('secret_userclass3')){
-			return $this->load->view("userclass3", array(), true);
+			return $this->load->view("userclass3", array('user' => $this->session->userdata('user_name')), true);
 		}else{
 			return "";
 		}
+		*/
+		return "";
 	}
 
 	public function admin_menu(){
+		/*
 		if($this->session->userdata('user_class') == md5('secret_userclass2')){
-			return $this->load->view("menu/userclass2", array(), true);
+			return $this->load->view("menu/userclass2", array('user' => $this->session->userdata('user_name')), true);
 		}
 		if($this->session->userdata('user_class') == md5('secret_userclass1')){
 			//print 1;
-			return $this->load->view("menu/userclass1", array( 'user' => $this->session->userdata('user_name') ), true);
+			return $this->load->view("menu/userclass1", array('user' => $this->session->userdata('user_name')), true);
 		}
-		return $this->load->view("menu/userclass0", array(), true);
+		*/
+		$menu = $this->load->view("menu/userclass0", array(), true);
+		if ($this->session->userdata('user_name') !== false) {
+			$menu = $this->load->view("menu/userclass1", array('user' => $this->session->userdata('user_name')), true);
+		}
+		return $menu;
 	}
 
 	public function _captcha_make(){

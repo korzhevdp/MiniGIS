@@ -2,9 +2,9 @@
 <script type="text/javascript">
 <!--
 var prop = {
-	current_zoom : <?=$this->session->userdata('map_zoom');?>,
-	current_type : <?=$this->session->userdata('map_type');?>,
-	map_center   : '<?=$this->session->userdata("map_center");?>',
+	current_zoom : 11,
+	current_type : 2,
+	map_center   : '40.521172,64.55342',
 	pagelist     : '<?=$pagelist;?>',
 	ttl          : <?=$id;?>,
 	description  : '<?=$description;?>',

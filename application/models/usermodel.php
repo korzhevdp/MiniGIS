@@ -1,5 +1,5 @@
 <?php
-class Usermodulemodel extends CI_Model{
+class Usermodel extends CI_Model{
 	function __construct(){
 		parent::__construct();
 	}
@@ -80,39 +80,63 @@ class Usermodulemodel extends CI_Model{
 		return implode($output,"\n");
 	}
 
-	function _user_edit($userid){
-		$result=$this->db->query("SELECT
-			users_admins.nick,
-			users_admins.registration_date,
-			users_admins.name_f,
-			users_admins.name_i,
-			users_admins.name_o,
-			users_admins.info
-			FROM
-			users_admins
-			WHERE
-			users_admins.uid = '".$userid."'");
+	function user_edit(){
+		$result = $this->db->query("SELECT 
+		users_admins.nick,
+		DATE_FORMAT(users_admins.registration_date, '%d.%m.%Y') as registration_date,
+		users_admins.name_f,
+		users_admins.name_i,
+		users_admins.name_o,
+		users_admins.info,
+		users_admins.lang,
+		users_admins.map_type,
+		users_admins.map_zoom,
+		users_admins.map_center,
+		users_admins.class_id,
+		users_admins.access
+		FROM
+		users_admins
+		WHERE
+		users_admins.uid = ?", array($this->session->userdata('user_id')));
 		if($result->num_rows() ){
-			$user=$result->row_array();
-		}else{
-			$user['warning']="Не найдено учётных данных по пользователю";
+			$user = $result->row_array();
 		}
-		return $this->load->view('admin/user',$user,true);
+		$output = array();
+		foreach($this->config->item('lang') as $key=>$val){
+			$selected = "";
+			if($key === $user['lang'] ){
+				$selected = ' selected = "selected"';
+			}
+			array_push($output, '<option value="'.$key.'" class="lang_'.$key.'"'.$selected.'>'.$val.'</option>');
+		}
+		$user['lang'] = implode($output, "\n");
+		return $this->load->view('admin/user', $user, true);
 	}
 
-	function _user_save($userid){
-		$this->db->query("UPDATE users_admins SET
-		users_admins.name_f = ?,
-		users_admins.name_i = ?,
-		users_admins.name_o = ?,
-		users_admins.info = ?
+	function user_save(){
+		//$this->output->enable_profiler(TRUE);
+		//return false;
+		$this->db->query("UPDATE users_admins
+		SET
+		users_admins.name_f     = ?,
+		users_admins.name_i     = ?,
+		users_admins.name_o     = ?,
+		users_admins.map_type   = ?,
+		users_admins.map_zoom   = ?,
+		users_admins.map_center = ?,
+		users_admins.info       = ?,
+		users_admins.lang       = ?
 		WHERE
 		users_admins.uid = ?", array(
-			$this->input->post('user_name_f', TRUE),
-			$this->input->post('user_name_i', TRUE),
-			$this->input->post('user_name_o', TRUE),
-			$this->input->post('user_info', TRUE),
-			$userid
+			$this->input->post('name_f', TRUE),
+			$this->input->post('name_i', TRUE),
+			$this->input->post('name_o', TRUE),
+			$this->input->post('map_type',    TRUE),
+			$this->input->post('map_zoom',    TRUE),
+			$this->input->post('map_center',  TRUE),
+			$this->input->post('user_info',   TRUE),
+			$this->input->post('lang',        TRUE),
+			$this->session->userdata('user_id')
 		));
 	}
 

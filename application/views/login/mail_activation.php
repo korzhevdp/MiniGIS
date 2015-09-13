@@ -1,4 +1,4 @@
-Активация учётной записи на www.lazarevka-otpusk.ru
+Активация учётной записи на <?=$this->config->item("site_friendly_url");?>
 
 
 Здравствуйте!

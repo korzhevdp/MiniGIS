@@ -60,7 +60,7 @@ class Page extends CI_Controller {
 			'menu'     => $this->load->view('cache/menus/menu',		array(), TRUE).$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu(),
 			'footer'   => $this->load->view('frontend/page_footer',	array(), TRUE)
 		);
-		$this->load->view('frontend/frontend_nomap2',$act);
+		$this->load->view('frontend/frontend_nomap2', $act);
 	}
 
 	function addcomment($location_id){

@@ -223,7 +223,7 @@ class Cachemodel extends CI_Model{
 		$output = array();
 		$table  = array();
 		// если есть целые активные слои, сперва выбираем список объектов входящих в эти слои.
-		if($map_content->a_layers){
+		if(strlen($map_content->a_layers)){
 			$result = $this->db->query("SELECT 
 			locations_types.name AS selfname,
 			'checkbox' AS fieldtype,
@@ -255,7 +255,7 @@ class Cachemodel extends CI_Model{
 		// типы объектов активного слоя выбраны в массив
 		// выбираем прочие признаки
 
-		if(!strlen($map_content->a_layers)) {
+		//if(!strlen($map_content->a_layers)) {
 			$result = $this->db->query('SELECT
 			CONCAT(properties_list.page, properties_list.`row`, properties_list.element) AS marker,
 			properties_list.label,
@@ -273,12 +273,15 @@ class Cachemodel extends CI_Model{
 				WHERE
 				locations_types.id IN ('.$map_content->a_types.')
 			)
+			OR properties_list.object_group IN (
+				Select locations_types.object_group FROM locations_types WHERE locations_types.id IN('.$map_content->a_types.')
+			)
 			AND properties_list.searchable
 			AND properties_list.active
 			ORDER BY
 			properties_list.label,
 			properties_list.selfname');
-		}
+		//}
 
 		if($result->num_rows()){
 			foreach ($result->result() as $row){

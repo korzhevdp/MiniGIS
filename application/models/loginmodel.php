@@ -7,20 +7,17 @@ class Loginmodel extends CI_Model{
 	}
 
 	function index($mode='auth'){
-		$act = Array();
-		if($mode=='auth'){
-			$act['reg']=0;
-			$act['captcha'] = $this->_captcha_make();
-		}else{
-			$act['reg']=1;
-			$act['captcha'] = $this->_captcha_make();
-		}
-		$act['errorlist']="";
-		$act['menu']=$this->load->view('cache/menus/menu',array(),TRUE);
-		$this->load->view('login/login_view2',$act);
+		$act = array(
+			'captcha'   => $this->captcha_make(),
+			'page'      => 1,
+			'errorlist' => "",
+			'reg'       => ($mode =='auth') ? 0 : 1,
+			'menu'      => $this->load->view('cache/menus/menu', array(), true),
+		);
+		$this->load->view('login/login_view2', $act);
 	}
 
-	function _test_user(){
+	function test_user(){
 		$ack    = array();
 		$errors = array();
 		$result = $this->db->query("SELECT 
@@ -30,6 +27,8 @@ class Loginmodel extends CI_Model{
 		users_admins.class_id,
 		users_admins.valid,
 		users_admins.active,
+		users_admins.lang,
+		users_admins.access,
 		users_admins.map_center,
 		users_admins.map_zoom,
 		users_admins.map_type,
@@ -45,7 +44,7 @@ class Loginmodel extends CI_Model{
 			$row = $result->row();
 			if(md5(md5('secret').$this->input->post('pass')) == $row->passw){ // если пароль верен
 				if(!$row->valid){//была ли проведена валидация
-					array_push($errors, '<div class="alert alert-error span5" style="clear:both;margin:40px;"><a class="close" data-dismiss="alert" href="#">x</a><h4 class="alert-heading">Ошибка!</h4>Пользователь с указанными именем и паролем ещё не был проверен. Чтобы начать работу, проверьте свой ящик электронной почты и перейдите по присланной ссылке для завершения проверки.</div>');
+					array_push($errors, 'Пользователь с указанными именем и паролем ещё не был проверен. Чтобы начать работу, проверьте свой ящик электронной почты и перейдите по присланной ссылке для завершения проверки.');
 				}
 				if(!$row->active){//а может быть пользователя мы отключили?
 					array_push($errors, "Пользователь с указанными именем и паролем неактивен. Напишите письмо в администрацию сайта по адресу: <u><a href=\"mailto:korzhevdp@gmail.com\">korzhevdp@gmail.com</a></u> если Вы желаете активировать его.");
@@ -57,29 +56,32 @@ class Loginmodel extends CI_Model{
 						'io'			=> $row->io,
 						'user_class'	=> md5("secret_userclass".$row->class_id),
 						'init_loc'		=> $row->init_loc,
+						'lang'			=> $row->lang,
+						'access'		=> $row->access,
 						'map_center'	=> (strlen($row->map_center) > 3 ? $row->map_center : $this->config->item('map_center')),
-						'map_zoom'		=> (strlen($row->map_zoom) ? $row->map_zoom : $this->config->item('map_zoom')),
-						'map_type'		=> (strlen($row->map_type) ? $row->map_type : $this->config->item('map_type'))
+						'map_zoom'		=> (strlen($row->map_zoom)       ? $row->map_zoom   : $this->config->item('map_zoom')),
+						'map_type'		=> (strlen($row->map_type)       ? $row->map_type   : $this->config->item('map_type'))
 					);
 					$this->session->set_userdata($session);
 					redirect('admin');
 				}
 			}else{
-				array_push($errors,'<div class="alert alert-error span5" style="clear:both;margin:40px;"><a class="close" data-dismiss="alert" href="#">x</a>
-				<h4 class="alert-heading">Ошибка!</h4>
-				Пользователь с указанными именем и паролем не найден. Проверьте правильность ввода имени пользователя и пароля. Обратите внимание, что прописные и строчные буквы различаются
-				</div>');
+				array_push($errors,'Пользователь с указанными именем и паролем не найден. Проверьте правильность ввода имени пользователя и пароля. Обратите внимание, что прописные и строчные буквы различаются');
 			}
 		}else{
-			array_push($errors,'<div class="alert alert-error span5" style="clear:both;margin:40px;"><a class="close" data-dismiss="alert" href="#">x</a><h4 class="alert-heading">Ошибка!</h4>Пользователь с указанными именем и паролем не найден. Проверьте правильность ввода имени пользователя и пароля. Обратите внимание, что прописные и строчные буквы различаются</div>');
+			array_push($errors,'Пользователь с указанными именем и паролем не найден. Проверьте правильность ввода имени пользователя и пароля. Обратите внимание, что прописные и строчные буквы различаются');
 		}
-		$act['captcha']   = $this->_captcha_make();
-		$act['menu']      = $this->load->view('cache/menus/menu', array(), TRUE);
-		$act['errorlist'] = implode($errors, "<br>\n");
+		$act = array(
+			'captcha'   => $this->captcha_make(),
+			'menu'      => $this->load->view('cache/menus/menu', array(), TRUE),
+			'errorlist' => implode($errors, "</li>\n<li>"),
+			'page'		=> 1
+		);
+
 		$this->load->view('login/login_view2', $act);
 	}
 
-	function _captcha_make(){
+	function captcha_make(){
 		$imgname          = "captcha/src.gif";
 		$im               = @ImageCreateFromGIF($imgname);
 		//$im = @ImageCreate (100, 50) or die ("Cannot Initialize new GD image stream");
@@ -98,51 +100,48 @@ class Loginmodel extends CI_Model{
 		//return "zz";
 	}
 
-	function _new_user_data_test(){
+	function new_user_data_test(){
 		$errors  = array();
-		$query   = $this->db->query("SELECT COUNT(*) as qty FROM users_admins WHERE LOWER(users_admins.nick) = ?", array($this->input->post('name')));
+		$query   = $this->db->query("SELECT users_admins.id FROM users_admins WHERE LOWER(users_admins.nick) = ?", array($this->input->post('name',true)));
 		if($query->num_rows()){
-			$row = $query->row();
-			if($row->qty){
-				array_push($errors,'<div class="notice error"><span class="icon gray small" data-icon="X"></span>'.(sizeof($errors)+1).". Пользователь с таким именем уже существует. Выберите другое имя</div>");
+			array_push($errors, "Пользователь с таким именем уже существует. Выберите другое имя");
+		}
+		$query = $this->db->query("SELECT users_admins.id FROM users_admins WHERE LOWER(users_admins.email) = ?", array($this->input->post('email', true)));
+		if ($query->num_rows()) {
+			array_push($errors, "На этот адрес электронной почты уже регистрировалось другое имя пользователя. В целях обеспечения безопасности данных выберите другой почтовый адрес");
+		}
+		if (strlen($this->input->post('name', true)) < 6) {
+			array_push($errors, "Для обеспечения безопасности данных имя пользователя должно быть длиной не менее 6 символов");
+		}
+		if ($this->input->post('pass', true) !== $this->input->post('pass2', true)) {
+			array_push($errors, "Пароли не совпадают");
+		} else {
+			if (strlen($this->input->post('pass')) < 6) {
+				array_push($errors, "Пароль должен быть длиной не менее 6 символов");
 			}
 		}
-		$query = $this->db->query("SELECT COUNT(*) as qty FROM users_admins WHERE LOWER(users_admins.email) = ?", array($this->input->post('email')));
-		if($query->num_rows()){
-			$row = $query->row();
-			if($row->qty){
-				array_push($errors,'<div class="notice error"><span class="icon gray small" data-icon="X"></span>'.(sizeof($errors)+1).". На этот адрес электронной почты уже регистрировалось другое имя пользователя. В целях обеспечения безопасности данных выберите другой почтовый адрес</div>");
-			}
+		if(!preg_match("/([a-z\-_\.0-9])@([a-z\-_\.0-9]+)\.(.+)/", $this->input->post('email', true))){
+			array_push($errors, "Адрес электронной почты не похож на настоящий");
 		}
-		if(strlen($this->input->post('name')) < 6){
-			array_push($errors, '<div class="notice error"><span class="icon gray small" data-icon="X"></span>'.(sizeof($errors)+1).". Для обеспечения безопасности данных имя пользователя должно быть длиной не менее 6 символов</div>");
-		}
-		if($this->input->post('pass') !== $this->input->post('pass2')){
-			array_push($errors, '<div class="notice error"><span class="icon gray small" data-icon="X"></span>'.(sizeof($errors)+1).". Пароли не совпадают</div>");
-		}else{
-			if(strlen($this->input->post('pass'))<6){
-				array_push($errors, '<div class="notice error"><span class="icon gray small" data-icon="X"></span>'.(sizeof($errors)+1).". Пароль должен быть длиной не менее 6 символов</div>");
-			}
-		}
-		if(!preg_match("/([a-z\-_\.0-9])@([a-z\-_\.0-9]+)\.(.+)/", $this->input->post('email'))){
-			array_push($errors, '<div class="notice error"><span class="icon gray small" data-icon="X"></span>'.(sizeof($errors)+1).". Адрес электронной почты не похож на настоящий</div>");
-		}
-		if(md5(strtolower($this->input->post('cpt')))!==$this->session->userdata('cpt')){
-			array_push($errors, '<div class="notice error"><span class="icon gray small" data-icon="X"></span>'.(sizeof($errors)+1).". Код с картинки введён неправильно</div>");
+		if(md5(strtolower($this->input->post('cpt', true))) !== $this->session->userdata('cpt')){
+			array_push($errors, "Код с картинки введён неправильно");
 		}
 		if(!sizeof($errors)){
 			return true;
 		}else{
 			$act = array(
-				'captcha'   => $this->_captcha_make(),
+				'captcha'   => $this->captcha_make(),
 				'reg'       => 1,
-				'errorlist' => '<div class="errorlist_header">Допущены следующие ошибки: </div>'.implode($errors, "")
+				'page'      => 2,
+				'menu'      => $this->load->view('cache/menus/menu', array(), true),
+				'errorlist' => implode($errors, "</li>\n<li>")
 			);
+			//print $act['page'];
 			$this->load->view('login/login_view2', $act);
 		}
 	}
 
-	function _user_add($valcode){
+	function user_add($valcode){
 		$query=$this->db->query("INSERT INTO 
 		`users_admins`
 		(`users_admins`.class_id,
@@ -168,7 +167,7 @@ class Loginmodel extends CI_Model{
 		);
 	}
 
-	function _email_send($valcode){
+	function email_send($valcode){
 			$this->email->from('korzhevdp@gmail.com', 'Администрация '.$this->config->item('site_friendly_url'));
 			$this->email->to('korzhevdp@gmail.com');
 			$this->email->subject('Активация учётной записи на '.$this->config->item('site_friendly_url'));
@@ -178,7 +177,7 @@ class Loginmodel extends CI_Model{
 			echo $this->email->print_debugger();
 	}
 
-	function _test_restore(){
+	function test_restore(){
 		$errors = array();
 		if(strlen($this->input->post('email') < 6 )){
 			$result=$this->db->query("SELECT
@@ -190,53 +189,56 @@ class Loginmodel extends CI_Model{
 			if($result->num_rows()){
 				$row = $result->row(0);
 				if(!$row->valid){
-					array_push($errors,'<div class="notice error"><span class="icon gray small" data-icon="X"></span>'.(sizeof($errors)+1).". Учётная запись ещё не была проверена, проверьте почтовый ящик на предмет письма о регистрации и воспользуйтесь находящейся там ссылкой для завершения регистрации</div>");
+					array_push($errors, "Учётная запись ещё не была проверена, проверьте почтовый ящик на предмет письма о регистрации и воспользуйтесь находящейся там ссылкой для завершения регистрации");
 				}
 			} else {
-				array_push($errors,'<div class="notice error"><span class="icon gray small" data-icon="X"></span>'.(sizeof($errors)+1).". Адрес электронной почты не найден, проверьте правильность написания адреса</div>");
+				array_push($errors, "Адрес электронной почты не найден, проверьте правильность написания адреса");
 			}
 			if(md5(strtolower($this->input->post('cpt')))!==$this->session->userdata('cpt')){
-				array_push($errors,'<div class="notice error"><span class="icon gray small" data-icon="X"></span>'.(sizeof($errors)+1).". Символы с картинки введены неверно</div>");
+				array_push($errors, "Символы с картинки введены неверно");
 			}
 
 			if(sizeof($errors)){
-				$act['errorlist'] = implode($errors,"<br>\n");
-				$act['return']    = '<u><a style="color:blue;" href="/login">Обратно на страницу восстановления пароля</a></u>';
+				$act['errorlist'] = implode($errors, "</li>\n<li>");
 			}else{
-				$valcode="c1d5a14".md5(date("DMYU"));
-				if($this->db->query("UPDATE 
-					`users_admins` 
-					SET 
-					`users_admins`.valid = 0,
-					`users_admins`.validcode = ?
-					WHERE 
-					`users_admins`.email = ?",
-				array(
-					$valcode,
-					$this->input->post('email')
-				))) {
-					$act['valcode'] = $this->config->item('base_url').'login/activate/'.$valcode;
-					if($this->send_mail( $this->input->post('email'), $this->load->view('login/mail_activation', $act , true))) {
-						$act['errorlist'] = "На указанный адрес было выслано письмо с одноразовым кодом активации. Воспользуйтесь ссылкой, чтобы установить новый пароль и продолжить работу с сайтом";
-						$act['return']    = '<u><a style="color:blue;" href="/login">Обратно на страницу восстановления пароля</a></u>';
-					}
-				}else{
-					array_push($errors, (sizeof($errors)+1).". Произошла критическая ошибка, попробуйте позже");
-					$act['errorlist']     = implode($errors,"<br>\n");
-					$act['return']        = '<u><a style="color:blue;" href="/login">Обратно на страницу авторизации</a></u>';
+				$errors = array();
+				if ($this->send_mail( $this->input->post('email'), $this->load->view('login/mail_activation', $act , true))) {
+					array_push($errors, "На указанный адрес было выслано письмо с одноразовым кодом активации. Воспользуйтесь ссылкой, чтобы установить новый пароль и продолжить работу с сайтом");
+				} else {
+					array_push($errors, "Произошла критическая ошибка, попробуйте позже");
 				}
 			}
-			$act['captcha']               = $this->_captcha_make();
+			$act = array(
+				'captcha'   => $this->captcha_make(),
+				'errorlist' => implode($errors,"</li>\n<li>"),
+				'page'      => 3,
+				'menu'      => $this->load->view('cache/menus/menu', array(), true)
+			);
 			$this->load->view('login/login_view2', $act);
 		}
 	}
 
 	public function send_mail($address, $text){
-		mail($this->input->post('email'),
-			"Активация учётной записи на ".$this->config->item('site_friendly_url'),
-			$this->load->view('login/mail_activation', $act , true),
-			"From: ".$this->config->item('site_reg_email')."\r\n"."Reply-To: ".$this->config->item('site_reg_email')."\r\n"."X-Mailer: PHP/" . phpversion()
+		$valcode="c1d5a14".md5(date("DMYU"));
+		$act = array(
+			'valcode' => $this->config->item('base_url').'/login/activate/'.$valcode
 		);
+		if($this->db->query("UPDATE 
+			`users_admins` 
+			SET 
+			`users_admins`.valid = 0,
+			`users_admins`.validcode = ?
+			WHERE 
+			`users_admins`.email = ?", array( $valcode, $this->input->post('email')))) {
+
+			mail($this->input->post('email'),
+				"Активация учётной записи на ".$this->config->item('site_friendly_url'),
+				$this->load->view('login/mail_activation', $act , true),
+				"From: ".$this->config->item('site_reg_email')."\r\n"."Reply-To: ".$this->config->item('site_reg_email')."\r\n"."X-Mailer: PHP/" . phpversion()
+			);
+		} else {
+			return false;
+		};
 		return true;
 	}
 }

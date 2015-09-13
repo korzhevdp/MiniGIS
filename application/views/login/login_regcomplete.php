@@ -1,19 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <HTML>
 <HEAD>
-	<TITLE> Административная консоль сайта </TITLE>
-	<META NAME="Generator" CONTENT="EditPlus">
-	<META NAME="Author" CONTENT="">
-	<META NAME="Keywords" CONTENT="">
-	<META NAME="Description" CONTENT="">
-	<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
-	<SCRIPT type="text/javascript" SRC="/jscript/mechanization.js"></SCRIPT>
-	<SCRIPT type="text/javascript" SRC="/jscript/jquery.js"></SCRIPT>
-	<SCRIPT type="text/javascript" SRC="/jscript/jquery-ui.js"></SCRIPT>
-	<SCRIPT type="text/javascript" SRC="/jscript/jquery.ui.datepicker-ru.js"></SCRIPT>
-	<link rel="stylesheet" type="text/css" href="/css/backstyle.css">
-	<link rel="stylesheet" type="text/css" href="/css/loginstyle.css">
-
+	<TITLE> РђРґРјРёРЅРёСЃС‚СЂР°С‚РёРІРЅР°СЏ РєРѕРЅСЃРѕР»СЊ СЃР°Р№С‚Р° </TITLE>
 </HEAD>
 <BODY>
 <TABLE style="height:70px;width:100%;border-spacing:0px;">
@@ -26,8 +14,8 @@
 	</TR>
 </TABLE>
 
-<DIV class="errorlist_header">Регистрация закончена. Ваша учётная запись активирована и ожидает проверки администратором. По окончании проверки, которая может занять некоторое время ваши предложения начнут отображаться на карте. Пожалуйста, найдите немного времени немного рассказать о себе на закладке <a href="/admin/user">"Пользователь"</a>, к примеру - указать контактный телефон</DIV>
-<u><a href="/admin"><CENTER>Для перехода к странице управления щёлкните эту ссылку</CENTER></a></u>
+<DIV class="errorlist_header">Р РµРіРёСЃС‚СЂР°С†РёСЏ Р·Р°РєРѕРЅС‡РµРЅР°. Р’Р°С€Р° СѓС‡С‘С‚РЅР°СЏ Р·Р°РїРёСЃСЊ Р°РєС‚РёРІРёСЂРѕРІР°РЅР° Рё РѕР¶РёРґР°РµС‚ РїСЂРѕРІРµСЂРєРё Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂРѕРј. РџРѕ РѕРєРѕРЅС‡Р°РЅРёРё РїСЂРѕРІРµСЂРєРё, РєРѕС‚РѕСЂР°СЏ РјРѕР¶РµС‚ Р·Р°РЅСЏС‚СЊ РЅРµРєРѕС‚РѕСЂРѕРµ РІСЂРµРјСЏ РІР°С€Рё РїСЂРµРґР»РѕР¶РµРЅРёСЏ РЅР°С‡РЅСѓС‚ РѕС‚РѕР±СЂР°Р¶Р°С‚СЊСЃСЏ РЅР° РєР°СЂС‚Рµ. РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РЅР°Р№РґРёС‚Рµ РЅРµРјРЅРѕРіРѕ РІСЂРµРјРµРЅРё РЅРµРјРЅРѕРіРѕ СЂР°СЃСЃРєР°Р·Р°С‚СЊ Рѕ СЃРµР±Рµ РЅР° Р·Р°РєР»Р°РґРєРµ <a href="/admin/user">"РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ"</a>, Рє РїСЂРёРјРµСЂСѓ - СѓРєР°Р·Р°С‚СЊ РєРѕРЅС‚Р°РєС‚РЅС‹Р№ С‚РµР»РµС„РѕРЅ</DIV>
+<u><a href="/admin"><CENTER>Р”Р»СЏ РїРµСЂРµС…РѕРґР° Рє СЃС‚СЂР°РЅРёС†Рµ СѓРїСЂР°РІР»РµРЅРёСЏ С‰С‘Р»РєРЅРёС‚Рµ СЌС‚Сѓ СЃСЃС‹Р»РєСѓ</CENTER></a></u>
 <DIV class="errorlist"></DIV>
 <DIV id="announcer"></DIV>
 </BODY>

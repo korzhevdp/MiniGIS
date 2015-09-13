@@ -17,7 +17,7 @@ class Admin extends CI_Controller{
 	}
 
 	public function index() {
-		$output['menu']      = $this->load->view('admin/menu', '', true);
+		$output['menu']      = $this->load->view('admin/menu', array(), true);
 		if($this->session->userdata('user_class') == md5("secret_userclass1")){
 			$supermenu       = $this->usefulmodel->semantics_supermenu();
 			$output['menu'] .= $this->load->view('admin/supermenu', $supermenu, true);
@@ -27,7 +27,7 @@ class Admin extends CI_Controller{
 	}
 
 	public function library($obj_group=1, $loc_type=0) {
-		$this->output->enable_profiler(TRUE);
+		//$this->output->enable_profiler(TRUE);
 		$output['menu']=$this->load->view('admin/menu','',true);
 		if($this->session->userdata('user_class') == md5("secret_userclass1")){
 			$supermenu=$this->usefulmodel->semantics_supermenu();
@@ -151,26 +151,21 @@ class Admin extends CI_Controller{
 		($location_id == 'all') ? $this->adminmodel->_params_sync_all() : $this->adminmodel->_params_sync_traversal($location_id);
 	}
 
-	public function usermanager($id=0,$mode='show'){
+	public function usermanager($id=0, $mode='show'){
 		if($this->session->userdata('user_class') == md5("secret_userclass1")){
-			if($mode == 'show'){
-				$supermenu=$this->usefulmodel->semantics_supermenu();
-				$output['menu']     = $this->load->view('admin/menu','',true);
-				$output['menu']    .= $this->load->view('admin/supermenu',$supermenu,true);
-				$output['content']  = '<h1>Управление пользователями. <small>Рейтинг</small></h1>';
-				$output['content'] .= $this->adminmodel->users_show();
-				$this->load->view('admin/view', $output);
-			}
-			if($mode == 'save'){
-				if($id){
-					$this->adminmodel->users_save($id);
-				}
-				redirect("admin/usermanager");
-			}
+			$supermenu=$this->usefulmodel->semantics_supermenu();
+			$output['menu']     = $this->load->view('admin/menu','',true);
+			$output['menu']    .= $this->load->view('admin/supermenu',$supermenu,true);
+			$output['content'] = $this->adminmodel->users_show();
+			$this->load->view('admin/view', $output);
 		}else{
 			$this->session->sess_destroy();
 			redirect('admin');
 		}
+	}
+
+	public function user_save(){
+		$this->adminmodel->users_save($this->session->userdata("user_id"));
 	}
 	
 	public function swpropsearch($group = 1, $prop = 0){

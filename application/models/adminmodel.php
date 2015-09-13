@@ -731,7 +731,7 @@ class Adminmodel extends CI_Model{
 		`users_admins`.id,
 		`users_admins`.class_id,
 		`users_admins`.nick,
-		`users_admins`.registration_date,
+		DATE_FORMAT(`users_admins`.registration_date, '%d.%m.%Y') AS registration_date,
 		CONCAT_WS(' ',`users_admins`.name_f,`users_admins`.name_i,`users_admins`.name_o) AS `fio`,
 		SUBSTRING(`users_admins`.`info`,1,400) as info,
 		`users_admins`.active,
@@ -740,35 +740,54 @@ class Adminmodel extends CI_Model{
 		FROM
 		`users_admins`
 		ORDER BY `users_admins`.`class_id` ASC, fio ASC");
-		$output=Array();
+		$output = array();
+		$users = array();
 		if($result->num_rows()){
 			foreach($result->result() as $row){
-				$string='<form method=post action="/admin/usermanager/'.$row->id.'/save" class="form-inline well well-small" style="margin-left:0px;">
-				<h3>'.$row->nick.' <small>'.$row->fio.'</small></h3>
-				'.$row->registration_date.'
-				<div><em>'.$row->info.'</em></div>
-					<label for="rating" class="checkbox" style="display:block">Рейтинг <input type="text" name="rating" id="rating" value="'.$row->rating.'"></label>
-					<label for="active" class="checkbox" style="display:block"><input type="checkbox" id="active" value=1 name="active" '.(($row->active) ? "checked" : '' ).'> Разрешён</label>
-					<label for="valid" class="checkbox" style="display:block"><input type="checkbox" name="valid" value=1 id="valid" '.(($row->valid) ? "checked" : '' ).'> Проверен</label>
-					<input type="submit" class="btn btn-primary btn-mini" value="Сохранить">
-				</form>';
-				array_push($output,$string);
+				$string = '<tr>
+					<td><b>'.$row->nick.'</b><br>
+						<small>'.$row->fio.'</small>
+					</td>
+					<td>'.$row->registration_date.'</td>
+					<td><small class="muted">'.$row->info.'</small></td>
+					<td><input type="text" class="short" id="rating" value="'.$row->rating.'"></td>
+					<td><input type="checkbox" id="active"'.(($row->active) ? ' checked="checked"' : '').'></td>
+					<td><input type="checkbox" id="valid"'.(($row->valid) ? ' checked="checked"' : '').'</td>
+					<td>
+						<select class="short" id="lang">
+						<option value="xx">Выберите язык</option>
+						<option value="ru">Русский</option>
+						<option value="en">Английский</option>
+						<option value="de">Немецкий</option>
+						<option value="es">Испанский</option>
+						</select>
+					</td>
+					<td></td>
+				</tr>';
+				array_push($users, $string);
 			}
 		}
-		return implode($output,"\n");
+		$output = array(
+			'table' => implode($users, "\n")
+		);
+		return $this->load->view("admin/usermanager", $output, true);
 	}
 
 	function users_save($id){
 		$result=$this->db->query("UPDATE users_admins 
 		SET
 		users_admins.active = ?,
-		users_admins.valid = ?,
-		users_admins.rating = ?
+		users_admins.valid  = ?,
+		users_admins.rating = ?,
+		users_admins.lang   = ?,
+		users_admins.access = ?
 		WHERE
-		users_admins.id = ?", array(
-			$this->input->post('active',true),
-			$this->input->post('valid',true),
-			$this->input->post('rating',true),
+		users_admins.uid = ?", array(
+			$this->input->post('active', true),
+			$this->input->post('valid' , true),
+			$this->input->post('rating', true),
+			$this->input->post('lang'  , true),
+			$this->input->post('access', true),
 			$id
 		));
 	}
@@ -778,7 +797,7 @@ class Adminmodel extends CI_Model{
 
 #
 ######################### end of comments section ############################
-######################### start of map content section ############################
+###################### start of map content section ##########################
 	function mc_show($mapset = 0){
 		//$this->output->enable_profiler(TRUE);
 		$mapcontent   = array(

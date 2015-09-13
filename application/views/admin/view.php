@@ -17,7 +17,7 @@
 			<div class="navbar-inner">
 				<div class="container">
 					<a class="brand" href="/"><img src="<?=$this->config->item('api');?>/images/minigis24.png" alt="">Home</a>
-					<?=$this->load->view('cache/menus/menu',array(),TRUE).$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu();?>
+					<?=$this->load->view('cache/menus/menu', array(), true).$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu();?>
 				</div>
 			</div>
 		</td>

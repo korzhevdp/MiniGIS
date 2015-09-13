@@ -36,18 +36,6 @@
 </head>
 
 <body>
-	<div class="navbar">
-		<div class="navbar-inner">
-			<a class="brand" href="http://www.korzhevdp.com">KORZHEVDP.COM</a>
-			<ul class="nav">
-				<li><a href="http://www.korzhevdp.com">Дом</a></li>
-				<li class="active"><a href="http://maps.korzhevdp.com">Проекты</a></li>
-				<li><a href="http://works.korzhevdp.com">Работы</a></li>
-				<li><a href="http://flood.korzhevdp.com">Проза</a></li>
-				<li><a href="http://rock.korzhevdp.com">Музыка</a></li>
-			</ul>
-		</div>
-	</div>
 	<!-- menu -->
 	<div class="navbar navbar-inverse">
 		<div class="navbar-inner">
