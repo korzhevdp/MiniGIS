@@ -4,47 +4,6 @@ class Ajax extends CI_Controller{
 		parent::__construct();
 	}
 
-//include("settings.inc");
-
-	public function select_all_locations($type_strict=0, $layer=1){
-		if($type_strict){
-			$locations=Array();
-			$result=$this->db->query('SELECT 
-			`locations`.id 
-			FROM 
-			`locations` 
-			WHERE
-			`locations`.`type` = ?',array($type_strict));
-			if($result->num_rows()){
-				foreach($result->result() as $row){
-					array_push($locations,$row->id);
-				}
-				return $this->_build_result($locations,$type_strict,$layer,false);
-			}else{
-				return $this->_rno();
-			}
-		}else{
-			return $this->_build_result(array(), 0, $layer, 0);
-		}
-	}
-
-	public function _rno($val=1){
-		$result=$this->db->query("SELECT 
-		CONCAT('zy.ac.',`objects_groups`.array,'.length = 0; clearCounters();') as `str`
-		FROM
-		`properties_list`
-		INNER JOIN `objects_groups` ON (`properties_list`.object_group = `objects_groups`.id)
-		WHERE
-		`properties_list`.`id` = ?", array($val));
-		if($result->num_rows()){
-			$row=$result->row();
-			$out = $row->str;
-		}else{
-			$out = "return false";
-		}
-		print $out;
-	}
-
 	public function select_filtered_group($input, $mapset, $current){
 		$string       = array();
 		$vals         = array();
@@ -68,7 +27,6 @@ class Ajax extends CI_Controller{
 		foreach($input as $key => $val){
 			$sorted[$key] = $val;
 		}
-		//print_r($values);
 
 		# Выборка алгоритмов поиска и пересортировка параметров в массивы алгоритмов
 		$result = $this->db->query("SELECT 
@@ -117,7 +75,7 @@ class Ajax extends CI_Controller{
 				array_push($list, $row->location_id);
 			}
 		}else{
-			return $this->_rno();
+			return "console.log('No Data')";
 		}
 		///echo "U checkboxes relevant: ".implode($list,",")."\n";
 		//print_r($full);
@@ -164,7 +122,7 @@ class Ajax extends CI_Controller{
 					}
 				}
 			}else{//если не найдено хотя бы что-то - дальнейший поиск не имеет смысла
-				return $this->_rno($rno_val);
+				return "console.log('No Data')";
 			}
 			//echo "LE relevant: ".implode($le_diff,",")."\n";
 		}
@@ -205,8 +163,8 @@ class Ajax extends CI_Controller{
 						array_push($me_diff, $loc);
 					}
 				}
-			}else{//если не найдено хотя бы что-то - дальнейший поиск не имеет смысла
-				return $this->_rno($rno_val);
+			} else {//если не найдено хотя бы что-то - дальнейший поиск не имеет смысла
+				return "console.log('No Data')";
 			}
 			//echo "ME relevant: ".implode($me_diff,",")."\n";
 		}
@@ -236,7 +194,7 @@ class Ajax extends CI_Controller{
 			$string = array_keys($full['d']);
 			$count  = sizeof($string);
 			$result = $this->db->query("SELECT 
-			IF(locations.parent = 0,properties_assigned.location_id,locations.parent) as lid
+			IF(locations.parent = 0, properties_assigned.location_id, locations.parent) as lid
 			FROM
 			properties_assigned
 			INNER JOIN `locations` ON (properties_assigned.location_id = `locations`.id)
@@ -245,7 +203,7 @@ class Ajax extends CI_Controller{
 			GROUP BY
 			properties_assigned.location_id
 			HAVING
-			(COUNT(*) = ?)",array($count));
+			(COUNT(*) = ?)", array($count));
 			if($result->num_rows()){
 				foreach($result->result() as $row ){
 					array_push($d_diff,$row->lid);
@@ -258,7 +216,7 @@ class Ajax extends CI_Controller{
 		//Цена - это главное безумие сезона :)
 		if(isset($full['pr']) && sizeof($full['pr'])){ # Цена!
 			$pr_diff = array();
-			$result=$this->db->query("SELECT
+			$result = $this->db->query("SELECT
 			IF(locations.parent, locations.parent, locations.id) AS location_id
 			FROM
 			timers
@@ -270,134 +228,23 @@ class Ajax extends CI_Controller{
 			//echo mysql_num_rows($result)."price_order\n";
 			if($result->num_rows()){
 				foreach($result->result() as $row ) {
-					array_push($pr_diff,$row->location_id);
+					array_push($pr_diff, $row->location_id);
 				}
 			}
 		}
-
-		//echo sizeof($p_difference)."-2\n";
 		$list = (isset($d_diff)  && sizeof($d_diff))  ? array_intersect($list, $d_diff)  : $list;
 		$list = (isset($ud_diff) && sizeof($ud_diff)) ? array_intersect($list, $ud_diff) : $list;
 		$list = (isset($le_diff) && sizeof($le_diff)) ? array_intersect($list, $le_diff) : $list;
 		$list = (isset($me_diff) && sizeof($me_diff)) ? array_intersect($list, $me_diff) : $list;
 		$list = (isset($pr_diff) && sizeof($pr_diff)) ? array_intersect($list, $pr_diff) : $list;
 		($current) ? array_push($list, $current) : "";
-		//echo "eval(alert('selects & texts: ".implode($difference,",")."));";
-		//echo "result: ".implode($list,",");
-		if(!sizeof($list)){
-			return $this->_rno($rno_val);
-		}else{
+		if(sizeof($list)){
 			print implode($list, ",");
-			//return $this->_build_result($list,$mapset,1);
-			//print implode($list,",");
-		}
-	}
-
-	public function _js_af_get($layer){
-		$result=$this->db->query("SELECT 
-		`objects_groups`.array,
-		`objects_groups`.`function`
-		FROM
-		`objects_groups`
-		WHERE `objects_groups`.id = ?",array($layer));
-		if($result->num_rows()){
-			$row = $result->row_array();
 		}else{
-			$row['array']="unresolved";
-			$row['function']="unresolved";
-		}
-		return $row;
-	}
-
-	function _build_result($list, $mapset=1, $exec){
-		##задаём обработчики
-		//$af=$this->_js_af_get($mapset);
-		#################################################
-		//$base_url = "http://localhost/codeigniter/";
-		##########################################################################
-		###### выборка результата
-		##########################################################################
-		// из чего мы вообще выбираем
-		$result=$this->db->query("SELECT 
-		IF(LENGTH(objects_groups.array) > 0, objects_groups.array, objects_groups1.array) AS array,
-		IF(LENGTH(objects_groups1.`function`) > 0,objects_groups1.`function`,objects_groups.`function`) AS `function`,
-		map_content.a_layers,
-		map_content.a_types
-		FROM
-		map_content
-		LEFT OUTER JOIN objects_groups ON (map_content.a_layers = objects_groups.id)
-		LEFT OUTER JOIN locations_types ON (map_content.a_types = locations_types.id)
-		LEFT OUTER JOIN objects_groups objects_groups1 ON (locations_types.object_group = objects_groups1.id)
-		WHERE
-		(map_content.id = ?)", array($mapset));
-		if($result->num_rows()){
-			$af = $result->row();
-		}
-
-		##########################################################################
-		###### выборка имён изображений (ВСЕХ первых по списку)
-		##########################################################################
-		$result=$this->db->query("SELECT
-		images.filename,
-		images.location_id as id
-		FROM
-		images
-		WHERE
-		images.active = 1 AND
-		`images`.`order` <= 1");
-		$imgs=Array();
-		if($result->num_rows()){
-			foreach($result->result() as $row){
-				$imgs[$row->id] = (!isset($imgs[$row->id])) ? $row->filename : $row->filename;
-			}
-		}
-		$listing = (sizeof($list)) ? "locations.id IN (".implode($list, ",").") AND" : $listing = "";
-		$result=$this->db->query("SELECT
-		IF(LENGTH(locations.address), locations.address, ?) AS address,
-		IF(LENGTH(`locations`.`style_override`) > 1, `locations`.`style_override`, IF(LENGTH(locations_types.attributes), locations_types.attributes, 'default#houseIcon')) AS attr,
-		CONCAT_WS(' ',IF(locations_types.id IN(10, 12, 13, 15), 'объект', locations_types.name),locations.location_name) AS location_name,
-		TRIM(locations.coord_y) AS coord_y,
-		locations_types.pr_type,
-		locations.id,
-		CONCAT('/page/gis/', locations.id) AS link,
-		IF(LENGTH(locations.contact_info), locations.contact_info, 'контактная информация отсутствует') AS contact_info
-		FROM
-		locations_types
-		INNER JOIN locations ON (locations_types.id = locations.`type`)
-		INNER JOIN `users_admins` ON (locations.owner = `users_admins`.uid)
-		WHERE
-		".$listing."
-		(locations_types.object_group = ? OR locations_types.id = ?) AND
-		locations.active = 1 AND
-		`users_admins`.`active` = 1 AND
-		LENGTH(locations.coord_y) > 0
-		ORDER BY locations.parent ASC",array($this->config->item('maps_def_loc'),$af->a_layers,$af->a_types));
-		header("Content-type: text/html; charset=windows-1251");
-		//print $this->db->last_query();
-		if($result->num_rows()){
-			$this->_objects_group($result,$imgs,$af->array,1);
-		}else{
-			return "var ".$af->array." = [];";
+			return "console.log('No Data')";
 		}
 	}
 
-	function _objects_group($src, $images, $array_name, $exec=0){
-		$out = array();
-		$ats = array();
-		$sess_array=Array();
-		foreach($src->result() as $row){
-			(!in_array("zy.ac.".$array_name." = [];",$ats)) ? array_push($ats,"zy.ac.".$array_name." = [];") : "";
-			$images[$row->id] = (!isset($images[$row->id]) || !strlen($images[$row->id])) ? 'nophoto.gif' : $images[$row->id];
-			$string="zy.ac.".$array_name."[".$row->id."] = { img: '".$images[$row->id]."', description: '".$row->address."', name: '".$row->location_name."', attr: '".$row->attr."', pr: ".$row->pr_type.", coord: '".$row->coord_y."', contact: '".$row->contact_info."', link: '".$row->link."' };";
-			array_push($out, $string);
-			array_push($sess_array,$row->id);
-		}
-		($exec) ? array_push($out, "display_search_results(zy.ac.".$array_name.");") : "";
-		array_unshift($out, "zy.ac.".$array_name." = []");
-		$this->session->set_userdata('last_search', implode($sess_array, ","));
-		header("Content-type: text/html; charset=windows-1251");
-		print implode($out, ";");
-	}
 
 ###################################################### NEW CONCEPT ################
 	public function send_warning($text){
@@ -449,7 +296,7 @@ class Ajax extends CI_Controller{
 		locations_types.pr_type,
 		CONCAT('/page/gis/', locations.id) AS link,
 		objects_groups.array,
-		IF(LENGTH(`locations`.`style_override`) > 3, `locations`.`style_override`, IF(LENGTH(locations_types.attributes), locations_types.attributes, 'default#houseIcon')) AS attr
+		IF(LENGTH(`locations`.`style_override`) > 1, `locations`.`style_override`, IF(LENGTH(locations_types.attributes), locations_types.attributes, 'twirl#houseIcon')) AS attr
 		FROM
 		locations_types
 		INNER JOIN locations ON (locations_types.id = locations.`type`)
@@ -479,7 +326,7 @@ class Ajax extends CI_Controller{
 		$result=$this->db->query("SELECT 
 		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
 		locations.id,
-		CONCAT_WS(' ',IF(locations_types.id IN(10, 12, 13, 15), 'объект', locations_types.name),locations.location_name) AS location_name,
+		CONCAT_WS(' ',IF(locations_types.pl_num = 0, 'объект', locations_types.name),locations.location_name) AS location_name,
 		IF(LENGTH(locations.contact_info), locations.contact_info, 'контактная информация отсутствует') AS contact_info,
 		IF(LENGTH(locations.address), locations.address, ?) AS address,
 		TRIM(locations.coord_y) AS coord_y,
@@ -517,7 +364,7 @@ class Ajax extends CI_Controller{
 		$result = $this->db->query("SELECT
 		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
 		locations.id,
-		CONCAT_WS(' ',IF(locations_types.id IN(10, 12, 13, 15), 'объект', locations_types.name),locations.location_name) AS location_name,
+		CONCAT_WS(' ',IF(locations_types.pl_num = 0, 'объект', locations_types.name),locations.location_name) AS location_name,
 		IF(LENGTH(locations.contact_info), locations.contact_info, 'контактная информация отсутствует') AS contact_info,
 		IF(LENGTH(locations.address), locations.address, ?) AS address,
 		locations.coord_y,
@@ -548,7 +395,7 @@ class Ajax extends CI_Controller{
 		$result=$this->db->query("SELECT 
 		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
 		locations.id,
-		CONCAT_WS(' ',IF(locations_types.id IN(10, 12, 13, 15), 'объект', locations_types.name),locations.location_name) AS location_name,
+		CONCAT_WS(' ',IF(locations_types.pl_num = 0, 'объект', locations_types.name),locations.location_name) AS location_name,
 		IF(LENGTH(locations.contact_info), locations.contact_info, 'контактная информация отсутствует') AS contact_info,
 		IF(LENGTH(locations.address), locations.address, ?) AS address,
 		locations.coord_y,
