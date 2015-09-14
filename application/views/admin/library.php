@@ -1,9 +1,13 @@
-<? if($loc_type) { ?>
-<h3><a href="/admin/library/<?=$obj_group;?>"><?=$name;?></a> / <a href="/admin/library/<?=$obj_group;?>/<?=$loc_type;?>"><?=$type_name;?></a></h3><hr>
+<h5><a href="/admin/library">Группы объектов</a>
+<? if ($obj_group) {?>
+	<? if($loc_type) { ?>
+		/ <a href="/admin/library/<?=$obj_group;?>"><?=$name;?></a> / <a href="/admin/library/<?=$obj_group;?>/<?=$loc_type;?>"><?=$type_name;?></a>
+	<? }else{ ?>
+		/ <a href="/admin/library/<?=$obj_group;?>"><?=$name;?></a>
+	<? }
+} ?>
+</h5><hr>
 
-<? }else{ ?>
-<h2><a href="/admin/library/<?=$obj_group;?>"><?=$name;?></a></h2><hr>
-<? } ?>
 <div id="library">
 	<ul class="thumbnails">
 		<?=$library;?>

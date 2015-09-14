@@ -27,7 +27,7 @@ class Loginmodel extends CI_Model{
 		users_admins.class_id,
 		users_admins.valid,
 		users_admins.active,
-		users_admins.lang,
+		IF(LENGTH(users_admins.lang), users_admins.lang, 'en') AS lang,
 		users_admins.access,
 		users_admins.map_center,
 		users_admins.map_zoom,
@@ -57,7 +57,7 @@ class Loginmodel extends CI_Model{
 						'user_class'	=> md5("secret_userclass".$row->class_id),
 						'init_loc'		=> $row->init_loc,
 						'lang'			=> $row->lang,
-						'access'		=> $row->access,
+						'access'		=> (($row->access) ? $row->access : "1"),
 						'map_center'	=> (strlen($row->map_center) > 3 ? $row->map_center : $this->config->item('map_center')),
 						'map_zoom'		=> (strlen($row->map_zoom)       ? $row->map_zoom   : $this->config->item('map_zoom')),
 						'map_type'		=> (strlen($row->map_type)       ? $row->map_type   : $this->config->item('map_type'))

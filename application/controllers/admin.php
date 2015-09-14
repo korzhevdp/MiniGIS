@@ -26,7 +26,7 @@ class Admin extends CI_Controller{
 		$this->load->view('admin/view', $output);
 	}
 
-	public function library($obj_group=1, $loc_type=0) {
+	public function library($obj_group=0, $loc_type=0) {
 		//$this->output->enable_profiler(TRUE);
 		$output['menu']=$this->load->view('admin/menu','',true);
 		if($this->session->userdata('user_class') == md5("secret_userclass1")){
@@ -152,22 +152,35 @@ class Admin extends CI_Controller{
 	}
 
 	public function usermanager($id=0, $mode='show'){
-		if($this->session->userdata('user_class') == md5("secret_userclass1")){
-			$supermenu=$this->usefulmodel->semantics_supermenu();
-			$output['menu']     = $this->load->view('admin/menu','',true);
-			$output['menu']    .= $this->load->view('admin/supermenu',$supermenu,true);
-			$output['content'] = $this->adminmodel->users_show();
-			$this->load->view('admin/view', $output);
-		}else{
+		if($this->session->userdata('user_class') !== md5("secret_userclass1")){
 			$this->session->sess_destroy();
 			redirect('admin');
 		}
+		$output = array(
+			'menu'     => $this->load->view('admin/menu', array(), true),
+			'content'  => $this->adminmodel->users_show()
+		);
+		$output['menu'] .= $this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true);
+		$this->load->view('admin/view', $output);
 	}
 
 	public function user_save(){
 		$this->adminmodel->users_save($this->session->userdata("user_id"));
 	}
-	
+	####################################################
+	public function groupmanager($id=0){
+		if($this->session->userdata('user_class') !== md5("secret_userclass1")){
+			$this->session->sess_destroy();
+			redirect('admin');
+		}
+		$output = array(
+			'menu'     => $this->load->view('admin/menu', array(), true),
+			'content'  => $this->adminmodel->groups_show($id)
+		);
+		$output['menu'] .= $this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true);
+		$this->load->view('admin/view', $output);
+	}
+	####################################################
 	public function swpropsearch($group = 1, $prop = 0){
 		$result = $this->db->query("UPDATE properties_list 
 		SET properties_list.searchable = IF(properties_list.searchable = 1, 0, 1) 

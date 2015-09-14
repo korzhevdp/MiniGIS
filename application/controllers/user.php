@@ -11,22 +11,24 @@ class User extends CI_Controller{
 			$this->load->model('cachemodel');
 			$this->load->model('usefulmodel');
 			$this->load->model('usermodel');
+			$this->load->model('adminmodel');
 			$this->load->helper('form');
 			$this->load->library('upload');
 		}
 	}
 
-	function index($obj_group=1, $loc_type=0){
-		$this->library($obj_group=1,$loc_type=0);
+	function index($obj_group = 0, $loc_type = 0){
+		$this->library($obj_group, $loc_type);
 	}
 
-	function library($obj_group=1, $loc_type=0){
-		$output['menu']=$this->load->view('admin/menu','',true);
+	function library($obj_group = 0, $loc_type = 0){
+		$output = array();
+		$output['menu'] = $this->load->view('admin/menu', array(), true);
 		if($this->session->userdata('user_class') == md5("secret_userclass1")){
-			$supermenu=$this->usefulmodel->semantics_supermenu();
-			$output['menu'].=$this->load->view('admin/supermenu',$supermenu,true);
+			$supermenu = $this->usefulmodel->semantics_supermenu();
+			$output['menu'] .= $this->load->view('admin/supermenu',$supermenu,true);
 		}
-		$output['content']=$this->usermodel->get_index($obj_group,$loc_type);
+		$output['content'] = $this->adminmodel->get_full_index($obj_group, $loc_type);
 		$this->load->view('admin/view',$output);
 	}
 
@@ -202,35 +204,46 @@ class User extends CI_Controller{
 	}
 
 ##########################################################################################
-	function photomanager($location_id=0,$image_id=0){
-		$output['menu']=$this->load->view('admin/menu','',true);
-		if($this->session->userdata('user_class') == md5("secret_userclass1")){
-			$supermenu=$this->usefulmodel->semantics_supermenu();
-			$output['menu'].=$this->load->view('admin/supermenu',$supermenu,true);
-		} // 37 = длина md5 хэша + длина "_.jpg";
-		if($this->input->post('frm_img_order') && strlen($this->input->post('frm_img_order'))>37 && $this->usefulmodel->_check_owner($location_id)){
-			$this->usermodel->_photoeditor_order_save();
+	function photomanager($location_id=0, $image_id=0){
+		// 37 = длина md5 хэша + длина "_.jpg";
+		if( $this->input->post('frm_img_order') 
+			&& strlen($this->input->post('frm_img_order')) > 37
+			&& $this->usefulmodel->_check_owner($location_id)
+		){
+			$this->usermodel->photoeditor_order_save();
 		}
-		$photoeditor=Array();
-		$photoeditor['location_id']=$location_id;
-		$photoeditor['image_id']=$image_id.".jpg";
-		$options=$this->usermodel->_photoeditor_locations($location_id);
-		$photoeditor['locations']=form_dropdown('location', $options, $location_id, 'id="location" class="span9" size=6 onchange="show_l_table(this.value);"');
-		$photoeditor['list']=$this->usermodel->_photoeditor_list($location_id);
-		$output['content']=$this->load->view('admin/photoeditor',$photoeditor,true);
+
+		$options = array();
+		foreach($this->usermodel->photoeditor_locations($location_id) as $key=>$val){
+			array_push($options, '<option value="'.$key.'">'.$val.'</option>');
+		}
+		//form_dropdown('location', $options, $location_id, 'id="location" class="span9" size=6 onchange="show_l_table(this.value);"')
+		$photoeditor = array(
+			'location_id' => $location_id,
+			'image_id'    => $image_id.".jpg",
+			'locations'   => implode($options, "\n"),
+			'list'        => $this->usermodel->photoeditor_list($location_id)
+		);
+		$output = array (
+			'menu'    => $this->load->view('admin/menu', array(), true),
+			'content' => $this->load->view('admin/photoeditor', $photoeditor, true)
+		);
+		if ($this->session->userdata('user_class') == md5("secret_userclass1")) {
+			$output['menu'].=$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true);
+		}
 		header("Pragma: no-cache");
-		$this->load->view('admin/view',$output);
+		$this->load->view('admin/view', $output);
 	}
 
-	function commentmanager(){
-		$owner=$this->session->userdata("user_id");
-		$output['content']=$this->usermodel->_comments_show($owner);
-		$output['menu']=$this->load->view('admin/menu','',true);
+	function commentmanager() {
+		$output = array(
+			'content' => $this->usermodel->_comments_show($this->session->userdata("user_id")),
+			'menu'    => $this->load->view('admin/menu', array(), true)
+		);
 		if($this->session->userdata('user_class') == md5("secret_userclass1")){
-			$supermenu=$this->usefulmodel->semantics_supermenu();
-			$output['menu'].=$this->load->view('admin/supermenu',$supermenu,true);
+			$output['menu'] .= $this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true);
 		}
-		$this->load->view('admin/view',$output);
+		$this->load->view('admin/view', $output);
 	}
 
 }

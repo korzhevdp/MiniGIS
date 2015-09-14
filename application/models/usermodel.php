@@ -4,7 +4,7 @@ class Usermodel extends CI_Model{
 		parent::__construct();
 	}
 
-	function get_index($obj_group = 1, $loc_type = 0){
+	function get_index($obj_group = 0, $loc_type = 0){
 		$output = array('<ul class="thumbnails">');
 		if(!$loc_type){
 			$result=$this->db->query("SELECT 
@@ -16,7 +16,7 @@ class Usermodel extends CI_Model{
 			`objects_groups`.`id` = ?", array($obj_group));
 			if($result->num_rows()){
 				$row = $result->row();
-				array_unshift($output,'<h2><a href="/usermodules/library/'.$obj_group.'">'.$row->name.'</a></h2><hr>');
+				array_unshift($output,'<h2><a href="/user/library/'.$obj_group.'">'.$row->name.'</a></h2><hr>');
 			}
 			$result = $this->db->query("SELECT 
 			locations_types.id,
@@ -33,7 +33,7 @@ class Usermodel extends CI_Model{
 			if($result->num_rows()){
 				foreach ($result->result_array() as $row){
 					$row['img']  = '<img src="'.$this->config->item("api").'/images/folder.png" alt="">';
-					$row['link'] = '/usermodules/library/'.$obj_group.'/'.$row['id'];
+					$row['link'] = '/user/library/'.$obj_group.'/'.$row['id'];
 					array_push($output, $this->load->view("admin/libraryitem", $row, true));
 				}
 			}
@@ -50,7 +50,7 @@ class Usermodel extends CI_Model{
 			WHERE `locations_types`.`id` = ?", array($loc_type));
 			if($result->num_rows()){
 				$row = $result->row();
-				array_unshift($output,'<h2><a href="/usermodules/library/'.$row->oid.'">'.$row->ob_name.'</a> / <a href="/usermodules/library/'.$row->oid.'/'.$row->tid.'">'.$row->tp_name.'</a></h2><hr>');
+				array_unshift($output,'<h2><a href="/user/library/'.$row->oid.'">'.$row->ob_name.'</a> / <a href="/user/library/'.$row->oid.'/'.$row->tid.'">'.$row->tp_name.'</a></h2><hr>');
 			}
 			$result=$this->db->query("SELECT 
 			IF(LENGTH(`locations`.location_name) > 40, CONCAT(LEFT(`locations`.location_name, 37), '...'), `locations`.location_name) AS name,
@@ -138,6 +138,10 @@ class Usermodel extends CI_Model{
 			$this->input->post('lang',        TRUE),
 			$this->session->userdata('user_id')
 		));
+		$this->session->set_userdata('lang'      , $this->input->post('lang', TRUE));
+		$this->session->set_userdata('map_zoom'  , $this->input->post('map_zoom', TRUE));
+		$this->session->set_userdata('map_type'  , $this->input->post('map_type', TRUE));
+		$this->session->set_userdata('map_center', $this->input->post('map_center', TRUE));
 	}
 
 	function _photoeditor_order_save(){

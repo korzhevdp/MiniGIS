@@ -4,7 +4,7 @@ class Adminmodel extends CI_Model{
 		parent::__construct();
 	}
 
-	function get_full_index($obj_group = 1, $loc_type = 0){
+	function get_full_index($obj_group = 0, $loc_type = 0){
 		$output = array();
 		$out    = array(
 			'loc_type'	=> $loc_type,
@@ -32,51 +32,74 @@ class Adminmodel extends CI_Model{
 			$row = $result->row();
 			$out['name'] = $row->name;
 		}
-
-		if(!$loc_type){
-			$result=$this->db->query("SELECT 
-			locations_types.id,
-			locations_types.name AS `title`,
-			IF(LENGTH(locations_types.name) > 49, CONCAT(LEFT(locations_types.name,46),'...'),locations_types.name) AS name
+		
+		if(!$obj_group) {
+			$result = $this->db->query('SELECT 
+			`objects_groups`.name,
+			`objects_groups`.id
 			FROM
-			locations_types
-			WHERE
-			`locations_types`.`pl_num` AND
-			`locations_types`.`object_group` = ?
-			ORDER BY title", array($obj_group));
-
+			`objects_groups`
+			WHERE `objects_groups`.`active`
+			AND `objects_groups`.`id` IN ('.$this->session->userdata('access').')
+			ORDER BY `objects_groups`.name ASC');
 			if($result->num_rows()){
 				foreach ($result->result_array() as $row){
+					$row['title']     = "";
 					$row['obj_group'] = $obj_group;
-					$row['img']  = '<img src="'.$this->config->item("api").'/images/folder.png" alt="">';
-					$row['link'] = '/admin/library/'.$obj_group.'/'.$row['id'];
+					$row['img']       = '<img src="'.$this->config->item("api").'/images/folder.png" alt="">';
+					$row['link']      = '/admin/library/'.$row['id'];
 					array_push($output, $this->load->view("admin/libraryitem", $row, true));
 				}
 			}
-		}else{
-			$result=$this->db->query("SELECT 
-			IF(LENGTH(`locations`.location_name) > 49, CONCAT(LEFT(`locations`.location_name,46),'...'),`locations`.location_name) AS name,
-			`locations`.location_name AS title,
-			`locations`.id
-			FROM
-			`locations`
-			WHERE
-			`locations`.`type` = ?
-			ORDER BY title", array($loc_type));
-			if($result->num_rows()){
-				foreach ($result->result_array() as $row){
-					$row['img']  = '<img src="'.$this->config->item("api").'/images/location_pin.png" alt="">';
-					$row['link'] = '/editor/edit/'.$row['id'];
-					array_push($output, $this->load->view("admin/libraryitem", $row, true));
+		} else {
+			if(!$loc_type){
+				$result=$this->db->query("SELECT 
+				locations_types.id,
+				locations_types.name AS `title`,
+				IF(LENGTH(locations_types.name) > 49, CONCAT(LEFT(locations_types.name, 46) ,'...'), locations_types.name) AS name
+				FROM
+				locations_types
+				WHERE
+				`locations_types`.`pl_num` AND
+				`locations_types`.`object_group` = ?
+				ORDER BY title", array($obj_group));
+				if($result->num_rows()){
+					foreach ($result->result_array() as $row){
+						$row['obj_group'] = $obj_group;
+						$row['img']  = '<img src="'.$this->config->item("api").'/images/folder.png" alt="">';
+						$row['link'] = '/admin/library/'.$obj_group.'/'.$row['id'];
+						array_push($output, $this->load->view("admin/libraryitem", $row, true));
+					}
 				}
+			} else {
+				$result = $this->db->query("SELECT 
+				IF(LENGTH(`locations`.location_name) > 49, CONCAT(LEFT(`locations`.location_name, 46), '...'),`locations`.location_name) AS name,
+				`locations`.location_name AS title,
+				`locations`.id
+				FROM
+				`locations`
+				WHERE
+				`locations`.`type`    = ?
+				AND `locations`.owner = ?
+				ORDER BY title", array(
+					$loc_type,
+					$this->session->userdata("user_id"))
+				);
+				if($result->num_rows()){
+					foreach ($result->result_array() as $row){
+						$row['img']  = '<img src="'.$this->config->item("api").'/images/location_pin.png" alt="">';
+						$row['link'] = '/editor/edit/'.$row['id'];
+						array_push($output, $this->load->view("admin/libraryitem", $row, true));
+					}
+				}
+				$row = array(
+					'img'   => '<img src="'.$this->config->item("api").'/images/location_pin.png" alt="">',
+					'name'  => 'Добавить объект',
+					'link'  => '/editor/add/'.$loc_type,
+					'title' => "Добавить новый объект этого класса"
+				);
+				array_push($output, $this->load->view("admin/libraryitem", $row, true));
 			}
-			$row = array(
-				'img'   => '<img src="'.$this->config->item("api").'/images/location_pin.png" alt="">',
-				'name'  => 'Добавить объект',
-				'link'  => '/editor/add/'.$loc_type,
-				'title' => "Добавить новый объект этого класса"
-			);
-			array_push($output, $this->load->view("admin/libraryitem", $row, true));
 		}
 		$out['library'] = implode($output, "\n");
 		return $this->load->view("admin/library", $out, true);
@@ -744,25 +767,14 @@ class Adminmodel extends CI_Model{
 		$users = array();
 		if($result->num_rows()){
 			foreach($result->result() as $row){
+				$fio = (strlen($row->fio)) ? $row->fio : '<em class="muted">ФИО не указано</em>';
 				$string = '<tr>
-					<td><b>'.$row->nick.'</b><br>
-						<small>'.$row->fio.'</small>
-					</td>
-					<td>'.$row->registration_date.'</td>
-					<td><small class="muted">'.$row->info.'</small></td>
+					<td>'.$row->nick.'</td>
+					<td><small>'.$fio.'<br>'.$row->info.'</small></td>
 					<td><input type="text" class="short" id="rating" value="'.$row->rating.'"></td>
 					<td><input type="checkbox" id="active"'.(($row->active) ? ' checked="checked"' : '').'></td>
 					<td><input type="checkbox" id="valid"'.(($row->valid) ? ' checked="checked"' : '').'</td>
-					<td>
-						<select class="short" id="lang">
-						<option value="xx">Выберите язык</option>
-						<option value="ru">Русский</option>
-						<option value="en">Английский</option>
-						<option value="de">Немецкий</option>
-						<option value="es">Испанский</option>
-						</select>
-					</td>
-					<td></td>
+					<td><span class="btn btn-primary btn-mini">Сохранить</span></td>
 				</tr>';
 				array_push($users, $string);
 			}
@@ -794,7 +806,78 @@ class Adminmodel extends CI_Model{
 #
 ######################### END usermanager section ############################
 #
+#
+######################### BEGIN usermanager section ############################
+#
+	function groups_show($group = 0){
+		$result=$this->db->query("SELECT 
+		`objects_groups`.id,
+		`objects_groups`.name,
+		`objects_groups`.active,
+		`objects_groups`.icon,
+		`objects_groups`.refcoord,
+		`objects_groups`.refzoom
+		FROM
+		`objects_groups`");
+		$output = array(
+			'coord'  => $this->session->userdata("map_center"),
+			'zoom'   => $this->session->userdata("map_zoom"),
+			'icon'   => '',
+			'name'   => '',
+			'id'     => 0,
+			'active' => '<input type="checkbox" value="1" name="active">'
+		);
+		$groups = array();
+		if($result->num_rows()){
+			foreach($result->result() as $row){
+				$checked  = ($row->active) ? 'checked="checked"' : '' ;
+				$checkbox = ($row->active) ? "Да" : "Нет" ;
+				$string = '<tr>
+					<td>'.$row->name.'</td>
+					<td>'.$row->icon.'</td>
+					<td>'.$row->refcoord.'</td>
+					<td>'.$row->refzoom.'</td>
+					<td>'.$checkbox.'</td>
+					<td><a href="/admin/groupmanager/'.$row->id.'" class="btn btn-small btn-primary">Редактировать</a></td>
+				</tr>';
+				if($row->id == $group) {
+					$output = array(
+						'coord'  => (strlen($row->refcoord) ? $row->refcoord : $this->session->userdata("map_center")),
+						'zoom'   => (strlen($row->refzoom)  ? $row->refzoom  : $this->session->userdata("map_zoom")),
+						'icon'   => $row->icon,
+						'name'   => $row->name,
+						'id'     => $row->id,
+						'active' => '<input type="checkbox" value="1" name="active" '.$checked.'>'
+					);
+				}
+				array_push($groups, $string);
+			}
+		}
+		$output['table'] = implode($groups, "\n");
+		return $this->load->view("admin/groupmanager", $output, true);
+	}
 
+	function group_save($id){
+		$result=$this->db->query("UPDATE users_admins 
+		SET
+		users_admins.active = ?,
+		users_admins.valid  = ?,
+		users_admins.rating = ?,
+		users_admins.lang   = ?,
+		users_admins.access = ?
+		WHERE
+		users_admins.uid = ?", array(
+			$this->input->post('active', true),
+			$this->input->post('valid' , true),
+			$this->input->post('rating', true),
+			$this->input->post('lang'  , true),
+			$this->input->post('access', true),
+			$id
+		));
+	}
+#
+######################### END usermanager section ############################
+#
 #
 ######################### end of comments section ############################
 ###################### start of map content section ##########################
