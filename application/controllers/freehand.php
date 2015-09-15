@@ -2,14 +2,9 @@
 class Freehand extends CI_Controller {
 	function __construct(){
 		parent::__construct();
-		//$this->output->enable_profiler(TRUE);
-		//$this->output->cache(10);
 		$this->load->model('usefulmodel');
 		if(!$this->session->userdata('common_user')){
 			$this->session->set_userdata('common_user', md5(rand(0,9999).'zy'.$this->input->ip_address()));
-		}
-		if(!$this->session->userdata('noted')){
-			$this->session->set_userdata('noted', array());
 		}
 		if(!$this->session->userdata('objects')){
 			$this->session->set_userdata('objects', array());
@@ -28,11 +23,6 @@ class Freehand extends CI_Controller {
 
 	function map($hash = ""){
 		$data = $this->session->userdata('map');
-		//$this->session->set_userdata('map',array('id' => 'new'));
-		//$act['yandex_key']=$this->config->item('yandex_key');
-		//if(!strlen($hash) && $data['id']=='void'){
-		//	print 1;
-		//}
 		$act = array(
 			'maps_center'	=> (is_array($data['center'])) ? implode($data['center'], ",") : '',
 			'maptype'		=> $data['maptype'],
@@ -235,7 +225,7 @@ class Freehand extends CI_Controller {
 		// тесты обработки
 		//print implode(array($id,$type,$geometry,$attr,$desc,$address,$name),"\n");
 		//print "Создан объект ".$id." применён класс ".$attr." в координатах: ".implode(explode(",", $geometry),"<br>"); 
-		print_r($this->session->userdata("objects"));
+		//print_r($this->session->userdata("objects"));
 		//print sizeof($this->session->userdata("objects"));
 	}
 	
@@ -386,20 +376,6 @@ class Freehand extends CI_Controller {
 				userobjects.ip,
 				userobjects.uagent
 			) VALUES ". implode($insert_query_list, ",\n"));
-			/*
-			$this->db->query("INSERT INTO userobjects_heap (
-				userobjects_heap.coord,
-				userobjects_heap.attributes,
-				userobjects_heap.description,
-				userobjects_heap.address,
-				userobjects_heap.name,
-				userobjects_heap.type,
-				userobjects_heap.map_id,
-				userobjects_heap.hash,
-				userobjects_heap.ip,
-				userobjects_heap.uagent
-			) VALUES ". implode($insert_query_list, ",\n"));
-			*/
 		}
 		//print implode($insert_query_list, ",\n");
 		$this->createframe($map['id']);

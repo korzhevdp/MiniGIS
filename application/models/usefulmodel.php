@@ -23,6 +23,21 @@ class Usefulmodel extends CI_Model{
 		}
 	}
 
+	public function check_admin_status(){
+		if($this->session->userdata('user_class') !== md5("secret_userclass1")){
+			$this->session->sess_destroy();
+			redirect('admin');
+		}
+	}
+
+	public function show_admin_menu(){
+		$output = $this->load->view('admin/menu', array(), true);
+		if($this->session->userdata('user_class') == md5("secret_userclass1")){
+			$output .= $this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true);
+		}
+		return $output;
+	}
+
 	public function rent_menu(){
 		//return $this->admin_menu();
 		/*
