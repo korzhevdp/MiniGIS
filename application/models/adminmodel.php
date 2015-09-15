@@ -403,7 +403,7 @@ class Adminmodel extends CI_Model{
 			'pl_num'		=> 0
 		);
 		if($obj){
-			$result=$this->db->query("SELECT 
+			$result = $this->db->query("SELECT 
 			locations_types.id,
 			locations_types.has_child,
 			locations_types.name,

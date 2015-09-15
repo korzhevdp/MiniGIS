@@ -2,10 +2,9 @@
 class Editor extends CI_Controller{
 	function __construct(){
 		parent::__construct();
+		$this->load->helper('url');
 		//$this->output->enable_profiler(TRUE);
-		$this->db->query("SET lc_time_names = 'ru_RU'");
 		if(!$this->session->userdata('user_id')){
-			$this->load->helper('url');
 			redirect('login/index/auth');
 		}else{
 			$this->load->model('usefulmodel');
@@ -15,24 +14,14 @@ class Editor extends CI_Controller{
 
 	public function edit($location = 0){
 		$output = $this->editormodel->starteditor("edit", $location);
-		if($this->session->userdata('user_class') == md5("secret_userclass1")){
-			$supermenu = $this->usefulmodel->semantics_supermenu();
-			$output['menu'] .= $this->load->view('admin/supermenu', $supermenu, true);
-		}
 		$this->load->view('editor/view', $output);
 	}
 
 	public function add($type = 0){
 		if ($this->session->userdata("c_l") !== 0){
-			$this->load->helper("url");
 			redirect("editor/edit/".$this->session->userdata("c_l"));
 		}
-		
 		$output = $this->editormodel->starteditor("add", $type);
-		if($this->session->userdata('user_class') == md5("secret_userclass1")){
-			$supermenu=$this->usefulmodel->semantics_supermenu();
-			$output['menu'].=$this->load->view('admin/supermenu', $supermenu, true);
-		}
 		$this->load->view('editor/view', $output);
 	}
 
@@ -269,7 +258,6 @@ class Editor extends CI_Controller{
 				// Идентификаторы свойств принадлежат одной странице. Флуд параметров не детектед.
 				//print "OK! page: ".$row->page;
 				$row = $result->row(0);
-				
 				$this->db->query("DELETE FROM
 				properties_assigned
 				WHERE
@@ -277,7 +265,6 @@ class Editor extends CI_Controller{
 					SELECT properties_list.id FROM properties_list WHERE properties_list.page = ?
 				)
 				AND properties_assigned.location_id = ?", array($row->page, $location_id));
-				
 				$this->db->query("INSERT INTO properties_assigned (
 					properties_assigned.location_id,
 					properties_assigned.property_id,
@@ -295,15 +282,9 @@ class Editor extends CI_Controller{
 	}
 
 	public function geosemantics($mode=1){
-		//$this->output->enable_profiler(TRUE);
-		if($this->session->userdata('user_class') !== md5("secret_userclass1")){
-			print "not allowed!";
-		}else{
-			$output = $this->editormodel->geoeditor($this->config->item("geo_module_group"), $mode);
-			$output['menu'] = $this->load->view('admin/menu','',true);
-			$supermenu = $this->usefulmodel->semantics_supermenu();
-			$this->load->view('editor/geoview',$output);
-		}
+		$this->usefulmodel->check_admin_status();
+		$output = $this->editormodel->geoeditor($this->config->item("geo_module_group"), $mode);
+		$this->load->view('editor/geoview', $output);
 	}
 
 	####################################################
