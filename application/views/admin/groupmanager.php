@@ -5,7 +5,7 @@
 <form method="post" action="/admin/group_save">
 	<div class="input-prepend control-group">
 		<span class="add-on pre-label">Название</span>
-		<input name="nick" title="Название группы объектов" class="long" maxlength="60" value="<?=$name;?>" type="text">
+		<input name="name" title="Название группы объектов" class="long" maxlength="60" value="<?=$name;?>" type="text">
 	</div>
 	<div class="input-prepend control-group">
 		<span class="add-on pre-label">Иконка</span>
@@ -15,26 +15,27 @@
 		<span class="add-on pre-label">Активна</span>
 		<?=$active;?>
 	</div>
-	<input type="hidden" name="country"    id="country"><br>
+	<input type="hidden" name="country"    id="country">
+	<input type="hidden" name="id"         id="id" value="<?=$id;?>">
 	<input type="hidden" name="map_center" id="map_center" value="<?=$coord;?>">
 	<input type="hidden" name="map_zoom"   id="map_zoom"   value="<?=$zoom;?>">
+	<br>
+	<button class="btn" type="submit" value="add" name="mode">Создать группу</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<button type="submit" value="save" name="mode" class="btn btn-primary">Сохранить группу</button>
 </form>
+<hr>
 
-<span class="btn">Создать группу</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="btn btn-primary">Сохранить группу</span>
 <table id="userTable" class="table table-bordered table-condensed table-striped">
 <tr>
 	<th style="width:250px;">Название</th>
 	<th style="width:50px;">Иконка</th>
-	<th style="">Опорный масштаб</th>
-	<th style="">Центр области</th>
+	<th style="width:200">Центр области</th>
+	<th>Z</th>
 	<th>Активна</th>
-	<th>Редактировать</th>
+	<th style="70px;">Редактировать</th>
 </tr>
 <?=$table;?>
 </table>
-<input type="hidden" id="map_center" value="<?=$this->session->userdata("map_center");?>">
-<input type="hidden" id="map_zoom"   value="<?=$this->session->userdata("map_zoom");?>">
-<input type="hidden" id="country"    value="">
 <script type="text/javascript">
 <!--
 var map,

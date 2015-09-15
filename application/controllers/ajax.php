@@ -6,20 +6,10 @@ class Ajax extends CI_Controller{
 
 	public function select_filtered_group($input, $mapset, $current){
 		$string       = array();
-		$vals         = array();
-		$sels         = array();
-		$specs        = array();
-		$le           = array();
-		$me           = array();
 		$sorted       = array();
 		$idset        = array();
 		$full         = array(); // массив в который будем складывать все пришедшие параметры в соответствии с алгоритмами :)
-		$difference   = array();
-		$p_difference = array();
-		$s_difference = array();
 		$list         = array(); // массив накопитель найденных объектов. Над ним проводятся операции
-		$by_price     = 0;
-		$truncate     = 0;
 		##########################################################################
 		###### формирование массива принятых параметров поиска
 		##########################################################################
@@ -63,11 +53,10 @@ class Ajax extends CI_Controller{
 		}
 		#### обратный случай: список чекбоксов пуст - выбираем все объекты
 		else{
-			$result=$this->db->query("SELECT 
+			$result = $this->db->query("SELECT 
 			`locations`.id AS `location_id`,
 			`locations`.parent 
 			FROM `locations`");
-			//return $this->_rno($rno_val);
 		}
 
 		if($result->num_rows()){
@@ -112,12 +101,12 @@ class Ajax extends CI_Controller{
 				}
 				//print_r($testarray);
 				foreach ($testarray as $loc => $val){
-					$go=1;
+					$match = 1;
 					$incounter = 0;
 					foreach($full['le'] as $prop => $val2){
-						($val[$prop] > $val2) ? $go = 0 : $incounter++;
+						($val[$prop] > $val2) ? $match = 0 : $incounter++;
 					}
-					if(!(sizeof($full['le']) - $incounter) && $go){
+					if(!(sizeof($full['le']) - $incounter) && $match){
 						array_push($le_diff, $loc);
 					}
 				}
@@ -131,8 +120,6 @@ class Ajax extends CI_Controller{
 			$me_diff = array();
 			$string  = array();
 			$string  = array_keys($full['me']);
-			$count   = sizeof($string);
-			$inline  = implode($string, ",");
 			$result  = $this->db->query("SELECT
 			IF(properties_list.coef = 1, properties_assigned.value, properties_assigned.value % properties_list.coef) AS value,
 			properties_assigned.property_id as `pid`,
@@ -141,25 +128,29 @@ class Ajax extends CI_Controller{
 			`properties_list`
 			INNER JOIN properties_assigned ON (`properties_list`.id = properties_assigned.property_id)
 			WHERE
-			(properties_assigned.property_id IN (".$inline.")) AND
-			(properties_assigned.location_id IN (SELECT properties_assigned.location_id FROM properties_assigned WHERE (properties_assigned.property_id IN (".$inline.")) 
-			GROUP BY properties_assigned.location_id HAVING (COUNT(*) = ?)))
+			(properties_assigned.property_id IN (".implode($string, ",").")) 
+			AND (properties_assigned.location_id IN (
+				SELECT
+				properties_assigned.location_id
+				FROM properties_assigned
+				WHERE properties_assigned.property_id IN (".implode($string, ",").")
+				GROUP BY properties_assigned.location_id 
+				HAVING COUNT(*) = ?
+			)
 			ORDER BY
-			properties_assigned.location_id", array($count));
-			//print $query;
+			properties_assigned.location_id", array(sizeof($string)));
 			if($result->num_rows()){
 				$testarray = array();
 				foreach($result->result() as $row){
 					$testarray[$row->lid][$row->pid] = $row->value;
 				}
-				//print_r($testarray);
 				foreach ($testarray as $loc=>$val){
-					$go = 1;
+					$match = 1;
 					$incounter = 0;
 					foreach($full['me'] as $prop=>$val2){
-						($val[$prop] < $val2) ? $go = 0 : $incounter++;
+						($val[$prop] < $val2) ? $match = 0 : $incounter++;
 					}
-					if(!(sizeof($full['me']) - $incounter) && $go){
+					if(!(sizeof($full['me']) - $incounter) && $match){
 						array_push($me_diff, $loc);
 					}
 				}
@@ -173,13 +164,12 @@ class Ajax extends CI_Controller{
 			$ud_diff = array();
 			$string  = array_keys($full['ud']);
 			$result  = $this->db->query("SELECT 
-			IF(locations.parent = 0,properties_assigned.location_id,locations.parent) as lid
+			IF(locations.parent = 0,properties_assigned.location_id,locations.parent) AS lid
 			FROM
 			properties_assigned
-			INNER JOIN `locations` on (properties_assigned.location_id = `locations`.id)
+			INNER JOIN `locations` ON (properties_assigned.location_id = `locations`.id)
 			WHERE
 			(properties_assigned.property_id IN (".implode($string, ',')."))");
-			//print $this->db->last_query();
 			if($result->num_rows()){
 				foreach($result->result() as $row){
 					array_push($ud_diff,$row->lid);
@@ -192,18 +182,17 @@ class Ajax extends CI_Controller{
 			$d_diff = array();
 			$string = array();
 			$string = array_keys($full['d']);
-			$count  = sizeof($string);
 			$result = $this->db->query("SELECT 
-			IF(locations.parent = 0, properties_assigned.location_id, locations.parent) as lid
+			IF(locations.parent = 0, properties_assigned.location_id, locations.parent) AS lid
 			FROM
 			properties_assigned
 			INNER JOIN `locations` ON (properties_assigned.location_id = `locations`.id)
 			WHERE
-			(properties_assigned.property_id IN (".implode($string, ",")."))
+			properties_assigned.property_id IN (".implode($string, ",").")
 			GROUP BY
 			properties_assigned.location_id
 			HAVING
-			(COUNT(*) = ?)", array($count));
+			COUNT(*) = ?", array(sizeof($string)));
 			if($result->num_rows()){
 				foreach($result->result() as $row ){
 					array_push($d_diff,$row->lid);
@@ -216,15 +205,15 @@ class Ajax extends CI_Controller{
 		//Цена - это главное безумие сезона :)
 		if(isset($full['pr']) && sizeof($full['pr'])){ # Цена!
 			$pr_diff = array();
-			$result = $this->db->query("SELECT
+			$result  = $this->db->query("SELECT
 			IF(locations.parent, locations.parent, locations.id) AS location_id
 			FROM
 			timers
 			INNER JOIN locations ON (timers.location_id = locations.id)
 			WHERE
-			(NOW() BETWEEN timers.start_point AND timers.end_point) AND
-			`timers`.`type` = 'price' AND
-			`timers`.`price` <= ".implode($full['pr'],""));
+			NOW() BETWEEN timers.start_point AND timers.end_point
+			AND `timers`.`type` = 'price'
+			AND `timers`.`price` <= ".implode($full['pr'], ""));
 			//echo mysql_num_rows($result)."price_order\n";
 			if($result->num_rows()){
 				foreach($result->result() as $row ) {
@@ -360,7 +349,8 @@ class Ajax extends CI_Controller{
 	public function get_bkg_types($layers_array, $types_array){
 		$conditions = array();
 		(strlen($types_array))  ? array_push($conditions, "locations.`type` IN (".$types_array.")") : "";
-		(strlen($layers_array)) ? array_push($conditions, "locations_types.object_group IN (".$layers_array.")") : "";// запись условий через IN избыточна, но универсальна.
+		(strlen($layers_array)) ? array_push($conditions, "locations_types.object_group IN (".$layers_array.")") : "";
+
 		$result = $this->db->query("SELECT
 		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
 		locations.id,
@@ -409,12 +399,12 @@ class Ajax extends CI_Controller{
 		INNER JOIN objects_groups ON (locations_types.object_group = objects_groups.id)
 		INNER JOIN users_admins ON (locations.owner = users_admins.uid)
 		WHERE
-		(locations_types.id = ?) AND
-		(locations.active = 1) AND 
-		(users_admins.active = 1) AND 
-		(LENGTH(locations.coord_y) > 3)
+		(locations_types.id = ?)
+		AND locations.active
+		AND users_admins.active
+		AND (LENGTH(locations.coord_y) > 3)
 		ORDER BY
-		locations.location_name",array($this->config->item('maps_def_loc'),$type));
+		locations.location_name", array($this->config->item('maps_def_loc'), $type));
 		$out = array();
 		if($result->num_rows()){
 			foreach($result->result() as $row){

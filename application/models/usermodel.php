@@ -37,8 +37,8 @@ class Usermodel extends CI_Model{
 					array_push($output, $this->load->view("admin/libraryitem", $row, true));
 				}
 			}
-		}else{
-			$result=$this->db->query("SELECT
+		} else {
+			$result = $this->db->query("SELECT
 			locations_types.object_group as obj_group,
 			`locations_types`.`id` AS `tid`,
 			`locations_types`.name AS `tp_name`,
@@ -52,7 +52,7 @@ class Usermodel extends CI_Model{
 				$row = $result->row();
 				array_unshift($output,'<h2><a href="/user/library/'.$row->oid.'">'.$row->ob_name.'</a> / <a href="/user/library/'.$row->oid.'/'.$row->tid.'">'.$row->tp_name.'</a></h2><hr>');
 			}
-			$result=$this->db->query("SELECT 
+			$result = $this->db->query("SELECT 
 			IF(LENGTH(`locations`.location_name) > 40, CONCAT(LEFT(`locations`.location_name, 37), '...'), `locations`.location_name) AS name,
 			`locations`.location_name AS title,
 			`locations`.id
@@ -62,7 +62,7 @@ class Usermodel extends CI_Model{
 			`locations`.`type` = ?
 			ORDER BY title", array($this->session->userdata('user_id'), $loc_type));
 			if($result->num_rows()){
-				foreach ($result->result_array() as $row){
+				foreach ($result->result_array() as $row) {
 					$row['img']  = '<img src="'.$this->config->item("api").'/images/location_pin.png" alt="">';
 					$row['link'] = '/editor/edit/'.$row['id'];
 					array_push($output, $this->load->view("admin/libraryitem", $row, true));
@@ -76,8 +76,8 @@ class Usermodel extends CI_Model{
 			);
 			array_push($output, $this->load->view("admin/libraryitem", $row, true));
 		}
-		array_push($output,"</ul>");
-		return implode($output,"\n");
+		array_push($output, "</ul>");
+		return implode($output, "\n");
 	}
 
 	function user_edit(){
@@ -128,9 +128,9 @@ class Usermodel extends CI_Model{
 		users_admins.lang       = ?
 		WHERE
 		users_admins.uid = ?", array(
-			$this->input->post('name_f', TRUE),
-			$this->input->post('name_i', TRUE),
-			$this->input->post('name_o', TRUE),
+			$this->input->post('name_f',      TRUE),
+			$this->input->post('name_i',      TRUE),
+			$this->input->post('name_o',      TRUE),
 			$this->input->post('map_type',    TRUE),
 			$this->input->post('map_zoom',    TRUE),
 			$this->input->post('map_center',  TRUE),
@@ -138,20 +138,20 @@ class Usermodel extends CI_Model{
 			$this->input->post('lang',        TRUE),
 			$this->session->userdata('user_id')
 		));
-		$this->session->set_userdata('lang'      , $this->input->post('lang', TRUE));
-		$this->session->set_userdata('map_zoom'  , $this->input->post('map_zoom', TRUE));
-		$this->session->set_userdata('map_type'  , $this->input->post('map_type', TRUE));
+		$this->session->set_userdata('lang'      , $this->input->post('lang'      , TRUE));
+		$this->session->set_userdata('map_zoom'  , $this->input->post('map_zoom'  , TRUE));
+		$this->session->set_userdata('map_type'  , $this->input->post('map_type'  , TRUE));
 		$this->session->set_userdata('map_center', $this->input->post('map_center', TRUE));
 	}
-
-	function _photoeditor_order_save(){
+	#######################################
+	function photoeditor_order_save(){
 		$list=explode(",",$this->input->post('frm_img_order'));
 		foreach($list as $key=>$val){
 			$this->db->query("UPDATE `images` SET `images`.`order` = ? WHERE `images`.`filename` = ?", array(($key+1),$val.".jpg"));
 		}
 	}
 
-	function _photoeditor_list($location_id){
+	function photoeditor_list($location_id){
 		$pics = array();
 		$result=$this->db->query("SELECT 
 		`images`.`filename`,
@@ -189,7 +189,7 @@ class Usermodel extends CI_Model{
 		return "var imgs = {\n".implode($pics,",\n")."\n}";
 	}
 
-	function _photoeditor_locations(){
+	function photoeditor_locations(){
 		$user = $this->session->userdata('user_id');
 		$locs = array("- выберите размещение -");
 		$result=$this->db->query("SELECT 
@@ -220,7 +220,7 @@ class Usermodel extends CI_Model{
 #*/
 ######################### start of help section ############################
 #
-	function _get_help_page($page=0){
+	function get_help_page($page=0){
 		$output=Array();
 		$topics=Array();
 		$result=$this->db->query("SELECT 
@@ -250,7 +250,7 @@ class Usermodel extends CI_Model{
 #
 ######################### start of comments section ############################
 #
-	function _comments_show($user_id=0){
+	function comments_show($user_id=0){
 		if(!$user_id){
 			return "";
 		}

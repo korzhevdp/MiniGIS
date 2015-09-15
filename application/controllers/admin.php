@@ -151,14 +151,14 @@ class Admin extends CI_Controller{
 		($location_id == 'all') ? $this->adminmodel->_params_sync_all() : $this->adminmodel->_params_sync_traversal($location_id);
 	}
 
-	public function usermanager($id=0, $mode='show'){
+	public function usermanager($id=0){
 		if($this->session->userdata('user_class') !== md5("secret_userclass1")){
 			$this->session->sess_destroy();
 			redirect('admin');
 		}
 		$output = array(
 			'menu'     => $this->load->view('admin/menu', array(), true),
-			'content'  => $this->adminmodel->users_show()
+			'content'  => $this->adminmodel->users_show($id)
 		);
 		$output['menu'] .= $this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true);
 		$this->load->view('admin/view', $output);
@@ -166,6 +166,7 @@ class Admin extends CI_Controller{
 
 	public function user_save(){
 		$this->adminmodel->users_save($this->session->userdata("user_id"));
+		redirect("/admin/usermanager/".$this->input->post('id'));
 	}
 	####################################################
 	public function groupmanager($id=0){
@@ -180,6 +181,15 @@ class Admin extends CI_Controller{
 		$output['menu'] .= $this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true);
 		$this->load->view('admin/view', $output);
 	}
+	public function group_save(){
+		if($this->session->userdata('user_class') !== md5("secret_userclass1")){
+			$this->session->sess_destroy();
+			redirect('admin');
+		}
+		$id = $this->adminmodel->group_save();
+		redirect('admin/groupmanager/'.$id);
+	}
+
 	####################################################
 	public function swpropsearch($group = 1, $prop = 0){
 		$result = $this->db->query("UPDATE properties_list 

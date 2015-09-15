@@ -749,58 +749,97 @@ class Adminmodel extends CI_Model{
 #
 ######################### BEGIN usermanager section ############################
 #
-	function users_show(){
-		$result=$this->db->query("SELECT 
+	function users_show($id = 0){
+		$access = "";
+		$output = array(
+			'admin'  => '',
+			'valid'  => '',
+			'active' => '',
+			'rating' => '',
+			'name'   => '',
+			'id'     => $id
+		);
+		$result = $this->db->query("SELECT 
 		`users_admins`.id,
 		`users_admins`.class_id,
 		`users_admins`.nick,
 		DATE_FORMAT(`users_admins`.registration_date, '%d.%m.%Y') AS registration_date,
 		CONCAT_WS(' ',`users_admins`.name_f,`users_admins`.name_i,`users_admins`.name_o) AS `fio`,
-		SUBSTRING(`users_admins`.`info`,1,400) as info,
+		SUBSTRING(`users_admins`.`info`, 1, 400) as info,
 		`users_admins`.active,
 		`users_admins`.rating,
-		`users_admins`.valid
+		`users_admins`.valid,
+		`users_admins`.access
 		FROM
 		`users_admins`
 		ORDER BY `users_admins`.`class_id` ASC, fio ASC");
-		$output = array();
-		$users = array();
+		$users  = array();
 		if($result->num_rows()){
 			foreach($result->result() as $row){
 				$fio = (strlen($row->fio)) ? $row->fio : '<em class="muted">ФИО не указано</em>';
+				if ($row->id == $id){
+					$access = $row->access;
+					$output['admin']  = (($row->class_id === "1") ? ' checked="checked"' : '');
+					$output['valid']  = (($row->valid) ? ' checked="checked"' : '');
+					$output['active'] = (($row->active) ? ' checked="checked"' : '');
+					$output['rating'] = $row->rating;
+					$output['name']   = $row->nick."&nbsp;&nbsp;&nbsp;&nbsp;<small>".$row->fio.",&nbsp;".$row->info."</small>";
+					$output['id']     = $row->id;
+				}
 				$string = '<tr>
 					<td>'.$row->nick.'</td>
 					<td><small>'.$fio.'<br>'.$row->info.'</small></td>
-					<td><input type="text" class="short" id="rating" value="'.$row->rating.'"></td>
-					<td><input type="checkbox" id="active"'.(($row->active) ? ' checked="checked"' : '').'></td>
-					<td><input type="checkbox" id="valid"'.(($row->valid) ? ' checked="checked"' : '').'</td>
-					<td><span class="btn btn-primary btn-mini">Сохранить</span></td>
+					<td>'.$row->rating.'</td>
+					<td>'.(($row->class_id === "1") ? 'Да' : 'Нет').'</td>
+					<td>'.(($row->active)   ? 'Да' : 'Нет').'</td>
+					<td>'.(($row->valid)    ? 'Да' : 'Нет').'</td>
+					<td><a href="/admin/usermanager/'.$row->id.'" class="btn btn-primary btn-mini">Редактировать</span></td>
 				</tr>';
 				array_push($users, $string);
 			}
 		}
-		$output = array(
-			'table' => implode($users, "\n")
-		);
+		$layers = array();
+		$result = $this->db->query('SELECT 
+		`objects_groups`.name,
+		`objects_groups`.id,'.
+		(strlen($access) 
+			? 'IF(`objects_groups`.`id` IN('.$access.'), 1, 0) AS granted'
+			: '0 AS granted'
+		).
+		' FROM
+		`objects_groups`
+		WHERE `objects_groups`.`active`');
+		if($result->num_rows()){
+			foreach($result->result() as $row){
+				$checked = ($row->granted == "1") ? ' checked="checked"' : "";
+				$string = '<li><label class="checkbox"><input type="checkbox" name="groups[]" value="'.$row->id.'"'.$checked.'>'.$row->name.'</label></li>';
+				array_push($layers, $string);
+			}
+		}
+		$output['table']  = implode($users,  "\n");
+		$output['layers'] = implode($layers, "\n");
 		return $this->load->view("admin/usermanager", $output, true);
 	}
 
 	function users_save($id){
-		$result=$this->db->query("UPDATE users_admins 
+		//$this->output->enable_profiler(TRUE);
+		//return false;
+		$admin = ($this->input->post('admin') == "1") ? 1 : 2;
+		$result = $this->db->query("UPDATE users_admins 
 		SET
-		users_admins.active = ?,
-		users_admins.valid  = ?,
-		users_admins.rating = ?,
-		users_admins.lang   = ?,
-		users_admins.access = ?
+		users_admins.active   = ?,
+		users_admins.valid    = ?,
+		users_admins.rating   = ?,
+		users_admins.access   = ?,
+		users_admins.class_id = ?
 		WHERE
-		users_admins.uid = ?", array(
+		users_admins.id = ?", array(
 			$this->input->post('active', true),
 			$this->input->post('valid' , true),
 			$this->input->post('rating', true),
-			$this->input->post('lang'  , true),
-			$this->input->post('access', true),
-			$id
+			implode($this->input->post('groups', true), ", "),
+			$admin,
+			$this->input->post('id')
 		));
 	}
 #
@@ -810,15 +849,7 @@ class Adminmodel extends CI_Model{
 ######################### BEGIN usermanager section ############################
 #
 	function groups_show($group = 0){
-		$result=$this->db->query("SELECT 
-		`objects_groups`.id,
-		`objects_groups`.name,
-		`objects_groups`.active,
-		`objects_groups`.icon,
-		`objects_groups`.refcoord,
-		`objects_groups`.refzoom
-		FROM
-		`objects_groups`");
+		$groups = array();
 		$output = array(
 			'coord'  => $this->session->userdata("map_center"),
 			'zoom'   => $this->session->userdata("map_zoom"),
@@ -827,7 +858,16 @@ class Adminmodel extends CI_Model{
 			'id'     => 0,
 			'active' => '<input type="checkbox" value="1" name="active">'
 		);
-		$groups = array();
+
+		$result = $this->db->query("SELECT 
+		`objects_groups`.id,
+		`objects_groups`.name,
+		`objects_groups`.active,
+		`objects_groups`.icon,
+		`objects_groups`.refcoord,
+		`objects_groups`.refzoom
+		FROM
+		`objects_groups`");
 		if($result->num_rows()){
 			foreach($result->result() as $row){
 				$checked  = ($row->active) ? 'checked="checked"' : '' ;
@@ -857,23 +897,47 @@ class Adminmodel extends CI_Model{
 		return $this->load->view("admin/groupmanager", $output, true);
 	}
 
-	function group_save($id){
-		$result=$this->db->query("UPDATE users_admins 
-		SET
-		users_admins.active = ?,
-		users_admins.valid  = ?,
-		users_admins.rating = ?,
-		users_admins.lang   = ?,
-		users_admins.access = ?
-		WHERE
-		users_admins.uid = ?", array(
-			$this->input->post('active', true),
-			$this->input->post('valid' , true),
-			$this->input->post('rating', true),
-			$this->input->post('lang'  , true),
-			$this->input->post('access', true),
-			$id
-		));
+	function group_save(){
+		//$this->output->enable_profiler(TRUE);
+		//return false;
+		$id = $this->input->post('id', true);
+		if($this->input->post('mode', true) === 'save') {
+			$result = $this->db->query("UPDATE
+				`objects_groups`
+				SET
+				`objects_groups`.refzoom  = ?,
+				`objects_groups`.refcoord = ?,
+				`objects_groups`.icon     = ?,
+				`objects_groups`.name     = ?,
+				`objects_groups`.active   = ?
+				WHERE
+				`objects_groups`.id = ?", array(
+				$this->input->post('map_zoom', true),
+				$this->input->post('map_center' , true),
+				$this->input->post('icon', true),
+				$this->input->post('name'  , true),
+				$this->input->post('active', true),
+				$this->input->post('id', true),
+			));
+		}
+		if($this->input->post('mode', true) === 'add') {
+			$result = $this->db->query("INSERT INTO
+			`objects_groups`(
+			`objects_groups`.refzoom,
+			`objects_groups`.refcoord,
+			`objects_groups`.icon,
+			`objects_groups`.name,
+			`objects_groups`.active)
+			VALUES( ?, ?, ?, ?, ?)", array(
+				$this->input->post('map_zoom', true),
+				$this->input->post('map_center' , true),
+				$this->input->post('icon', true),
+				$this->input->post('name'  , true),
+				$this->input->post('active', true)
+			));
+			$id = $this->db->insert_id();
+		}
+		return $id;
 	}
 #
 ######################### END usermanager section ############################
@@ -943,7 +1007,8 @@ class Adminmodel extends CI_Model{
 		`objects_groups`.name,
 		`objects_groups`.active
 		FROM
-		`objects_groups`");
+		`objects_groups`
+		WHERE `objects_groups`.active");
 		if($result->num_rows()){
 			foreach($result->result() as $row){
 				# активный слой
@@ -968,7 +1033,8 @@ class Adminmodel extends CI_Model{
 		`objects_groups`
 		INNER JOIN `locations_types` ON (`objects_groups`.id = `locations_types`.object_group)
 		WHERE
-		`locations_types`.`pl_num`");
+		`locations_types`.`pl_num`
+		AND `objects_groups`.active");
 		if($result->num_rows()){
 			# В $a_types и $b_types помещаются объекты переднего плана.
 			# Помещаются в соответствии с группой объектов с соответствующие подмассивы, потом из них будут формироваться выходные таблицы.
