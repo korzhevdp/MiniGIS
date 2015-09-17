@@ -122,9 +122,6 @@ class Ajax extends CI_Controller{
 			return "console.log('No Data')";
 		}
 	}
-
-
-###################################################### NEW CONCEPT ################
 	public function get_map_content(){
 		//$this->output->enable_profiler(TRUE);
 		$map_content = array();
@@ -170,11 +167,11 @@ class Ajax extends CI_Controller{
 		print $this->select_by_type($this->input->post('type', true));
 	}
 
-	function send_warning($text){
+	private function send_warning($text){
 		return true;
 	}
 
-	function get_active_layer($layers_array){
+	private function get_active_layer($layers_array){
 		// Layer - эквивалент object_group;
 		$result = $this->db->query("SELECT
 		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
@@ -207,7 +204,7 @@ class Ajax extends CI_Controller{
 		return $out;
 	}
 
-	function pack_results($result){
+	private function pack_results($result){
 		$out = array();
 		foreach($result->result() as $row){
 			$image  = (strlen($row->img)) ? $row->img : "nophoto.gif";
@@ -217,7 +214,7 @@ class Ajax extends CI_Controller{
 		return $out;
 	}
 
-	function get_active_type($types_array){
+	private function get_active_type($types_array){
 		// Layer - эквивалент object_group;
 		$result=$this->db->query("SELECT 
 		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
@@ -248,7 +245,7 @@ class Ajax extends CI_Controller{
 		return $out;
 	}
 
-	function get_bkg_types($layers_array, $types_array){
+	private function get_bkg_types($layers_array, $types_array){
 		$conditions = array();
 		(strlen($types_array))  ? array_push($conditions, "locations.`type` IN (".$types_array.")") : "";
 		(strlen($layers_array)) ? array_push($conditions, "locations_types.object_group IN (".$layers_array.")") : "";
@@ -279,7 +276,7 @@ class Ajax extends CI_Controller{
 		return $out();
 	}
 
-	function select_by_type($type){
+	private function select_by_type($type){
 		$result=$this->db->query("SELECT 
 		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
 		locations.id,
@@ -310,7 +307,7 @@ class Ajax extends CI_Controller{
 		return "data = { ".implode($out, ",\n")."\n}";
 	}
 
-	function select_by_D_algorithm($list) {
+	private function select_by_D_algorithm($list) {
 		/*
 		$list   = array()
 		$output = array()
@@ -338,7 +335,7 @@ class Ajax extends CI_Controller{
 		//echo "D relevant: ".implode($d_diff,",")."\n";
 	}
 
-	function select_by_UD_algorithm($list) {
+	private function select_by_UD_algorithm($list) {
 		/*
 		$list   = array()
 		$output = array()
@@ -362,7 +359,7 @@ class Ajax extends CI_Controller{
 		//echo "UD relevant: ".implode($ud_diff,",")."\n";
 	}
 
-	function select_by_ME_algorithm($list) {
+	private function select_by_ME_algorithm($list) {
 		/*
 		$list   = array()
 		$output = array()
@@ -409,7 +406,7 @@ class Ajax extends CI_Controller{
 		//echo "UD relevant: ".implode($ud_diff,",")."\n";
 	}
 
-	function select_by_LE_algorithm($list) {
+	private function select_by_LE_algorithm($list) {
 		/*
 		$list   = array()
 		$output = array()
@@ -417,11 +414,6 @@ class Ajax extends CI_Controller{
 		$output = array();
 			$string  = implode(array_keys($list));
 			$count   = sizeof($string);	
-			/*
-			* $string - список свойств
-			* $count - количество свойств, соответствие которым должно быть выдержано
-			* Учитывается не только соответствие номеру признака (как в случае u-алгоритма), но и соответствие  ВСЕМ введённым "le"-параметрам
-			*/
 			$result  = $this->db->query("SELECT
 			IF(properties_list.coef = 1, properties_assigned.value, (properties_assigned.value / properties_list.divider * properties_list.multiplier)) AS value,
 			properties_assigned.property_id as `pid`,
@@ -443,7 +435,6 @@ class Ajax extends CI_Controller{
 			)
 			ORDER BY
 			properties_assigned.location_id", array($count));
-
 			if($result->num_rows()){
 				$testarray = array();
 				foreach($result->result() as $row){
@@ -467,7 +458,7 @@ class Ajax extends CI_Controller{
 		//echo "UD relevant: ".implode($ud_diff,",")."\n";
 	}
 
-	function select_by_PRICE_algorithm($list) {
+	private function select_by_PRICE_algorithm($list) {
 		$output = array();
 		$result = $this->db->query("SELECT
 		IF(locations.parent, locations.parent, locations.id) AS location_id
@@ -487,7 +478,7 @@ class Ajax extends CI_Controller{
 		return $output;
 	}
 
-	function select_by_U_algorithm($list) {
+	private function select_by_U_algorithm($list) {
 		/*
 		$list   = array()
 		$output = array()
@@ -510,8 +501,6 @@ class Ajax extends CI_Controller{
 		}
 		return $output;
 	}
-/* NEW CONCEPT */
-
 }
 
 /* End of file ajax.php */
