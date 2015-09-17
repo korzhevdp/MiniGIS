@@ -17,27 +17,15 @@ class Foxhound extends CI_Controller{
 	}
 
 	private function select_filtered_group($input, $mapset, $current){
-		$string       = array();
-		$idset        = array();
 		$full         = array(); // массив в который будем складывать все пришедшие параметры в соответствии с алгоритмами :)
 		$list         = array(); // массив накопитель найденных объектов. Над ним проводятся операции
-		$le_diff      = array();
-		$me_diff      = array();
-		$ud_diff      = array();
-		$d_diff       = array();
-		$pr_diff      = array();
-		##########################################################################
-		###### формирование массива принятых параметров поиска
-		##########################################################################
-		$idset = array_keys($input);
-		# Выборка алгоритмов поиска и пересортировка параметров в массивы алгоритмов
 		$result = $this->db->query("SELECT
 		`properties_list`.algoritm,
 		`properties_list`.id
 		FROM
 		`properties_list`
 		WHERE 
-		`properties_list`.id IN (".implode($idset, ",").")");
+		`properties_list`.id IN (".implode(array_keys($input), ",").")");
 		if($result->num_rows()){
 			foreach($result->result() as $row){
 				if (!isset($full[$row->algoritm])) {
@@ -46,14 +34,12 @@ class Foxhound extends CI_Controller{
 				$full[$row->algoritm][$row->id] = $input[$row->id];
 			}
 		}
-		# разбор по алгоритму U
 		if(isset($full['u']) && sizeof($full['u'])) {
-			$list = $this->select_by_U_algorithm($full['u']);# Формируется список признаков отнесённых к union-алгоритму
+			$list = $this->select_by_U_algorithm($full['u']);
 		}
 		if(isset($full['ud']) && sizeof($full['ud'])) {
 			$this->test_search_array($this->select_by_UD_algorithm($full['ud']));
 		}
-		## результаты LE-, ME-выборок с нулевой длиной должны останавливать поиск! (?)
 		if (isset($full['le']) && sizeof($full['le'])) {
 			$this->test_search_array($this->select_by_LE_algorithm($full['le']));
 		}
@@ -63,10 +49,9 @@ class Foxhound extends CI_Controller{
 		if (isset($full['d']) && sizeof($full['d'])) {
 			$this->test_search_array($this->select_by_D_algorithm($full['d']));
 		}
-		if (isset($full['pr']) && sizeof($full['pr'])) { # Цена!
-			$this->test_search_array($pr_diff = $this->select_by_PRICE_algorithm($full['pr']));
+		if (isset($full['pr']) && sizeof($full['pr'])) {
+			$this->test_search_array($this->select_by_PRICE_algorithm($full['pr']));
 		}
-		########################################## сравниваем массивы
 		if(sizeof($list)) {
 			print implode($list, ",");
 		} else {

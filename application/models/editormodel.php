@@ -36,7 +36,7 @@ class Editormodel extends CI_Model{
 		return $output;
 	}
 	
-	public function get_summary($type, $id){
+	private function get_summary($type, $id){
 		$output = array(
 			'id' => 0,
 			'location_name'		=> 'Новое имя',
@@ -123,14 +123,14 @@ class Editormodel extends CI_Model{
 		`properties_list`
 		WHERE `properties_list`.`object_group` = ?", array($output['object_group']));
 		if($result->num_rows()){
-			$row = $result->row();
-			$i   = 1;
-			while($i <= $row->maxpage){
-				$button = ($i == 1)
-					? '<button type="button" class="btn btn-info btn-small displayMain" title="Перейти к началу">'.$i.'</button>'
-					: '<button type="button" class="btn btn-info btn-small displayPage" title="Перейти к странице '.$i.'" ref="'.implode(array($output['object_group'], $output['id'], $i), "/").'">'.$i.'</button>';
+			$row  = $result->row();
+			$page = 1;
+			while($page <= $row->maxpage){
+				$button = ($page === 1)
+					? '<button type="button" class="btn btn-info btn-small displayMain" title="Перейти к началу">'.$page.'</button>'
+					: '<button type="button" class="btn btn-info btn-small displayPage" title="Перейти к странице '.$page.'" ref="'.implode(array($output['object_group'], $output['id'], $page), "/").'">'.$page.'</button>';
 				array_push($pagelist, $button);
-				$i++;
+				$page++;
 			}
 		}
 		$output['pagelist'] = implode($pagelist, "&nbsp;");
@@ -140,7 +140,7 @@ class Editormodel extends CI_Model{
 		return $output;
 	}
 
-	public function get_bas_points_types(){
+	private function get_bas_points_types(){
 		$output = array();
 		$result = $this->db->query("SELECT 
 		locations_types.id,
@@ -179,7 +179,7 @@ class Editormodel extends CI_Model{
 		return implode($output,"\n");
 	}
 
-	public function get_object_list_by_type(){
+	private function get_object_list_by_type(){
 		$output = array();
 		$result = $this->db->query("SELECT
 		`locations`.id,
@@ -196,7 +196,7 @@ class Editormodel extends CI_Model{
 		return implode($output, "\n");
 	}
 	
-	public function get_objects_by_type(){
+	private function get_objects_by_type(){
 		//$this->output->enable_profiler(TRUE);
 		$output = array();
 		$run    = 0;
@@ -349,7 +349,7 @@ class Editormodel extends CI_Model{
 		return implode($table,"\n");
 	}
 
-	public function geoeditor($object_group, $mode=1){
+	private function geoeditor($object_group, $mode=1){
 		//$this->output->enable_profiler(TRUE);
 		$output = array();
 		$data = array();
@@ -360,7 +360,7 @@ class Editormodel extends CI_Model{
 		return $output;
 	}
 
-	public function get_unbound_objects($object_group, $mode=1){
+	private function get_unbound_objects($object_group, $mode=1){
 		//$this->output->enable_profiler(TRUE);
 		$output	= array();
 		$mode	= ($mode == 2) ? "AND LENGTH(`locations`.coord_y) = 0" : "AND LENGTH(`locations`.coord_y) > 0";
@@ -389,7 +389,7 @@ class Editormodel extends CI_Model{
 		return implode($output, "\n");
 	}
 
-	public function get_context(){
+	private function get_context(){
 		/*
 		возвращает js-объект с информацией о всех объектах, связанных в рамках карты-отображения с текущим
 		по итогам обработки этих данных составляется описание связей в пределах карты отображения.
@@ -421,14 +421,14 @@ class Editormodel extends CI_Model{
 		
 		//список типов объектов на выходе
 		$output_types = array();
-		$id = ($this->input->post("id")) ? $this->input->post("id") : 511;
+		$location = ($this->input->post("id")) ? $this->input->post("id") : 511;
 		$result = $this->db->query("SELECT 
 		`locations_types`.object_group as og,
 		`locations`.`type`
 		FROM
 		`locations_types`
 		INNER JOIN `locations` ON (`locations_types`.id = `locations`.`type`)
-		WHERE `locations`.id = ?", array($id));
+		WHERE `locations`.id = ?", array($location));
 		if($result->num_rows()){
 			$row2 = $result->row();
 		}
