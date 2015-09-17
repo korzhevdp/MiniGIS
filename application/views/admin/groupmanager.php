@@ -1,41 +1,53 @@
 <script src="http://api-maps.yandex.ru/2.0/?coordorder=longlat&amp;load=package.standard&amp;lang=ru-RU" type="text/javascript"></script>
 <h3>Управление группами объектов.&nbsp;&nbsp;&nbsp;&nbsp;<small>Города и отрасли</small></h3>
-<div id="YMaps" style="width:570px;height:260px;border:1px solid grey;margin-bottom:20px;"></div>
 
-<form method="post" action="/admin/group_save">
-	<div class="input-prepend control-group">
-		<span class="add-on pre-label">Название</span>
-		<input name="name" title="Название группы объектов" class="long" maxlength="60" value="<?=$name;?>" type="text">
-	</div>
-	<div class="input-prepend control-group">
-		<span class="add-on pre-label">Иконка</span>
-		<input name="icon" title="Иконка группы объектов" class="long" maxlength="60" value="<?=$icon;?>" type="text">
-	</div>
-	<div class="input-prepend control-group">
-		<span class="add-on pre-label">Активна</span>
-		<?=$active;?>
-	</div>
-	<input type="hidden" name="country"    id="country">
-	<input type="hidden" name="id"         id="id" value="<?=$id;?>">
-	<input type="hidden" name="map_center" id="map_center" value="<?=$coord;?>">
-	<input type="hidden" name="map_zoom"   id="map_zoom"   value="<?=$zoom;?>">
-	<br>
-	<button class="btn" type="submit" value="add" name="mode">Создать группу</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-	<button type="submit" value="save" name="mode" class="btn btn-primary">Сохранить группу</button>
-</form>
-<hr>
+<ul class="nav nav-tabs" style="clear:both;">
+	<li class="active"><a href="#tabr1" data-toggle="tab">Группы</a></li>
+	<li><a href="#tabr2" data-toggle="tab">Переводы имён</a></li>
+</ul>
 
-<table id="userTable" class="table table-bordered table-condensed table-striped">
-<tr>
-	<th style="width:250px;">Название</th>
-	<th style="width:50px;">Иконка</th>
-	<th style="width:200">Центр области</th>
-	<th>Z</th>
-	<th>Активна</th>
-	<th style="70px;">Редактировать</th>
-</tr>
-<?=$table;?>
-</table>
+<div class="tab-content" style="clear:both;">
+	<div id="tabr1" class="tab-pane active">
+		<div id="YMaps" style="width:570px;height:260px;border:1px solid grey;margin-bottom:20px;"></div>
+		<form method="post" action="/admin/group_save">
+			<div class="input-prepend control-group">
+				<span class="add-on pre-label">Название</span>
+				<input name="name" title="Название группы объектов" class="long" maxlength="60" value="<?=$name;?>" type="text">
+			</div>
+			<div class="input-prepend control-group">
+				<span class="add-on pre-label">Иконка</span>
+				<input name="icon" title="Иконка группы объектов" class="long" maxlength="60" value="<?=$icon;?>" type="text">
+			</div>
+			<div class="input-prepend control-group">
+				<span class="add-on pre-label">Активна</span>
+				<?=$active;?>
+			</div>
+			<input type="hidden" name="country"    id="country">
+			<input type="hidden" name="id"         id="id" value="<?=$id;?>">
+			<input type="hidden" name="map_center" id="map_center" value="<?=$coord;?>">
+			<input type="hidden" name="map_zoom"   id="map_zoom"   value="<?=$zoom;?>">
+			<br>
+			<button class="btn" type="submit" value="add" name="mode">Создать группу</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<button type="submit" value="save" name="mode" class="btn btn-primary">Сохранить группу</button>
+		</form>
+		<hr>
+
+		<table id="userTable" class="table table-bordered table-condensed table-striped">
+			<tr>
+				<th style="width:250px;">Название</th>
+				<th style="width:50px;">Иконка</th>
+				<th style="width:200">Центр области</th>
+				<th>Z</th>
+				<th>Активна</th>
+				<th style="70px;">Редактировать</th>
+			</tr>
+			<?=$table;?>
+		</table>
+	</div>
+	<div id="tabr2" class="tab-pane">
+		Переводы
+	</div>
+</div>
 <script type="text/javascript">
 <!--
 var map,

@@ -273,7 +273,7 @@ class Ajax extends CI_Controller{
 		if($result->num_rows()){
 			$out = $this->pack_results($result);
 		}
-		return $out();
+		return $out;
 	}
 
 	private function select_by_type($type){
