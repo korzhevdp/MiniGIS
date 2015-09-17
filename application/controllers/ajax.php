@@ -354,7 +354,7 @@ class Ajax extends CI_Controller{
 				array_push($output, $row->lid);
 			}
 		}
-		print $this->db->last_query();
+		//print $this->db->last_query();
 		return $output;
 		//echo "UD relevant: ".implode($ud_diff,",")."\n";
 	}
@@ -440,7 +440,6 @@ class Ajax extends CI_Controller{
 				foreach($result->result() as $row){
 					$testarray[$row->lid][$row->pid] = $row->value;
 				}
-				//print_r($testarray);
 				foreach ($testarray as $loc => $val){
 					$match = 1;
 					$incounter = 0;
