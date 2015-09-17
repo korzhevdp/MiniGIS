@@ -293,7 +293,7 @@ class Editor extends CI_Controller{
 	public function get_property_page(){
 		if(!$this->session->userdata('user_id')){
 			print "Время работы в текущей сессии истекло.<br>Завершите работу и введите имя пользователя и пароль заново";
-			exit;
+			//exit;
 		}
 		if($this->input->post("loc") && !$this->usefulmodel->check_owner($this->input->post("loc"))){
 			print "У вас нет прав просматривать наборы свойств по этому объекту";

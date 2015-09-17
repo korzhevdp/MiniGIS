@@ -301,11 +301,17 @@ class Ajax extends CI_Controller{
 		));
 		$out = array();
 		if($result->num_rows()){
-			foreach($result->result() as $row){
-				$image  = (strlen($row->img)) ? $row->img : "nophoto.gif";
-				$string = "\t".$row->id.": { img: '".$image."', description: '".$row->address."', name: '".$row->location_name."', attr: '".$row->attr."', coord: '".$row->coord_y."', pr: ".$row->pr_type.", contact: '".$row->contact_info."', link: '".$row->link."' }";
-				array_push($out, $string);
-			}
+			$out = $this->pack_results($result);
+		}
+		return $out();
+	}
+
+	public function pack_results($result){
+		$out = array();
+		foreach($result->result() as $row){
+			$image  = (strlen($row->img)) ? $row->img : "nophoto.gif";
+			$string = "\t".$row->id.": { img: '".$image."', description: '".$row->address."', name: '".$row->location_name."', attr: '".$row->attr."', coord: '".$row->coord_y."', pr: ".$row->pr_type.", contact: '".$row->contact_info."', link: '".$row->link."' }";
+			array_push($out, $string);
 		}
 		return $out;
 	}
@@ -335,13 +341,8 @@ class Ajax extends CI_Controller{
 		AND LENGTH(locations.coord_y) > 3
 		ORDER BY locations.id ASC", array( $this->config->item('maps_def_loc')) );
 		$out = array();
-		$ats = array();
 		if($result->num_rows()){
-			foreach($result->result() as $row){
-				$image  = (strlen($row->img)) ? $row->img : "nophoto.gif";
-				$string = "\t".$row->id.": { img: '".$image."', description: '".$row->address."', name: '".$row->location_name."', attr: '".$row->attr."', coord: '".$row->coord_y."', pr: ".$row->pr_type.", contact: '".$row->contact_info."', link: '".$row->link."' }";
-				array_push($out, $string);
-			}
+			$out = $this->pack_results($result);
 		}
 		return $out;
 	}
@@ -372,13 +373,9 @@ class Ajax extends CI_Controller{
 		AND (users_admins.active AND LENGTH(locations.coord_y) > 3)", array($this->config->item('maps_def_loc'), $types_array));
 		$out = array();
 		if($result->num_rows()){
-			foreach($result->result() as $row){
-				$image  = (strlen($row->img)) ? $row->img : "nophoto.gif";
-				$string = "\t".$row->id.": { img: '".$image."', description: '".$row->address."', name: '".$row->location_name."', attr: '".$row->attr."', coord: '".$row->coord_y."', pr: ".$row->pr_type.", contact: '".$row->contact_info."', link: '".$row->link."' }";
-				array_push($out, $string);
-			}
+			$out = $this->pack_results($result);
 		}
-		return $out;
+		return $out();
 	}
 	
 	public function select_by_type($type){
@@ -407,23 +404,19 @@ class Ajax extends CI_Controller{
 		locations.location_name", array($this->config->item('maps_def_loc'), $type));
 		$out = array();
 		if($result->num_rows()){
-			foreach($result->result() as $row){
-				$image  = (strlen($row->img)) ? $row->img : "nophoto.gif";
-				$string = $row->id.": { img: '".$image."', description: '".$row->address."', name: '".$row->location_name."', attr: '".$row->attr."', coord: '".$row->coord_y."', pr: ".$row->pr_type.", contact: '".$row->contact_info."', link: '".$row->link."'}";
-				array_push($out, $string);
-			}
+			$out = $this->pack_results($result);
 		}
-		return "data = { ".implode($out, ",\n")."}";
+		return "data = { ".implode($out, ",\n")."\n}";
 	}
 	
-	public function search(){
+	public function search() {
 		//$this->output->enable_profiler(TRUE);
 		//$this->db->query("INSERT INTO `users_searches` (`users_searches`.`userid`,`users_searches`.`string`) VALUES (?,?)", array($user,$input));
-		if(!$this->input->post('mapset')){
+		if(!$this->input->post('mapset')) {
 			print "all";
-			exit;
+		} else {
+			$this->select_filtered_group($this->input->post('sc'), $this->input->post('mapset'), $current = 0);
 		}
-		$this->select_filtered_group($this->input->post('sc'), $this->input->post('mapset'), $current = 0);
 	}
 
 	public function msearch(){

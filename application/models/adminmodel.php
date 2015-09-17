@@ -867,12 +867,20 @@ class Adminmodel extends CI_Model{
 		`objects_groups`.refcoord,
 		`objects_groups`.refzoom
 		FROM
-		`objects_groups`");
+		`objects_groups`
+		ORDER BY `objects_groups`.active DESC, `objects_groups`.name ASC");
 		if($result->num_rows()){
 			foreach($result->result() as $row){
-				$checked  = ($row->active) ? 'checked="checked"' : '' ;
-				$checkbox = ($row->active) ? "Да" : "Нет" ;
-				$string = '<tr>
+				if($row->active) {
+					$checked  = 'checked="checked"';
+					$checkbox = "Да";
+					$class    = ' class="success"';
+				} else {
+					$checked  = '' ;
+					$checkbox = "Нет";
+					$class    = '';
+				}
+				$string = '<tr'.$class.'>
 					<td>'.$row->name.'</td>
 					<td>'.$row->icon.'</td>
 					<td>'.$row->refcoord.'</td>

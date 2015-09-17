@@ -2,7 +2,7 @@
 <h3>Профиль.&nbsp;&nbsp;&nbsp;&nbsp;<small><?=$name_f."&nbsp;".$name_i;?> с нами с <?=$registration_date?></small></h3>
 
 <ul class="nav nav-tabs" style="clear:both;">
-	<li><a href="#tabr1" data-toggle="tab" class="active">Информация о пользователе</a></li>
+	<li class="active"><a href="#tabr1" data-toggle="tab">Информация о пользователе</a></li>
 	<li><a href="#tabr2" data-toggle="tab">Сменить пароль</a></li>
 </ul>
 <div class="tab-content" style="clear:both;">
