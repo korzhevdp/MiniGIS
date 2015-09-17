@@ -18,7 +18,6 @@ class Foxhound extends CI_Controller{
 
 	private function select_filtered_group($input, $mapset, $current){
 		$string       = array();
-		$sorted       = array();
 		$idset        = array();
 		$full         = array(); // массив в который будем складывать все пришедшие параметры в соответствии с алгоритмами :)
 		$list         = array(); // массив накопитель найденных объектов. Над ним проводятся операции
@@ -31,10 +30,6 @@ class Foxhound extends CI_Controller{
 		###### формирование массива принятых параметров поиска
 		##########################################################################
 		$idset = array_keys($input);
-		foreach($input as $key => $val){
-			$sorted[$key] = $val;
-		}
-
 		# Выборка алгоритмов поиска и пересортировка параметров в массивы алгоритмов
 		$result = $this->db->query("SELECT
 		`properties_list`.algoritm,
@@ -48,90 +43,44 @@ class Foxhound extends CI_Controller{
 				if (!isset($full[$row->algoritm])) {
 					$full[$row->algoritm] = array();
 				};
-				$full[$row->algoritm][$row->id] = $sorted[$row->id];
+				$full[$row->algoritm][$row->id] = $input[$row->id];
 			}
 		}
-
-		//print_r($full);
-
 		# разбор по алгоритму U
-		if(isset($full['u']) && sizeof($full['u'])){
+		if(isset($full['u']) && sizeof($full['u'])) {
 			$list = $this->select_by_U_algorithm($full['u']);# Формируется список признаков отнесённых к union-алгоритму
-			//echo "U checkboxes relevant: ".implode($list,",")."\n";
 		}
-		
-		if(isset($full['ud']) && sizeof($full['ud'])){
-			$ud_diff = $this->select_by_UD_algorithm($full['ud']);
-			//echo "UD relevant: ".implode($ud_diff, ",")."\n";
+		if(isset($full['ud']) && sizeof($full['ud'])) {
+			$this->test_search_array($this->select_by_UD_algorithm($full['ud']));
 		}
-
-		# разбор по алгоритму LE
-
 		## результаты LE-, ME-выборок с нулевой длиной должны останавливать поиск! (?)
-		if (isset($full['le']) && sizeof($full['le'])){
-			$le_diff = $this->select_by_LE_algorithm($full['le']);
-			//echo "LE relevant: ".implode($le_diff, ",")."\n";
+		if (isset($full['le']) && sizeof($full['le'])) {
+			$this->test_search_array($this->select_by_LE_algorithm($full['le']));
 		}
-
-		if (isset($full['me']) && sizeof($full['me'])){
-			$me_diff = select_by_ME_algorithm($full['me']);
-			//echo "ME relevant: ".implode($me_diff,",")."\n";
+		if (isset($full['me']) && sizeof($full['me'])) {
+			$this->test_search_array($this->select_by_ME_algorithm($full['me']));
 		}
-
-		if (isset($full['d']) && sizeof($full['d'])){
-			$d_diff = $this->select_by_D_algorithm($full['d']);
-			//echo "D relevant: ".implode($d_diff,",")."\n";
+		if (isset($full['d']) && sizeof($full['d'])) {
+			$this->test_search_array($this->select_by_D_algorithm($full['d']));
 		}
-
-		if (isset($full['pr']) && sizeof($full['pr'])){ # Цена!
-			$pr_diff = $this->select_by_PRICE_algorithm($full['pr']);
+		if (isset($full['pr']) && sizeof($full['pr'])) { # Цена!
+			$this->test_search_array($pr_diff = $this->select_by_PRICE_algorithm($full['pr']));
 		}
-
 		########################################## сравниваем массивы
-		if(sizeof($d_diff)) {
-			if (sizeof($list)) {
-				$list = array_intersect($list, $d_diff);
-			} else {
-				$list = $d_diff;
-			}
-		}
-
-		if(sizeof($ud_diff)) {
-			if (sizeof($list)) {
-				$list = array_intersect($list, $ud_diff);
-			} else {
-				$list = $ud_diff;
-			}
-		}
-
-		if(sizeof($le_diff)) {
-			if (sizeof($list)) {
-				$list = array_intersect($list, $le_diff);
-			} else {
-				$list = $le_diff;
-			}
-		}
-
-		if(sizeof($me_diff)) {
-			if (sizeof($list)) {
-				$list = array_intersect($list, $me_diff);
-			} else {
-				$list = $me_diff;
-			}
-		}
-
-		if(sizeof($pr_diff)) {
-			if (sizeof($list)) {
-				$list = array_intersect($list, $pr_diff);
-			} else {
-				$list = $pr_diff;
-			}
-		}
-
-		if(sizeof($list)){
+		if(sizeof($list)) {
 			print implode($list, ",");
-		}else{
-			return "console.log('No Data')";
+		} else {
+			print "console.log('No Data')";
+		}
+	}
+
+	private function test_search_array($addition){
+		if(sizeof($addition)) {
+			if (sizeof($list)) {
+				$list = array_intersect($list, $addition);
+			} else {
+				$list = $addition;
+			}
 		}
 	}
 
