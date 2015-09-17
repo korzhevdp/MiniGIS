@@ -10,6 +10,11 @@ class Ajax extends CI_Controller{
 		$idset        = array();
 		$full         = array(); // массив в который будем складывать все пришедшие параметры в соответствии с алгоритмами :)
 		$list         = array(); // массив накопитель найденных объектов. Над ним проводятся операции
+		$le_diff      = array();
+		$me_diff      = array();
+		$ud_diff      = array();
+		$d_diff       = array();
+		$pr_diff      = array();
 		##########################################################################
 		###### формирование массива принятых параметров поиска
 		##########################################################################
@@ -19,214 +24,98 @@ class Ajax extends CI_Controller{
 		}
 
 		# Выборка алгоритмов поиска и пересортировка параметров в массивы алгоритмов
-		$result = $this->db->query("SELECT 
+		$result = $this->db->query("SELECT
 		`properties_list`.algoritm,
 		`properties_list`.id
 		FROM
 		`properties_list`
 		WHERE 
-		`properties_list`.id IN (".implode($idset,",").")");
+		`properties_list`.id IN (".implode($idset, ",").")");
 		if($result->num_rows()){
 			foreach($result->result() as $row){
-				(!isset($full[$row->algoritm])) ? $full[$row->algoritm] = array() : "";
+				if (!isset($full[$row->algoritm])) {
+					$full[$row->algoritm] = array();
+				};
 				$full[$row->algoritm][$row->id] = $sorted[$row->id];
 			}
 		}
+
 		//print_r($full);
-		#####################################################################################################################
-		//if((isset($sels[2]) || isset($sels[3]) || isset($sels[4])) && (!isset($vals[1]))){$vals[1]=4000000;}
-		##########################################################################
-		###### первичная выборка: в случае, когда непустой список чекбоксов.
-		##########################################################################
+
 		# разбор по алгоритму U
 		if(isset($full['u']) && sizeof($full['u'])){
-			# Формируется список признаков отнесённых к union-алгоритму
-			$string = implode(array_keys($full['u']), ",");
-			$result = $this->db->query("SELECT 
-			IF(locations.parent = 0, locations.id, locations.parent) AS location_id
-			FROM
-			locations
-			INNER JOIN properties_assigned ON (locations.id = properties_assigned.location_id)
-			INNER JOIN `locations_types` ON (locations.`type` = `locations_types`.id)
-			WHERE
-			(properties_assigned.property_id IN (".$string."))");
+			$list = $this->select_by_U_algorithm($full['u']);# Формируется список признаков отнесённых к union-алгоритму
+			//echo "U checkboxes relevant: ".implode($list,",")."\n";
 		}
-		#### обратный случай: список чекбоксов пуст - выбираем все объекты
-		else{
-			$result = $this->db->query("SELECT 
-			`locations`.id AS `location_id`,
-			`locations`.parent 
-			FROM `locations`");
+		
+		if(isset($full['ud']) && sizeof($full['ud'])){
+			$ud_diff = $this->select_by_UD_algorithm($full['ud']);
+			//echo "UD relevant: ".implode($ud_diff, ",")."\n";
 		}
 
-		if($result->num_rows()){
-			foreach($result->result() as $row){
-				array_push($list, $row->location_id);
-			}
-		}else{
-			return "console.log('No Data')";
-		}
-		///echo "U checkboxes relevant: ".implode($list,",")."\n";
-		//print_r($full);
-		///return implode($idset,",");
-		##########################################################################
-		###### режем лишнее тут в соответствии с дополнительными условиями поиска:
-		###### перебор le полей (Less OR Equal)
-		##########################################################################
 		# разбор по алгоритму LE
-		if(isset($full['le']) && sizeof($full['le'])){
-			$le_diff = array();
-			$string  = array();
-			$string  = array_keys($full['le']);
-			$count   = sizeof($string);			// количество свойств, соответствие которым должно быть выдержано
-			$inline  = implode($string, ",");	// список свойств, которым надо соответствовать
-			// выбираются данные. Учитывается не только соответствие номеру признака (как в случае u-алгоритма), но и соответствие "le" ВСЕМ введённым параметрам
-			$result  = $this->db->query("SELECT
-			IF(properties_list.coef = 1,properties_assigned.value,properties_assigned.value % properties_list.coef) AS value,
-			properties_assigned.property_id as `pid`,
-			properties_assigned.location_id as `lid`
-			FROM
-			`properties_list`
-			INNER JOIN properties_assigned ON (`properties_list`.id = properties_assigned.property_id)
-			WHERE
-			(properties_assigned.property_id IN (".$inline.")) AND
-			(properties_assigned.location_id IN (SELECT properties_assigned.location_id FROM properties_assigned WHERE (properties_assigned.property_id IN (".$inline.")) GROUP BY properties_assigned.location_id HAVING (COUNT(*) = ?)))
-			ORDER BY
-			properties_assigned.location_id", array($count));
 
-			if($result->num_rows()){
-				$testarray = array();
-				foreach($result->result() as $row){
-					$testarray[$row->lid][$row->pid] = $row->value;
-				}
-				//print_r($testarray);
-				foreach ($testarray as $loc => $val){
-					$match = 1;
-					$incounter = 0;
-					foreach($full['le'] as $prop => $val2){
-						($val[$prop] > $val2) ? $match = 0 : $incounter++;
-					}
-					if(!(sizeof($full['le']) - $incounter) && $match){
-						array_push($le_diff, $loc);
-					}
-				}
-			}else{//если не найдено хотя бы что-то - дальнейший поиск не имеет смысла
-				return "console.log('No Data')";
-			}
-			//echo "LE relevant: ".implode($le_diff,",")."\n";
+		## результаты LE-, ME-выборок с нулевой длиной должны останавливать поиск! (?)
+		if (isset($full['le']) && sizeof($full['le'])){
+			$le_diff = $this->select_by_LE_algorithm($full['le']);
+			//echo "LE relevant: ".implode($le_diff, ",")."\n";
 		}
 
-		if(isset($full['me']) && sizeof($full['me'])){
-			$me_diff = array();
-			$string  = array();
-			$string  = array_keys($full['me']);
-			$result  = $this->db->query("SELECT
-			IF(properties_list.coef = 1, properties_assigned.value, properties_assigned.value % properties_list.coef) AS value,
-			properties_assigned.property_id as `pid`,
-			properties_assigned.location_id as `lid`
-			FROM
-			`properties_list`
-			INNER JOIN properties_assigned ON (`properties_list`.id = properties_assigned.property_id)
-			WHERE
-			(properties_assigned.property_id IN (".implode($string, ",").")) 
-			AND (properties_assigned.location_id IN (
-				SELECT
-				properties_assigned.location_id
-				FROM properties_assigned
-				WHERE properties_assigned.property_id IN (".implode($string, ",").")
-				GROUP BY properties_assigned.location_id 
-				HAVING COUNT(*) = ?
-			)
-			ORDER BY
-			properties_assigned.location_id", array(sizeof($string)));
-			if($result->num_rows()){
-				$testarray = array();
-				foreach($result->result() as $row){
-					$testarray[$row->lid][$row->pid] = $row->value;
-				}
-				foreach ($testarray as $loc=>$val){
-					$match = 1;
-					$incounter = 0;
-					foreach($full['me'] as $prop=>$val2){
-						($val[$prop] < $val2) ? $match = 0 : $incounter++;
-					}
-					if(!(sizeof($full['me']) - $incounter) && $match){
-						array_push($me_diff, $loc);
-					}
-				}
-			} else {//если не найдено хотя бы что-то - дальнейший поиск не имеет смысла
-				return "console.log('No Data')";
-			}
+		if (isset($full['me']) && sizeof($full['me'])){
+			$me_diff = select_by_ME_algorithm($full['me']);
 			//echo "ME relevant: ".implode($me_diff,",")."\n";
 		}
 
-		if(isset($full['ud']) && sizeof($full['ud'])){
-			$ud_diff = array();
-			$string  = array_keys($full['ud']);
-			$result  = $this->db->query("SELECT 
-			IF(locations.parent = 0,properties_assigned.location_id,locations.parent) AS lid
-			FROM
-			properties_assigned
-			INNER JOIN `locations` ON (properties_assigned.location_id = `locations`.id)
-			WHERE
-			(properties_assigned.property_id IN (".implode($string, ',')."))");
-			if($result->num_rows()){
-				foreach($result->result() as $row){
-					array_push($ud_diff,$row->lid);
-				}
-			}
-			//echo "UD relevant: ".implode($ud_diff,",")."\n";
-		}
-
-		if(isset($full['d']) && sizeof($full['d'])){
-			$d_diff = array();
-			$string = array();
-			$string = array_keys($full['d']);
-			$result = $this->db->query("SELECT 
-			IF(locations.parent = 0, properties_assigned.location_id, locations.parent) AS lid
-			FROM
-			properties_assigned
-			INNER JOIN `locations` ON (properties_assigned.location_id = `locations`.id)
-			WHERE
-			properties_assigned.property_id IN (".implode($string, ",").")
-			GROUP BY
-			properties_assigned.location_id
-			HAVING
-			COUNT(*) = ?", array(sizeof($string)));
-			if($result->num_rows()){
-				foreach($result->result() as $row ){
-					array_push($d_diff,$row->lid);
-				}
-			}
+		if (isset($full['d']) && sizeof($full['d'])){
+			$d_diff = $this->select_by_D_algorithm($full['d']);
 			//echo "D relevant: ".implode($d_diff,",")."\n";
 		}
 
-		//echo sizeof($difference)."-1\n";
-		//Цена - это главное безумие сезона :)
-		if(isset($full['pr']) && sizeof($full['pr'])){ # Цена!
-			$pr_diff = array();
-			$result  = $this->db->query("SELECT
-			IF(locations.parent, locations.parent, locations.id) AS location_id
-			FROM
-			timers
-			INNER JOIN locations ON (timers.location_id = locations.id)
-			WHERE
-			NOW() BETWEEN timers.start_point AND timers.end_point
-			AND `timers`.`type` = 'price'
-			AND `timers`.`price` <= ".implode($full['pr'], ""));
-			//echo mysql_num_rows($result)."price_order\n";
-			if($result->num_rows()){
-				foreach($result->result() as $row ) {
-					array_push($pr_diff, $row->location_id);
-				}
+		if (isset($full['pr']) && sizeof($full['pr'])){ # Цена!
+			$pr_diff = $this->select_by_PRICE_algorithm($full['pr']);
+		}
+
+		########################################## сравниваем массивы
+		if(sizeof($d_diff)) {
+			if (sizeof($list)) {
+				$list = array_intersect($list, $d_diff);
+			} else {
+				$list = $d_diff;
 			}
 		}
-		$list = (isset($d_diff)  && sizeof($d_diff))  ? array_intersect($list, $d_diff)  : $list;
-		$list = (isset($ud_diff) && sizeof($ud_diff)) ? array_intersect($list, $ud_diff) : $list;
-		$list = (isset($le_diff) && sizeof($le_diff)) ? array_intersect($list, $le_diff) : $list;
-		$list = (isset($me_diff) && sizeof($me_diff)) ? array_intersect($list, $me_diff) : $list;
-		$list = (isset($pr_diff) && sizeof($pr_diff)) ? array_intersect($list, $pr_diff) : $list;
-		($current) ? array_push($list, $current) : "";
+
+		if(sizeof($ud_diff)) {
+			if (sizeof($list)) {
+				$list = array_intersect($list, $ud_diff);
+			} else {
+				$list = $ud_diff;
+			}
+		}
+
+		if(sizeof($le_diff)) {
+			if (sizeof($list)) {
+				$list = array_intersect($list, $le_diff);
+			} else {
+				$list = $le_diff;
+			}
+		}
+
+		if(sizeof($me_diff)) {
+			if (sizeof($list)) {
+				$list = array_intersect($list, $me_diff);
+			} else {
+				$list = $me_diff;
+			}
+		}
+
+		if(sizeof($pr_diff)) {
+			if (sizeof($list)) {
+				$list = array_intersect($list, $pr_diff);
+			} else {
+				$list = $pr_diff;
+			}
+		}
+
 		if(sizeof($list)){
 			print implode($list, ",");
 		}else{
@@ -236,10 +125,6 @@ class Ajax extends CI_Controller{
 
 
 ###################################################### NEW CONCEPT ################
-	public function send_warning($text){
-		return true;
-	}
-
 	public function get_map_content(){
 		//$this->output->enable_profiler(TRUE);
 		$map_content = array();
@@ -273,7 +158,23 @@ class Ajax extends CI_Controller{
 		}
 	}
 
-	public function get_active_layer($layers_array){
+	public function search() {
+		if ( $this->input->post('mapset') != 0 ) {
+			$this->select_filtered_group($this->input->post('sc'), $this->input->post('mapset'), $current = 0);
+		} else {
+			print "all";
+		}
+	}
+
+	public function msearch(){
+		print $this->select_by_type($this->input->post('type', true));
+	}
+
+	function send_warning($text){
+		return true;
+	}
+
+	function get_active_layer($layers_array){
 		// Layer - эквивалент object_group;
 		$result = $this->db->query("SELECT
 		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
@@ -303,10 +204,10 @@ class Ajax extends CI_Controller{
 		if($result->num_rows()){
 			$out = $this->pack_results($result);
 		}
-		return $out();
+		return $out;
 	}
 
-	public function pack_results($result){
+	function pack_results($result){
 		$out = array();
 		foreach($result->result() as $row){
 			$image  = (strlen($row->img)) ? $row->img : "nophoto.gif";
@@ -316,7 +217,7 @@ class Ajax extends CI_Controller{
 		return $out;
 	}
 
-	public function get_active_type($types_array){
+	function get_active_type($types_array){
 		// Layer - эквивалент object_group;
 		$result=$this->db->query("SELECT 
 		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
@@ -347,7 +248,7 @@ class Ajax extends CI_Controller{
 		return $out;
 	}
 
-	public function get_bkg_types($layers_array, $types_array){
+	function get_bkg_types($layers_array, $types_array){
 		$conditions = array();
 		(strlen($types_array))  ? array_push($conditions, "locations.`type` IN (".$types_array.")") : "";
 		(strlen($layers_array)) ? array_push($conditions, "locations_types.object_group IN (".$layers_array.")") : "";
@@ -377,8 +278,8 @@ class Ajax extends CI_Controller{
 		}
 		return $out();
 	}
-	
-	public function select_by_type($type){
+
+	function select_by_type($type){
 		$result=$this->db->query("SELECT 
 		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
 		locations.id,
@@ -408,20 +309,206 @@ class Ajax extends CI_Controller{
 		}
 		return "data = { ".implode($out, ",\n")."\n}";
 	}
-	
-	public function search() {
-		//$this->output->enable_profiler(TRUE);
-		//$this->db->query("INSERT INTO `users_searches` (`users_searches`.`userid`,`users_searches`.`string`) VALUES (?,?)", array($user,$input));
-		if(!$this->input->post('mapset')) {
-			print "all";
-		} else {
-			$this->select_filtered_group($this->input->post('sc'), $this->input->post('mapset'), $current = 0);
+
+	function select_by_D_algorithm($list) {
+		/*
+		$list   = array()
+		$output = array()
+		*/
+		$output = array();
+		$string = implode(array_keys($list), ", ");
+		$count  = sizeof(array_keys($list));
+		$result = $this->db->query("SELECT
+		IF(locations.parent = 0, properties_assigned.location_id, locations.parent) AS lid
+		FROM
+		properties_assigned
+		INNER JOIN `locations` ON (properties_assigned.location_id = `locations`.id)
+		WHERE
+		properties_assigned.property_id IN (".$string.")
+		GROUP BY
+		properties_assigned.location_id
+		HAVING
+		COUNT(*) = ?", array($count));
+		if($result->num_rows()){
+			foreach($result->result() as $row ){
+				array_push($output, $row->lid);
+			}
 		}
+		return $output;
+		//echo "D relevant: ".implode($d_diff,",")."\n";
 	}
 
-	public function msearch(){
-		$type = $this->input->post('type', true);
-		print $this->select_by_type($type);
+	function select_by_UD_algorithm($list) {
+		/*
+		$list   = array()
+		$output = array()
+		*/
+		$output  = array();
+		$string  = implode(array_keys($list), ",");
+		$result  = $this->db->query("SELECT
+		IF(locations.parent = 0, properties_assigned.location_id, locations.parent) AS lid
+		FROM
+		properties_assigned
+		INNER JOIN `locations` ON (properties_assigned.location_id = `locations`.id)
+		WHERE
+		properties_assigned.property_id IN (".$string.")");
+		if($result->num_rows()){
+			foreach($result->result() as $row) {
+				array_push($output, $row->lid);
+			}
+		}
+		print $this->db->last_query();
+		return $output;
+		//echo "UD relevant: ".implode($ud_diff,",")."\n";
+	}
+
+	function select_by_ME_algorithm($list) {
+		/*
+		$list   = array()
+		$output = array()
+		*/
+		$output = array();
+		$string = implode(array_keys($list), ", ");
+		$count  = sizeof(array_keys($list));
+		$result = $this->db->query("SELECT
+		IF(properties_list.coef = 1, properties_assigned.value, (properties_assigned.value / properties_list.divider * properties_list.multiplier)) AS value,
+		properties_assigned.property_id as `pid`,
+		properties_assigned.location_id as `lid`
+		FROM
+		`properties_list`
+		INNER JOIN properties_assigned ON (`properties_list`.id = properties_assigned.property_id)
+		WHERE
+		properties_assigned.property_id IN (".$string.")
+		AND properties_assigned.location_id IN (
+			SELECT
+			properties_assigned.location_id
+			FROM properties_assigned
+			WHERE properties_assigned.property_id IN (".$string.")
+			GROUP BY properties_assigned.location_id
+			HAVING COUNT(*) = ?
+		)
+		ORDER BY
+		properties_assigned.location_id", array($count));
+		if($result->num_rows()) {
+			$testarray = array();
+			foreach($result->result() as $row){
+				$testarray[$row->lid][$row->pid] = $row->value;
+			}
+			foreach ($testarray as $loc=>$val){
+				$match     = 1;
+				$incounter = 0;
+				foreach($list as $prop=>$val2){
+					($val[$prop] < $val2) ? $match = 0 : $incounter++;
+				}
+				if((sizeof($list) - $incounter) === 0 && $match){
+					array_push($output, $loc);
+				}
+			}
+		}
+		return $output;
+		//echo "UD relevant: ".implode($ud_diff,",")."\n";
+	}
+
+	function select_by_LE_algorithm($list) {
+		/*
+		$list   = array()
+		$output = array()
+		*/
+		$output = array();
+			$string  = implode(array_keys($list));
+			$count   = sizeof($string);	
+			/*
+			* $string - список свойств
+			* $count - количество свойств, соответствие которым должно быть выдержано
+			* Учитывается не только соответствие номеру признака (как в случае u-алгоритма), но и соответствие  ВСЕМ введённым "le"-параметрам
+			*/
+			$result  = $this->db->query("SELECT
+			IF(properties_list.coef = 1, properties_assigned.value, (properties_assigned.value / properties_list.divider * properties_list.multiplier)) AS value,
+			properties_assigned.property_id as `pid`,
+			properties_assigned.location_id as `lid`
+			FROM
+			`properties_list`
+			INNER JOIN properties_assigned ON (`properties_list`.id = properties_assigned.property_id)
+			WHERE
+			properties_assigned.property_id IN (".$string.")
+			AND properties_assigned.location_id IN (
+				SELECT
+				properties_assigned.location_id
+				FROM
+				properties_assigned
+				WHERE
+				properties_assigned.property_id IN (".$string.")
+				GROUP BY properties_assigned.location_id
+				HAVING COUNT(*) = ?
+			)
+			ORDER BY
+			properties_assigned.location_id", array($count));
+
+			if($result->num_rows()){
+				$testarray = array();
+				foreach($result->result() as $row){
+					$testarray[$row->lid][$row->pid] = $row->value;
+				}
+				//print_r($testarray);
+				foreach ($testarray as $loc => $val){
+					$match = 1;
+					$incounter = 0;
+					foreach($list as $prop => $val2){
+						($val[$prop] > $val2) ? $match = 0 : $incounter++;
+					}
+					if((sizeof($list) - $incounter) === 0 && $match){
+						array_push($le_diff, $loc);
+					}
+				}
+			}else{//если не найдено хотя бы что-то - дальнейший поиск не имеет смысла
+				return "console.log('No Data')";
+			}
+		return $output;
+		//echo "UD relevant: ".implode($ud_diff,",")."\n";
+	}
+
+	function select_by_PRICE_algorithm($list) {
+		$output = array();
+		$result = $this->db->query("SELECT
+		IF(locations.parent, locations.parent, locations.id) AS location_id
+		FROM
+		timers
+		INNER JOIN locations ON (timers.location_id = locations.id)
+		WHERE
+		NOW() BETWEEN timers.start_point AND timers.end_point
+		AND `timers`.`type` = 'price'
+		AND `timers`.`price` <= ".implode($full['pr'], ""));
+		//echo mysql_num_rows($result)."price_order\n";
+		if($result->num_rows()){
+			foreach($result->result() as $row ) {
+				array_push($output, $row->location_id);
+			}
+		}
+		return $output;
+	}
+
+	function select_by_U_algorithm($list) {
+		/*
+		$list   = array()
+		$output = array()
+		*/
+		$output = array();
+		# Формируется список признаков отнесённых к union-алгоритму
+		$string = implode(array_keys($list), ", ");
+		$result = $this->db->query("SELECT 
+		IF(locations.parent = 0, locations.id, locations.parent) AS location_id
+		FROM
+		locations
+		INNER JOIN properties_assigned ON (locations.id = properties_assigned.location_id)
+		INNER JOIN `locations_types` ON (locations.`type` = `locations_types`.id)
+		WHERE
+		(properties_assigned.property_id IN (".$string."))");
+		if($result->num_rows()) {
+			foreach($result->result() as $row) {
+				array_push($output, $row->location_id);
+			}
+		}
+		return $output;
 	}
 /* NEW CONCEPT */
 
