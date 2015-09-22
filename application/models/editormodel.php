@@ -140,7 +140,7 @@ class Editormodel extends CI_Model{
 		return $output;
 	}
 
-	private function get_bas_points_types(){
+	public function get_bas_points_types(){
 		$output = array();
 		$result = $this->db->query("SELECT 
 		locations_types.id,
@@ -179,7 +179,7 @@ class Editormodel extends CI_Model{
 		return implode($output,"\n");
 	}
 
-	private function get_object_list_by_type(){
+	public function get_object_list_by_type(){
 		$output = array();
 		$result = $this->db->query("SELECT
 		`locations`.id,
@@ -196,7 +196,7 @@ class Editormodel extends CI_Model{
 		return implode($output, "\n");
 	}
 	
-	private function get_objects_by_type(){
+	public function get_objects_by_type(){
 		//$this->output->enable_profiler(TRUE);
 		$output = array();
 		$run    = 0;

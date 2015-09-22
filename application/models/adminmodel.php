@@ -5,10 +5,12 @@ class Adminmodel extends CI_Model{
 	}
 
 	function get_full_index($obj_group = 0, $loc_type = 0){
+		$controller = ($this->session->userdata('admin')) ? "admin" : "user";
 		$output = array();
 		$out    = array(
-			'loc_type'	=> $loc_type,
-			'obj_group'	=> $obj_group
+			'loc_type'	 => $loc_type,
+			'obj_group'	 => $obj_group,
+			'controller' => $controller
 		);
 
 		$result=$this->db->query("SELECT 
@@ -47,7 +49,7 @@ class Adminmodel extends CI_Model{
 					$row['title']     = "";
 					$row['obj_group'] = $obj_group;
 					$row['img']       = '<img src="'.$this->config->item("api").'/images/folder.png" alt="">';
-					$row['link']      = '/admin/library/'.$row['id'];
+					$row['link']      = '/'.$controller.'/library/'.$row['id'];
 					array_push($output, $this->load->view("admin/libraryitem", $row, true));
 				}
 			}
@@ -67,7 +69,7 @@ class Adminmodel extends CI_Model{
 					foreach ($result->result_array() as $row){
 						$row['obj_group'] = $obj_group;
 						$row['img']  = '<img src="'.$this->config->item("api").'/images/folder.png" alt="">';
-						$row['link'] = '/admin/library/'.$obj_group.'/'.$row['id'];
+						$row['link'] = '/'.$controller.'/library/'.$obj_group.'/'.$row['id'];
 						array_push($output, $this->load->view("admin/libraryitem", $row, true));
 					}
 				}
@@ -105,6 +107,18 @@ class Adminmodel extends CI_Model{
 		return $this->load->view("admin/library", $out, true);
 	}
 
+	function get_composite_indexes($obj_group, $loc_type, $page = 1){
+		if ($obj_group) {
+			$values         = $this->adminmodel->show_semantics_values($obj_group, $loc_type);
+			$values['list'] = $this->adminmodel->show_semantics($obj_group);
+		}
+		$output = array(
+			'content'  => $this->adminmodel->get_full_index($obj_group, $loc_type),
+			'content2' => ($obj_group) ? $this->load->view('admin/prop_control_table', $values, true) : $this->load->view("admin/notapplicable", array(), true),
+			'page'     => $page
+		);
+		return $this->load->view("admin/library2", $output, true);
+	}
 	#######################################################################
 	### управление списками параметров VERIFIED
 	#######################################################################
@@ -133,7 +147,7 @@ class Adminmodel extends CI_Model{
 			foreach ($result->result_array() as $row){
 				//$ed_btn = ($row->editable) ? '<a href="/admin/semantics/'.$object_group.'/'.$row->id.'" class="btn btn-primary btn-mini">Редактировать</a>' : "";
 				$row['object_group'] = $object_group;
-				$row['infoclass']	 = ($row['editable'])	? ""					: ' class="warning"';
+				$row['infoclass']	 = ($row['editable'])	? ' title="Назначаемое свойство"' : ' class="warning" title="Признак типа/категории объекта"';
 				$row['pic1']		 = ($row['searchable'])	? 'find.png'			: 'lightbulb_off.png';
 				$row['title1']		 = ($row['searchable'])	? 'Доступно для поиска' : 'Поиск по параметру не производится';
 				$row['pic2']		 = ($row['active'])		? 'lightbulb.png'		: 'lightbulb_off.png';
@@ -231,9 +245,6 @@ class Adminmodel extends CI_Model{
 		$result=$this->db->query("SELECT DISTINCT properties_list.cat AS vals FROM properties_list ORDER BY vals");
 		$output['cat'] = pack_datalist($result);
 
-		$result=$this->db->query("SELECT DISTINCT properties_list.algoritm AS vals, IF(properties_list.algoritm = ?, 1, 0) AS act FROM properties_list ORDER BY vals", array($output['algoritm']));
-		$output['algoritm'] = pack_select($result);
-
 		$result=$this->db->query("SELECT 
 		locations.id,
 		CONCAT_WS(' ', locations_types.name, locations.location_name) AS name,
@@ -261,6 +272,7 @@ class Adminmodel extends CI_Model{
 
 	function save_semantics(){
 		//$this->output->enable_profiler(TRUE);
+		//return false;
 		$mode  =  $this->input->post('mode');
 		$group = ($this->input->post('object_group'))? $this->input->post('object_group') : 1;
 		$sb    = ($this->input->post('searchable')) ? 1 : 0;
@@ -422,10 +434,16 @@ class Adminmodel extends CI_Model{
 		}
 		// группы объектов для формы редактирования
 		$object['obj_group'] = array('<option value="0">Выберите группу объектов</option>');
-		$result=$this->db->query("SELECT `objects_groups`.id,`objects_groups`.name FROM `objects_groups` WHERE `objects_groups`.`active`");
+		$result = $this->db->query("SELECT 
+		`objects_groups`.id,
+		`objects_groups`.name
+		FROM
+		`objects_groups`
+		WHERE
+		`objects_groups`.`active`");
 		if($result->num_rows()){
 			foreach($result->result() as $row){
-				array_push($object['obj_group'],'<option value="'.$row->id.'" '.(($row->id == $object['object_group']) ? 'selected="selected"' : '').'>'.$row->name.'</option>');
+				array_push($object['obj_group'], '<option value="'.$row->id.'" '.(($row->id == $object['object_group']) ? 'selected="selected"' : '').'>'.$row->name.'</option>');
 			}
 		}
 		$object['obj_group'] = implode($object['obj_group'],"\n");
@@ -472,11 +490,10 @@ class Adminmodel extends CI_Model{
 				array_push($table2, $this->load->view('admin/parameterline2', $row, true));
 			}
 			$object['table2'] = implode($table2, "\n");
-			$out = $this->load->view('admin/object_types_control_table', $object, true);
 		}else{
 			$out = "<tr><td colspan=5>Справочник объектов пуст.</td></tr>";
 		}
-		return $out;
+		return $this->load->view('admin/object_types_control_table', $object, true);
 	}
 
 	function gis_save(){
@@ -485,31 +502,31 @@ class Adminmodel extends CI_Model{
 		if(!$this->input->post('obj')){
 			$this->db->query("INSERT INTO
 			`properties_list` (
-			`properties_list`.`row`,
-			`properties_list`.element,
-			`properties_list`.label,
-			`properties_list`.algoritm,
-			`properties_list`.selfname,
-			`properties_list`.page,
-			`properties_list`.property_group,
-			`properties_list`.fieldtype,
-			`properties_list`.cat,
-			`properties_list`.object_group,
-			`properties_list`.parameters,
-			`properties_list`.active,
-			`properties_list`.searchable,
-			`properties_list`.coef
-			)VALUES( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", array(
+				`properties_list`.`row`,
+				`properties_list`.element,
+				`properties_list`.label,
+				`properties_list`.algoritm,
+				`properties_list`.selfname,
+				`properties_list`.page,
+				`properties_list`.property_group,
+				`properties_list`.fieldtype,
+				`properties_list`.cat,
+				`properties_list`.object_group,
+				`properties_list`.parameters,
+				`properties_list`.active,
+				`properties_list`.searchable,
+				`properties_list`.coef
+			) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", array(
 				1,
 				1,
-				1,
-				'u',
-				$this->input->post('name', TRUE),
+				"Укажите метку",
+				'ud',
+				$this->input->post('name', true),
 				1,
 				"",
 				"checkbox",
 				"",
-				$this->input->post('obj_group', TRUE),
+				$this->input->post('obj_group', true),
 				"",
 				0,
 				1,
@@ -531,6 +548,8 @@ class Adminmodel extends CI_Model{
 				$this->db->insert_id(),
 				$this->input->post('pr_type',    true)
 			));
+			$text = "Администратором ".$this->session->userdata("user_name")." создан тип объекта #".$this->db->insert_id()." - ".$this->input->post('name');
+			$this->usefulmodel->insert_audit($text);
 		}else{
 			$this->db->query("UPDATE
 			locations_types
@@ -563,6 +582,8 @@ class Adminmodel extends CI_Model{
 				$this->input->post('obj_group', true),
 				$this->input->post('pl_num',    true)
 			));
+			$text = "Администратором ".$this->session->userdata("user_name")." сохранены параметры типа объекта #".$this->input->post('obj')." - ".$this->input->post('name');
+			$this->usefulmodel->insert_audit($text);
 		}
 	}
 
@@ -642,7 +663,23 @@ class Adminmodel extends CI_Model{
 
 	function sheet_edit($sheet_id){
 		$redirect = array('<option value="">Не перенаправляется</option>');
-		$act = array();
+		$act = array(
+			'id'         => 1,
+			'sheet_id'   => 1,
+			'sheet_text' => 'Текст',
+			'root'       => 0,
+			'owner'      => 0,
+			'header'     => 'Заголовок',
+			'redirect'   => '',
+			'date'       => '00.00.0000',
+			'ts'         => 0,
+			'active'     => 1,
+			'is_active'  => 1,
+			'parent'     => 0,
+			'pageorder'  => 0,
+			'comment'    => "Умолчательный комментарий",
+			'sheet_tree' => ''
+		);
 		$result=$this->db->query("SELECT 
 		`sheets`.`id`,
 		`sheets`.`text` as sheet_text,
@@ -665,19 +702,18 @@ class Adminmodel extends CI_Model{
 			$act['sheet_id'] = $sheet_id;
 			$act['sheet_tree'] = $this->adminmodel->_sheet_tree(0,$sheet_id);
 			$act['is_active'] = ($act['active']) ? 'checked="checked"' : "";
-			$result=$this->db->query("SELECT 
-			CONCAT('/map/simple/',`map_content`.id) as id,
-			`map_content`.name
-			FROM
-			`map_content`");
-			if($result->num_rows()){
-				foreach($result->result() as $row){
-					$selected = ($row->id == $act['redirect']) ? 'selected="selected"' : "";
-					$string = '<option value="'.$row->id.'" '.$selected.'>'.$row->name.'</option>';
-					array_push($redirect, $string);
-				}
+		}
+		$result=$this->db->query("SELECT 
+		CONCAT('/map/simple/',`map_content`.id) as id,
+		`map_content`.name
+		FROM
+		`map_content`");
+		if($result->num_rows()){
+			foreach($result->result() as $row){
+				$selected = ($row->id == $act['redirect']) ? 'selected="selected"' : "";
+				$string = '<option value="'.$row->id.'" '.$selected.'>'.$row->name.'</option>';
+				array_push($redirect, $string);
 			}
-
 		}
 		$act['redirect'] = implode($redirect, "\n");
 		$out = $this->load->view('fragments/sheets_editor',$act,true);
@@ -841,12 +877,14 @@ class Adminmodel extends CI_Model{
 			$admin,
 			$this->input->post('id')
 		));
+		$text = "Администратором ".$this->session->userdata("user_name")." изменены характеристики пользователя #".$this->input->post('id').": active: ".$this->input->post('active', true).", valid: ".$this->input->post('valid' , true).", rating: ".$this->input->post('rating' , true).", class: ".$admin.", access: ".implode($this->input->post('groups', true), ", ");
+		$this->usefulmodel->insert_audit($text);
 	}
 #
 ######################### END usermanager section ############################
 #
 #
-######################### BEGIN usermanager section ############################
+######################### BEGIN groupmanager section ############################
 #
 	function groups_show($group = 0){
 		$groups = array();
@@ -927,6 +965,8 @@ class Adminmodel extends CI_Model{
 				$this->input->post('active', true),
 				$this->input->post('id', true),
 			));
+			$text = "Администратором ".$this->session->userdata("user_name")." обновлены параметры группы #".$this->input->post('id', true)." - ".$this->input->post('name', true);
+			$this->usefulmodel->insert_audit($text);
 		}
 		if($this->input->post('mode', true) === 'add') {
 			$result = $this->db->query("INSERT INTO
@@ -944,11 +984,13 @@ class Adminmodel extends CI_Model{
 				$this->input->post('active', true)
 			));
 			$id = $this->db->insert_id();
+			$text = "Администратором ".$this->session->userdata("user_name")." создана группа #".$id." - ".$this->input->post('name', true);
+			$this->usefulmodel->insert_audit($text);
 		}
 		return $id;
 	}
 #
-######################### END usermanager section ############################
+######################### END groupmanager section ############################
 #
 #
 ######################### end of comments section ############################
@@ -1119,7 +1161,10 @@ class Adminmodel extends CI_Model{
 			$b_layers,
 			$this->input->post('mapset_name')
 		));
-		return $this->db->insert_id();
+		$id = $this->db->insert_id();
+		$text = "Администратором ".$this->session->userdata("user_name")." создана карта #".$id." - al: ".$a_layers.", at: ".$a_types.", bl: ".$b_layers.", bt: ".$b_types." с именем: ".$this->input->post('mapset_name');
+		$this->usefulmodel->insert_audit($text);
+		return $id;
 	}
 
 	function mc_save(){
@@ -1144,10 +1189,162 @@ class Adminmodel extends CI_Model{
 			$this->input->post('mapset_name'),
 			$this->input->post('mapset')
 		));
+		$text = "Администратором ".$this->session->userdata("user_name")." сохранена карта #".$this->input->post('mapset')." - al: ".$a_layers.", at: ".$a_types.", bl: ".$b_layers.", bt: ".$b_types." с именем: ".$this->input->post('mapset_name');
+		$this->usefulmodel->insert_audit($text);
 	}
 ######################### end of map content section ############################
 #
 ######################### start of menu content section ############################
+	public function translations($mode = "groups"){
+		//$this->output->enable_profiler(TRUE);
+		$output = array();
+
+		if ($mode === "groups"){
+			$result = $this->db->query("SELECT
+			objects_groups.id,
+			objects_groups.name
+			FROM
+			objects_groups
+			ORDER BY objects_groups.name");
+		}
+		if ($mode === "categories"){
+			$result = $this->db->query("SELECT 
+			`locations_types`.name,
+			`locations_types`.id
+			FROM
+			`locations_types`
+			WHERE `locations_types`.pl_num > 0");
+		}
+		if ($mode === "properties"){
+			$result = $this->db->query("SELECT 
+			`properties_list`.selfname AS name,
+			`properties_list`.id
+			FROM
+			`properties_list`
+			WHERE LENGTH(`properties_list`.`selfname`)");
+		}
+		if ($mode === "labels"){
+			$result = $this->db->query("SELECT DISTINCT
+			`properties_list`.label AS id,
+			`properties_list`.label AS name
+			FROM
+			`properties_list`
+			ORDER BY `properties_list`.label");
+		}
+		if ($mode === "articles"){
+			$result = $result=$this->db->query("SELECT 
+			`sheets`.`id`,
+			`sheets`.`header` AS name
+			FROM
+			`sheets`
+			ORDER BY name ASC");
+		}
+		if ($mode === "maps"){
+			$result = $this->db->query("SELECT
+			`map_content`.name,
+			`map_content`.id
+			FROM
+			`map_content`
+			ORDER BY `map_content`.name ASC");
+		}
+		$groups = $this->config->item($mode);
+		$table  = $this->get_translation_table($result, $groups, $mode);
+		$output['table'] = implode($table, "\n");
+		$output['mode']  = $mode;
+		return $this->load->view('admin/translations', $output, true);
+	}
+
+	private function get_translation_table($result, $groups, $mode){
+		$table  = array();
+		$string = array();
+		foreach($this->config->item("lang") as $key=>$val) {
+			$cell = '<th><img src="'.$this->config->item("api").'/images/flag_'.$key.'.png" alt="">'.$val.'</th>';
+			array_push($string, $cell);
+		}
+		array_push($table, "<tr>".implode($string, "\n")."</tr>");
+		if($result->num_rows()){
+			foreach($result->result() as $row){
+				$string = array();
+				$id = sizeof($table);
+				foreach($this->config->item("lang") as $key=>$val) {
+					$readonly = "";
+					if($key === $this->config->item("native_lang")){
+						$value = $row->name;
+						$readonly = ' readonly="readonly"';
+					} else {
+						$value = (isset($groups[$row->id][$key])) ? $groups[$row->id][$key] : '';
+					}
+					if($mode === 'labels'){
+						$cell = "\t".'<td><input type="text" name="'.$mode.'['.$id.']['.$key.']" class="translation" ref="'.$row->id.'" lang="'.$key.'" value="'.$value.'" placeholder="Нет перевода"'.$readonly.'></td>';
+					}
+					else{
+						$cell = "\t".'<td><input type="text" name="'.$mode.'['.$row->id.']['.$key.']" class="translation" ref="'.$row->id.'" lang="'.$key.'" value="'.$value.'" placeholder="Нет перевода"'.$readonly.'></td>';
+					}
+					array_push($string, $cell);
+
+				}
+				if($mode === 'labels'){
+					$cell = "\t".'<td class="hide"><input type="hidden" name="'.$mode.'['.$id.'][original]" class="translation" ref="'.$row->id.'" lang="'.$key.'" value="'.$row->name.'" placeholder="Нет перевода"></td>';
+					array_push($string, $cell);
+				}
+
+				array_push($table, "<tr>\n".implode($string, "\n")."\n</tr>");
+			}
+		}
+		return $table;
+	}
+
+	public function trans_save(){
+		//$this->output->enable_profiler(TRUE);
+		$output = array();
+		if($this->input->post("type") === 'labels'){
+			$filename = 'application/config/translations_l.php';
+			if(sizeof($this->input->post($this->input->post("type")))){
+
+				foreach($this->input->post($this->input->post("type")) as $key=>$val) {
+					$orig = $val['original'];
+					$input = array();
+					foreach($val as $lang=>$word){
+						$string = "'".addslashes($lang)."' => '".addslashes($word)."'";
+						array_push($input, $string);
+					}
+					$string = "\t'".$orig."' => array( ".implode($input, ",")." )";
+					array_push($output, $string);
+				}
+			}
+		} else {
+			if($this->input->post("type") === 'groups'){
+				$filename = 'application/config/translations_g.php';
+			}
+			if($this->input->post("type") === 'categories'){
+				$filename = 'application/config/translations_c.php';
+			}
+			if($this->input->post("type") === 'properties'){
+				$filename = 'application/config/translations_p.php';
+			}
+			if($this->input->post("type") === 'articles'){
+				$filename = 'application/config/translations_a.php';
+			}
+			if($this->input->post("type") === 'maps'){
+				$filename = 'application/config/translations_m.php';
+			}
+			if(sizeof($this->input->post($this->input->post("type")))){
+				foreach($this->input->post($this->input->post("type")) as $key=>$val) {
+					$input = array();
+					foreach($val as $lang=>$word){
+						$string = "'".addslashes(trim($lang))."' => '".addslashes(trim($word))."'";
+						array_push($input, $string);
+					}
+					$string = "\t".$key." => array( ".implode($input, ",")." )";
+					array_push($output, $string);
+				}
+			}
+		}
+
+		$config = $this->load->view('admin/translations_template', array('group' => $this->input->post("type"), 'content' => implode($output, ",\n")), true);
+		$this->load->helper('file');
+		write_file($filename, "<".$config, "w");
+	}
 }
 /* End of file adminmodel.php */
 /* Location: ./application/controllers/adminmodel.php */

@@ -33,7 +33,7 @@
 			<label class="span2">Пароль:</label>
 			<input class="span6" type="password" name="pass"><br>
 			
-			<a class="btn btn-large" title="Не туда попал" href="http://giscenter.home">Возврат на главную страницу</a>
+			<a class="btn btn-large" title="Не туда попал" href="<?=base_url();?>">Возврат на главную страницу</a>
 			<button type="submit" class="btn btn-primary btn-large">Вход</button>
 		</form>
 	</div>

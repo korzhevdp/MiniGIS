@@ -5,19 +5,25 @@ class Map extends CI_Controller {
 		$this->load->model('mapmodel');
 		$this->load->model('usefulmodel');
 		//$this->output->enable_profiler(TRUE);
+		if(!$this->session->userdata('lang')){
+			$this->session->set_userdata('lang', 'en');
+		}
 	}
 
 	public function index(){
 		$this->simple(1);
 	}
 
-	public function mapdata($mapset = 1){
-		return $this->mapmodel->map_data_get($mapset);
-	}
-	
 	public function simple($mapset = 1){
-		$act = $this->mapdata($mapset);
-		$this->load->view('frontend/frontend_map2', $act);
+		$act = $this->mapmodel->map_data_get($mapset);
+		$this->load->view($this->session->userdata('lang').'/frontend/frontend_map2', $act);
+	}
+
+	public function set_language(){
+		//$this->output->enable_profiler(TRUE);
+		$this->session->set_userdata('lang', $this->input->post('lang'));
+		$this->load->helper("url");
+		redirect($this->input->post('redirect'));
 	}
 
 	public function type($type){
@@ -34,10 +40,10 @@ class Map extends CI_Controller {
 			$map_header = $row->name;
 		}
 		$act = array(
-			'footer'		=> $this->load->view('frontend/page_footer', array(), true),
+			'footer'		=> $this->load->view($this->session->userdata('lang').'/frontend/page_footer', array(), true),
 			'otype'			=> $type,
 			'mapset'		=> 0,
-			'menu'			=> $this->load->view('cache/menus/menu', array(), true),
+			'menu'			=> $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true).$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu(),
 			'keywords'		=> $this->config->item('map_keywords'),
 			'map_header'	=> $map_header,
 			'switches'		=> 'switches = {}',
@@ -45,7 +51,7 @@ class Map extends CI_Controller {
 			'map_center'	=> $this->config->item('map_center'),
 			'title'			=> $this->config->item('site_title_start')." Интерактивная карта"
 		);
-		$this->load->view('frontend/frontend_map2', $act);
+		$this->load->view($this->session->userdata('lang').'/frontend/frontend_map2', $act);
 	}
 
 	public function get_map_content(){
@@ -85,7 +91,7 @@ class Map extends CI_Controller {
 		$out = array();
 		foreach($result->result() as $row){
 			$image  = (strlen($row->img)) ? $row->img : "nophoto.gif";
-			$string = "\t".$row->id.": { img: '".$image."', description: '".$row->address."', name: '".$row->location_name."', attr: '".$row->attr."', coord: '".$row->coord_y."', pr: ".$row->pr_type.", contact: '".$row->contact_info."', link: '".$row->link."' }";
+			$string = "\t".$row->id.": { img: '".$image."', description: '".$row->address."', type: '".$row->typename."', name: '".$row->location_name."', attr: '".$row->attr."', coord: '".$row->coord_y."', pr: ".$row->pr_type.", contact: '".$row->contact_info."', link: '".$row->link."' }";
 			array_push($out, $string);
 		}
 		return $out;
@@ -96,7 +102,8 @@ class Map extends CI_Controller {
 		$result = $this->db->query("SELECT
 		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
 		locations.id,
-		CONCAT_WS(' ',IF(locations_types.id IN(10, 12, 13, 15), 'объект', locations_types.name),locations.location_name) AS location_name,
+		IF(locations_types.pl_num = 0, 'объект', locations_types.name) AS typename,
+		locations.location_name,
 		IF(LENGTH(locations.contact_info), locations.contact_info, 'контактная информация отсутствует') AS contact_info,
 		IF(LENGTH(locations.address), locations.address, ?) AS address,
 		locations.coord_y,
@@ -129,7 +136,8 @@ class Map extends CI_Controller {
 		$result=$this->db->query("SELECT 
 		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
 		locations.id,
-		CONCAT_WS(' ',IF(locations_types.pl_num = 0, 'объект', locations_types.name),locations.location_name) AS location_name,
+		IF(locations_types.pl_num = 0, 'объект', locations_types.name) AS typename,
+		locations.location_name,
 		IF(LENGTH(locations.contact_info), locations.contact_info, 'контактная информация отсутствует') AS contact_info,
 		IF(LENGTH(locations.address), locations.address, ?) AS address,
 		TRIM(locations.coord_y) AS coord_y,
@@ -163,7 +171,8 @@ class Map extends CI_Controller {
 		$result = $this->db->query("SELECT
 		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
 		locations.id,
-		CONCAT_WS(' ',IF(locations_types.pl_num = 0, 'объект', locations_types.name),locations.location_name) AS location_name,
+		IF(locations_types.pl_num = 0, 'объект', locations_types.name) AS typename,
+		locations.location_name,
 		IF(LENGTH(locations.contact_info), locations.contact_info, 'контактная информация отсутствует') AS contact_info,
 		IF(LENGTH(locations.address), locations.address, ?) AS address,
 		locations.coord_y,
@@ -186,36 +195,6 @@ class Map extends CI_Controller {
 		return $out;
 	}
 
-	private function select_by_type($type){
-		$result=$this->db->query("SELECT 
-		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
-		locations.id,
-		CONCAT_WS(' ',IF(locations_types.pl_num = 0, 'объект', locations_types.name),locations.location_name) AS location_name,
-		IF(LENGTH(locations.contact_info), locations.contact_info, 'контактная информация отсутствует') AS contact_info,
-		IF(LENGTH(locations.address), locations.address, ?) AS address,
-		locations.coord_y,
-		locations_types.pr_type,
-		CONCAT('/page/gis/', locations.id) AS link,
-		objects_groups.array,
-		IF(LENGTH(`locations`.`style_override`) > 1, `locations`.`style_override`, IF(LENGTH(locations_types.attributes), locations_types.attributes, 'default#houseIcon')) AS attr
-		FROM
-		locations_types
-		INNER JOIN locations ON (locations_types.id = locations.`type`)
-		INNER JOIN objects_groups ON (locations_types.object_group = objects_groups.id)
-		INNER JOIN users_admins ON (locations.owner = users_admins.uid)
-		WHERE
-		(locations_types.id = ?)
-		AND locations.active
-		AND users_admins.active
-		AND (LENGTH(locations.coord_y) > 3)
-		ORDER BY
-		locations.location_name", array($this->config->item('maps_def_loc'), $type));
-		$out = array();
-		if($result->num_rows()){
-			$out = $this->pack_results($result);
-		}
-		return "data = { ".implode($out, ",\n")."\n}";
-	}
 }
 
 /* End of file map.php */

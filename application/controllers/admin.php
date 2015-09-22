@@ -6,7 +6,6 @@ class Admin extends CI_Controller{
 		if(!$this->session->userdata('user_id')){
 			redirect('login/index/auth');
 		}else{
-			$this->load->model('cachemodel');
 			$this->load->model('usefulmodel');
 			$this->load->model('adminmodel');
 			$this->session->set_userdata("c_l", 0);
@@ -23,21 +22,22 @@ class Admin extends CI_Controller{
 		$this->load->view('admin/view', $output);
 	}
 
-	public function library($obj_group=0, $loc_type=0) {
+	public function library($obj_group = 0, $loc_type = 0, $page = 1) {
 		$this->usefulmodel->check_admin_status();
 		$output = array(
-			'menu'    => $this->load->view('admin/menu', array(), true)
-						.$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true),
-			'content' => $this->adminmodel->get_full_index($obj_group, $loc_type)
+			'menu'     => $this->load->view('admin/menu', array(), true)
+						 .$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true),
+			'content'  => $this->adminmodel->get_composite_indexes($obj_group, $loc_type, $page)
 		);
 		$this->load->view('admin/view', $output);
 	}
 
 	public function sheets($mode, $sheet_id="0") {
 		$this->usefulmodel->check_admin_status();
+		$this->load->model('cachemodel');
 		if ($mode === 'save') {
 			$this->adminmodel->sheet_save($sheet_id);
-			$this->cachemodel->menu_build(1, $this->config->item('mod_housing_root'), $this->config->item('mod_gis'));
+			$this->cachemodel->menu_build(1, 0, 'file');
 		}
 		$output = array(
 			'menu'    => $this->load->view('admin/menu', array(), true)
@@ -49,16 +49,17 @@ class Admin extends CI_Controller{
 
 	public function maps(){
 		$this->usefulmodel->check_admin_status();
+		$this->load->model('cachemodel');
 		$mapset = ($this->input->post('map_view')) ? $this->input->post('map_view') : 0;
 		if($this->input->post('save')){
 			$this->adminmodel->mc_save();
-			$this->cachemodel->cache_selector_content($this->input->post('mapset'));
-			$this->cachemodel->menu_build(1, $this->config->item('mod_housing_root'), $this->config->item('mod_gis'));
+			$this->cachemodel->cache_selector_content('file');
+			$this->cachemodel->menu_build(1, 0, 'file');
 		}
 		if($this->input->post('new')){
 			$mapsetid = $this->adminmodel->mc_new();
-			$this->cachemodel->cache_selector_content($mapsetid);
-			$this->cachemodel->menu_build(1, $this->config->item('mod_housing_root'), $this->config->item('mod_gis'));
+			$this->cachemodel->cache_selector_content('file');
+			$this->cachemodel->menu_build(1, 0, 'file');
 		}
 		$output = array(
 			'menu'    => $this->load->view('admin/menu', array(), true)
@@ -83,23 +84,13 @@ class Admin extends CI_Controller{
 	}
 
 	public function gis_save(){
+		//$this->output->enable_profiler(TRUE);
 		$this->usefulmodel->check_admin_status();
+		$this->load->model('cachemodel');
 		$this->adminmodel->gis_save();
-		$result = $this->db->query("SELECT 
-		map_content.id
-		FROM
-		map_content
-		WHERE
-		(map_content.a_layers = ?)", array(
-			$this->input->post('obj_group', true)
-		));
-		if($result->num_rows){
-			foreach($result->result() as $row){
-				$this->cachemodel->cache_selector_content($row->id);
-			}
-		}
-		$this->cachemodel->menu_build(1, $this->config->item('mod_housing_root'), $this->config->item('mod_gis'));
-		$this->cachemodel->_build_object_lists();
+		$this->cachemodel->menu_build(1, 0, 'file');
+		$this->cachemodel->cache_selector_content('file');
+		$this->cachemodel->build_object_lists();
 		redirect("admin/gis");
 	}
 
@@ -139,9 +130,9 @@ class Admin extends CI_Controller{
 	public function groupmanager($id=0){
 		$this->usefulmodel->check_admin_status();
 		$output = array(
-			'menu'    => $this->load->view('admin/menu', array(), true)
-						.$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true),
-			'content' => $this->adminmodel->groups_show($id)
+			'menu'         => $this->load->view('admin/menu', array(), true)
+						     .$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true),
+			'content'      => $this->adminmodel->groups_show($id)
 		);
 		$this->load->view('admin/view', $output);
 	}
@@ -151,7 +142,6 @@ class Admin extends CI_Controller{
 		$id = $this->adminmodel->group_save();
 		redirect('admin/groupmanager/'.$id);
 	}
-
 	####################################################
 	public function swpropsearch($group = 1, $prop = 0){
 		$result = $this->db->query("UPDATE properties_list 
@@ -169,8 +159,46 @@ class Admin extends CI_Controller{
 		redirect('admin/semantics/'.$group);
 	}
 
-	public function cachemap($mapset = 1, $mode = "file"){
-		$this->cachemodel->cache_selector_content($mapset, $mode);
+	public function cachemap($mode = "file"){
+		$this->load->model('cachemodel');
+		$this->cachemodel->cache_selector_content($mode);
+	}
+
+	public function cachemenu(){
+		$this->load->model('cachemodel');
+		$this->cachemodel->cache_docs(1, 'file');
+	}
+
+
+	public function translations($mode="groups"){
+		$this->config->load('translations_g', FALSE);
+		$this->config->load('translations_c', FALSE);
+		$this->config->load('translations_p', FALSE);
+		$this->config->load('translations_l', FALSE);
+		$this->config->load('translations_m', FALSE);
+		$this->config->load('translations_a', FALSE);
+		$this->usefulmodel->check_admin_status();
+		$output = array(
+			'menu'         => $this->load->view('admin/menu', array(), true)
+							 .$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true),
+			'content'      => $this->adminmodel->translations($mode)
+		);
+		$this->load->view('admin/view', $output);
+	}
+
+	public function trans_save(){
+
+		$this->adminmodel->trans_save();
+		$this->load->model('cachemodel');
+		$this->config->load('translations_g');
+		$this->config->load('translations_c');
+		$this->config->load('translations_p');
+		$this->config->load('translations_l');
+		$this->config->load('translations_m');
+		$this->config->load('translations_a');
+		$this->cachemodel->menu_build(1, 0, 'file');
+		$this->cachemodel->cache_selector_content('file');
+		redirect("/admin/translations/".$this->input->post('type'));
 	}
 }
 /* End of file admin.php */

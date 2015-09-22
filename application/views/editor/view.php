@@ -152,7 +152,7 @@
 			<div class="navbar-inner">
 				<div class="container">
 					<a class="brand" href="/">KORZHEVDP.COM <img src="<?=$this->config->item('api');?>/images/minigis24.png" alt="MiniGIS" title="MiniGis Project"></a>
-					<?=$this->load->view('cache/menus/menu', array(), TRUE).$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu();?>
+					<?=$this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), TRUE).$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu();?>
 				</div>
 			</div>
 		</td>

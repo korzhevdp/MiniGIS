@@ -114,7 +114,7 @@ class Editor extends CI_Controller{
 				$this->usefulmodel->insert_audit("При сохранении объекта: #".$location_id." - владелец не совпадает");
 				redirect('admin/library');
 			}
-			if($location_id !== $this->session->userdata("c_l")){
+			if($location_id != $this->session->userdata("c_l")){
 				$this->usefulmodel->insert_audit("При сохранении объекта: #".$location_id." - подмена целевого объекта (".$this->session->userdata("c_l").")");
 			}
 

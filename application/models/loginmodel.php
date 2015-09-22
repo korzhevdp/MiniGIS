@@ -12,7 +12,7 @@ class Loginmodel extends CI_Model{
 			'page'      => 1,
 			'errorlist' => "",
 			'reg'       => ($mode =='auth') ? 0 : 1,
-			'menu'      => $this->load->view('cache/menus/menu', array(), true),
+			'menu'      => $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true),
 		);
 		$this->load->view('login/login_view2', $act);
 	}
@@ -32,10 +32,10 @@ class Loginmodel extends CI_Model{
 		users_admins.map_center,
 		users_admins.map_zoom,
 		users_admins.map_type,
-		MIN(`locations`.id) AS `init_loc`
+		MIN(locations.id) AS init_loc
 		FROM
-		`locations`
-		INNER JOIN users_admins ON (`locations`.owner = users_admins.uid)
+		locations
+		RIGHT OUTER JOIN users_admins ON (locations.owner = users_admins.uid)
 		WHERE
 		(users_admins.nick = ?)
 		LIMIT 1", array($this->input->post('name', true)));
@@ -54,8 +54,8 @@ class Loginmodel extends CI_Model{
 						'user_id'		=> $row->uid,
 						'user_name'		=> $this->input->post('name'),
 						'io'			=> $row->io,
-						'user_class'	=> md5("secret_userclass".$row->class_id),
-						'init_loc'		=> $row->init_loc,
+						'admin'			=> ($row->class_id === "1") ? 1 : 0,
+						'init_loc'		=> (strlen($row->init_loc) ? $row->init_loc : 0),
 						'lang'			=> $row->lang,
 						'access'		=> (($row->access) ? $row->access : "1"),
 						'map_center'	=> (strlen($row->map_center) > 3 ? $row->map_center : $this->config->item('map_center')),
@@ -63,17 +63,18 @@ class Loginmodel extends CI_Model{
 						'map_type'		=> (strlen($row->map_type)       ? $row->map_type   : $this->config->item('map_type'))
 					);
 					$this->session->set_userdata($session);
-					redirect('admin');
+					//print "logged";
+					redirect('user');
 				}
 			}else{
-				array_push($errors,'Пользователь с указанными именем и паролем не найден. Проверьте правильность ввода имени пользователя и пароля. Обратите внимание, что прописные и строчные буквы различаются');
+				array_push($errors, 'Пользователь с указанными именем и паролем не найден. Проверьте правильность ввода имени пользователя и пароля. Обратите внимание, что прописные и строчные буквы различаются');
 			}
 		}else{
 			array_push($errors,'Пользователь с указанными именем и паролем не найден. Проверьте правильность ввода имени пользователя и пароля. Обратите внимание, что прописные и строчные буквы различаются');
 		}
 		$act = array(
 			'captcha'   => $this->captcha_make(),
-			'menu'      => $this->load->view('cache/menus/menu', array(), TRUE),
+			'menu'      => $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), TRUE),
 			'errorlist' => implode($errors, "</li>\n<li>"),
 			'page'		=> 1
 		);
@@ -133,7 +134,7 @@ class Loginmodel extends CI_Model{
 				'captcha'   => $this->captcha_make(),
 				'reg'       => 1,
 				'page'      => 2,
-				'menu'      => $this->load->view('cache/menus/menu', array(), true),
+				'menu'      => $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true),
 				'errorlist' => implode($errors, "</li>\n<li>")
 			);
 			//print $act['page'];
@@ -142,7 +143,20 @@ class Loginmodel extends CI_Model{
 	}
 
 	function user_add($valcode){
-		$query=$this->db->query("INSERT INTO 
+		$rights_level = 2;
+		$active = 0;
+		$result = $this->db->query("SELECT 
+		COUNT(*) as users
+		FROM
+		`users_admins`");
+		if($result->num_rows()){
+			$row = $result->row();
+			$rights_level = ($row->users == 0) ? 1: 2;
+		}
+		if( $this->config->item('users_active_at_once') ) {
+			$active = 1;
+		}
+		$query = $this->db->query("INSERT INTO 
 		`users_admins`
 		(`users_admins`.class_id,
 		`users_admins`.nick,
@@ -155,12 +169,12 @@ class Loginmodel extends CI_Model{
 		`users_admins`.email
 		)
 		VALUES( ?, ?, ?, ?, ?, ?, ?, ?, ? )", array(
-			2,
+			$admin,
 			trim($this->input->post('name', true)),
 			md5(md5('secret').$this->input->post('pass')),
 			date("Y-m-d H:i:s"),
 			sha1(sha1('uid'.date("DMYHIS").rand(1, 9))),
-			0,
+			$active,
 			0,
 			$valcode,
 			$this->input->post('email'))
@@ -212,7 +226,7 @@ class Loginmodel extends CI_Model{
 				'captcha'   => $this->captcha_make(),
 				'errorlist' => implode($errors,"</li>\n<li>"),
 				'page'      => 3,
-				'menu'      => $this->load->view('cache/menus/menu', array(), true)
+				'menu'      => $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true)
 			);
 			$this->load->view('login/login_view2', $act);
 		}

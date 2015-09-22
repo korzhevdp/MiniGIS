@@ -1,5 +1,6 @@
 <h4>Семантика объектов&nbsp;&nbsp;&nbsp;&nbsp;<small><?=$og_name;?></small></h4>
-	<div class="well well-small" style="padding-bottom:35px;">
+	<form method=post id="ogp_edit_form" action="/admin/save_semantics">
+
 		<div class="input-prepend">
 			<label class="add-on" for="ogp1">Страница:</label>
 			<input type="text" id="ogp1" form="ogp_edit_form" name="page" value="<?=$page;?>">
@@ -26,9 +27,14 @@
 		</div><br>
 
 		<div class="input-prepend">
-			<label class="add-on" for="ogp6">Алгоритм:</label>
+			<label class="add-on" for="ogp6">Алгоритм поиска:</label>
 			<select form="ogp_edit_form" name="algoritm" id="ogp6">
-				<?=$algoritm;?>
+				<option value="u" <? if ($algoritm === "u" ) {?> selected="selected"<? } ?>>Соответствует всем признакам</option>
+				<option value="ud"<? if ($algoritm === "ud") {?> selected="selected"<? } ?>>Соответствует одному из признаков</option>
+				<option value="d"<?  if ($algoritm === "d" ) {?> selected="selected"<? } ?>>d - алгоритм</option>
+				<option value="me"<? if ($algoritm === "me") {?> selected="selected"<? } ?>>Больше или равно</option>
+				<option value="le"<? if ($algoritm === "le") {?> selected="selected"<? } ?>>Меньше или равно</option>
+				<option value="pr"<? if ($algoritm === "pr") {?> selected="selected"<? } ?>>Цена на дату запроса</option>
 			</select>
 		</div><br>
 
@@ -69,12 +75,12 @@
 
 		<div class="input-prepend">
 			<label class="add-on" for="ogp12">В поиске:</label>
-			<input type="checkbox" name="searchable" id="ogp12" value="1" <?=$searchable?>>
+			<input form="ogp_edit_form" type="checkbox" name="searchable" id="ogp12" value="1" <?=$searchable?>>
 		</div><br>
 
 		<div class="input-prepend">
 			<label class="add-on" for="ogp13">Включен:</label>
-			<input type="checkbox" name="active" id="ogp13" value="1" <?=$active?>>
+			<input form="ogp_edit_form" type="checkbox" name="active" id="ogp13" value="1" <?=$active?>>
 		</div><br>
 
 		<input type="hidden" form="ogp_edit_form" name="obj" value="<?=$obj;?>">
@@ -82,8 +88,7 @@
 		<button type="submit" form="ogp_edit_form" name="mode" class="btn" value="new" style="margin-top:10px;">Создать новый элемент</button>
 		<button type="submit" form="ogp_edit_form" name="mode" class="btn btn-primary" value="save" style="margin-left:147px;margin-top:10px;">Сохранить элемент</button>
 
-	</div>
-<form method=post id="ogp_edit_form" action="/admin/save_semantics"></form>
+</form>
 
 <h4>Список параметров семантики для этого типа объектов&nbsp;&nbsp;&nbsp;&nbsp;<small>Для описания и поиска</small></h4>
 <table class="table table-bordered table-condensed">

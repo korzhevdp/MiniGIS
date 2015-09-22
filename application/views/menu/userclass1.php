@@ -1,5 +1,5 @@
 <ul class="nav pull-right">
-	<li><img src="<?=$this->config->item("api");?>/images/flag_<?=$this->session->userdata("lang");?>.png" style="width:32px;height:32px;border:0;margin-top:8px;" alt=""></li>
+	<li><img src="http://api.korzhevdp.com/images/flag_<?=$this->session->userdata('lang');?>.png" class="langMark" alt=""></li>
 	<li class="divider-vertical"></li>
 	<li class="dropdown">
 		<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-user icon-white"></i>&nbsp;<?=$user;?>&nbsp;<b class="caret"></b></a>

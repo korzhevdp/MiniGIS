@@ -4,6 +4,12 @@ class Login extends CI_Controller{
 		parent::__construct();
 		$this->load->model('loginmodel');
 		$this->load->library('email');
+		if(!$this->session->userdata('common_user')){
+			$this->session->set_userdata('common_user', md5(rand(0, 9999).'zy'.$this->input->ip_address()));
+		}
+		if(!$this->session->userdata('lang')){
+			$this->session->set_userdata('lang', 'en');
+		}
 	}
 
 	function index($mode = 'auth'){

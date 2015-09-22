@@ -15,7 +15,8 @@ class Usefulmodel extends CI_Model{
 		FROM
 		`locations`
 		WHERE
-		locations.id = ? AND locations.owner = ?", array( $location_id, $this->session->userdata('user_id') ));
+		locations.id = ? 
+		AND locations.owner = ?", array( $location_id, $this->session->userdata('user_id') ));
 		if($result->num_rows()){
 			return TRUE;
 		}else{
@@ -24,7 +25,7 @@ class Usefulmodel extends CI_Model{
 	}
 
 	public function check_admin_status(){
-		if($this->session->userdata('user_class') !== md5("secret_userclass1")){
+		if(!$this->session->userdata('admin')){
 			$this->session->sess_destroy();
 			redirect('admin');
 		}
@@ -32,7 +33,7 @@ class Usefulmodel extends CI_Model{
 
 	public function show_admin_menu(){
 		$output = $this->load->view('admin/menu', array(), true);
-		if($this->session->userdata('user_class') == md5("secret_userclass1")){
+		if($this->session->userdata('admin')){
 			$output .= $this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true);
 		}
 		return $output;
@@ -117,7 +118,7 @@ class Usefulmodel extends CI_Model{
 		) VALUES( ?, ?, ? )", array(
 			$this->session->userdata('user_id'), 
 			$text, 
-			$this->session->userdata("c_l")
+			($this->session->userdata("c_l")) ? $this->session->userdata("c_l") : 0
 		));
 	}
 	################################################################################

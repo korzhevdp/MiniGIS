@@ -30,7 +30,7 @@ class Frontendmodel extends CI_Model{
 	public function get_cached_content($location_id){ // CI_C_Gis проверить работу - каждый раз готовит кэш заново.
 		//$this->output->enable_profiler(TRUE);
 		$output = "";
-		$cachefile = "/var/www/html/minigis/application/views/cache/locations/location_".$location_id.".src";
+		$cachefile = "/var/www/html/inmypocket/application/views/cache/locations/location_".$location_id.".src";
 		if(file_exists($cachefile)){
 			$output = file_get_contents($cachefile);
 		}else{
@@ -106,8 +106,8 @@ class Frontendmodel extends CI_Model{
 			$ans['housing']="";
 		}
 		$ans['rest']=$menu;
-		$ans['notepad']=$this->load->view('frontend/frontend_notepad_etc',$ans, true);
-		return $this->load->view('frontend/menu',$ans, true);
+		$ans['notepad']=$this->load->view($this->session->userdata('lang').'/frontend/frontend_notepad_etc',$ans, true);
+		return $this->load->view($this->session->userdata('lang').'/frontend/menu',$ans, true);
 	}
 
 	function traverse_sheet_tree($doc_id){
@@ -158,7 +158,7 @@ class Frontendmodel extends CI_Model{
 				redirect($row['redirect']);
 			}
 			$row['doc_traverse'] = $this->traverse_sheet_tree($doc_id);
-			return $this->load->view('frontend/doc_view', $row, true);
+			return $this->load->view($this->session->userdata('lang').'/frontend/doc_view', $row, true);
 		}else{
 			return "Запрошенного Вами документа не существует.";
 		}
@@ -225,7 +225,7 @@ class Frontendmodel extends CI_Model{
 		if($result->num_rows()){
 			$row=$result->row_array();
 			$row['doc_traverse']=$this->_traverse_sheet_tree($sheet);
-			$page=$this->load->view('frontend/doc_view',$row, true);
+			$page=$this->load->view($this->session->userdata('lang').'/frontend/doc_view',$row, true);
 		}else{
 			$page="Страница куда-то потерялась.";
 		}
@@ -236,7 +236,7 @@ class Frontendmodel extends CI_Model{
 		$act['text1'] = '';			//$this->_sheet_aggregation_make(1);
 		$act['special_offer'] = "";	//$this->_stripe_aggregation_make(34,105);
 		$act['notes'] = $this->session->userdata('note');
-		return $this->load->view('frontend/main_page_content', $act, true);
+		return $this->load->view($this->session->userdata('lang').'/frontend/main_page_content', $act, true);
 	}
 	############ GIS ##############
 	###
@@ -361,7 +361,7 @@ class Frontendmodel extends CI_Model{
 				$row['map']=$this->frontendmodel->_show_map($location_id); // взять подходящий из ajax.php или админки
 				return $this->load->view('frontend/location_quickgis_view',$row,true);
 			}else{*/
-			return $this->load->view('frontend/location_gis_view',$row,true);
+			return $this->load->view($this->session->userdata('lang').'/frontend/location_gis_view',$row,true);
 			//}
 		}else{
 			return "Данные по запрошенному объекту не найдены";
@@ -403,7 +403,7 @@ class Frontendmodel extends CI_Model{
 		$act['yandex_key']=$this->config->item('yandex_key');
 		$act['maps_center']=$this->config->item('maps_center');
 		$act['objects']=implode($jsarray,"\n");
-		return $this->load->view('frontend/qgis_locations_map',$act,true);
+		return $this->load->view($this->session->userdata('lang').'/frontend/qgis_locations_map',$act,true);
 	}
 	########
 
@@ -544,7 +544,7 @@ class Frontendmodel extends CI_Model{
 		$act['comments'] = (sizeof($comments)) ? implode($comments,"<BR>\n") : "<h1><small>Пока здесь тихо</small></h1>";
 		$act['location_id'] = $location_id;
 		$act['captcha']=$this->usefulmodel->_captcha_make();
-		return $this->load->view('frontend/comments', $act, true);
+		return $this->load->view($this->session->userdata('lang').'/frontend/comments', $act, true);
 	}
 }
 /* End of file frontendmodel.php */

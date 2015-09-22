@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 	<title>Административная консоль сайта</title>
-	<meta http-equiv="content-type" content="text/html; charset=utf-8">
 	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/jquery.js"></script>
 	<script type="text/javascript" src="<?=$this->config->item('api');?>/bootstrap/js/bootstrap.js"></script>
 	<link href="<?=$this->config->item('api');?>/bootstrap/css/bootstrap.css" rel="stylesheet">
@@ -17,7 +16,7 @@
 			<div class="navbar-inner">
 				<div class="container">
 					<a class="brand" href="/"><img src="<?=$this->config->item('api');?>/images/minigis24.png" alt="">Home</a>
-					<?=$this->load->view('cache/menus/menu', array(), true).$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu();?>
+					<?=$this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true).$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu();?>
 				</div>
 			</div>
 		</td>
@@ -36,7 +35,7 @@
 <div id="announcer"></div>
 <script type="text/javascript">
 <!--
-	$("#operations_menu").height($(window).height() - 70 + 'px').css("margin-left","0px");
+	//$("#operations_menu").height($(window).height() - 70 + 'px').css("margin-left","0px");
 //-->
 </script>
 <!-- 

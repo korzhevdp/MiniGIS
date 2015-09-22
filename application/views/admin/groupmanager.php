@@ -1,13 +1,7 @@
 <script src="http://api-maps.yandex.ru/2.0/?coordorder=longlat&amp;load=package.standard&amp;lang=ru-RU" type="text/javascript"></script>
 <h3>Управление группами объектов.&nbsp;&nbsp;&nbsp;&nbsp;<small>Города и отрасли</small></h3>
 
-<ul class="nav nav-tabs" style="clear:both;">
-	<li class="active"><a href="#tabr1" data-toggle="tab">Группы</a></li>
-	<li><a href="#tabr2" data-toggle="tab">Переводы имён</a></li>
-</ul>
 
-<div class="tab-content" style="clear:both;">
-	<div id="tabr1" class="tab-pane active">
 		<div id="YMaps" style="width:570px;height:260px;border:1px solid grey;margin-bottom:20px;"></div>
 		<form method="post" action="/admin/group_save">
 			<div class="input-prepend control-group">
@@ -43,11 +37,6 @@
 			</tr>
 			<?=$table;?>
 		</table>
-	</div>
-	<div id="tabr2" class="tab-pane">
-		Переводы
-	</div>
-</div>
 <script type="text/javascript">
 <!--
 var map,
