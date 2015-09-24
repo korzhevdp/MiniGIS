@@ -5,12 +5,27 @@ class Cachemodel extends CI_Model{
 		// работа с переводами будет принципиально везде
 		$this->load->helper('file');
 	}
-	
+	private function get_statmap($type = 1, $coords = "0,0"){
+		$output = array();
+		$maps   = array(
+			1 => "http://static-maps.yandex.ru/1.x/?z=13&l=map&size=128,128&pt=".$coords.",vkbkm",
+			2 => "http://static-maps.yandex.ru/1.x/?l=map&size=128,128&pl=".$coords,
+			3 => "http://static-maps.yandex.ru/1.x/?l=map&size=128,128&pl=c:ec473fFF,f:FF660020,w:3,".$coords,
+			4 => '',
+			5 => ''
+		);
+		$output['statmap'] = $maps[$type];
+		if ($type == 1) {
+			$output['lat'] = $act['coord_y'][1];
+			$output['lon'] = $act['coord_y'][0];
+		}
+		return $output;
+	}
+
 	// кэширование объекта
-	public function cache_location($location_id = 0, $with_output = 0, $mode = 'file'){ //она же fetch unified information;
-		//выбираем назначенные параметры объекта
-		$location = array();
+	public function cache_location($location_id = 0, $with_output = 0, $mode = 'file'){
 		$act      = array();
+		$input  = array();
 		$output   = array();
 		// наполняем $act данными объекта из основного хранилища
 		$result = $this->db->query("SELECT
@@ -32,40 +47,8 @@ class Cachemodel extends CI_Model{
 		if($result->num_rows()){
 			$act = $result->row_array();
 		}
-		if(isset($act['pr_type'])){
-			$act['lat'] = $act['coord_y'];
-			switch($act['pr_type']){
-				case 1 :
-					$act['statmap'] = "http://static-maps.yandex.ru/1.x/?z=13&l=map&size=128,128&pt=".$act['coord_y'].",vkbkm";
-					$act['coord_y'] = explode(",", $act['coord_y']);
-					$act['lat'] = $act['coord_y'][1];
-					$act['lon'] = $act['coord_y'][0];
-				break;
-				case 2 :
-					$act['statmap'] = "http://static-maps.yandex.ru/1.x/?l=map&size=128,128&pl=".$act['coord_y'];
-				break;
-				case 3 :
-					$act['statmap'] = "http://static-maps.yandex.ru/1.x/?l=map&size=128,128&pl=c:ec473fFF,f:FF660020,w:3,".$act['coord_y'];
-				break;
-				case 4 :
-					$act['statmap'] = "";
-				break;
-				case 5 :
-					$act['statmap'] = "";
-				break;
-			}
-		}
+		$act = array_merge($act, $this->get_statmap($act['pr_type'], $act['coord_y']));
 		
-		$input  = array();
-		$output = array();
-		$icons  = array(
-			'business' => '<img src="'.$this->config->item('api').'/images/icons/briefcase.png" width="16" height="16" border="0" alt="">',
-			'health'   => '<img src="'.$this->config->item('api').'/images/icons/health.png" width="16" height="16" border="0" alt="">',
-			'services' => '<img src="'.$this->config->item('api').'/images/icons/service-bell.png" width="16" height="16" border="0" alt="">',
-			'other'    => '<img src="'.$this->config->item('api').'/images/icons/information.png" width="16" height="16" border="0" alt="">',
-			'sport'    => '<img src="'.$this->config->item('api').'/images/icons/sports.png" width="16" height="16" border="0" alt="">',
-			'sights'   => '<img src="'.$this->config->item('api').'/images/icons/photo.png" width="16" height="16" border="0" alt="">'
-		);
 		$result = $this->db->query("SELECT 
 		properties_assigned.property_id,
 		properties_assigned.location_id,
@@ -87,43 +70,10 @@ class Cachemodel extends CI_Model{
 			foreach($result->result() as $row){
 				array_push($output, "<h4>".$row->label.'</h4><span class="line">'.$row->selfname.' - '.$row->value.'</span>');
 			}
-			/*
-			foreach($result->result() as $row){
-				$input[$row->label] = array();
-				$data = explode("^", $row->content);
-				foreach($data as $val){
-					$data2 = explode('|', $val);
-					if(isset($data2[1])){
-						if($data2[1] === 'searange'){
-							$preoutput['Расстояние до моря'][0] = $data2[2];
-							break;
-						}
-						if($data2[1] === 'searange_units'){
-							$preoutput['Расстояние до моря'][1] = $data2[2];
-							break;
-						}
-						if($data2[1] === 'place'){
-							array_push($output['встреча/проводы'], $data2[2]);
-							break;
-						}
-						$icon = (isset($icons[$data2[1]])) ? $icons[$data2[1]] : "";
-						$string = $icon.$data2[2];
-						array_push($input[$row->label], "<p>".str_replace("\n", "</p><p>", $string)."</p>");
-					}
-				}
-			}
-			*/
 		}
-		//print_r($output);
-		/*
-		foreach($input as $key => $val){
-			array_push($output, "<h4>".$key."</h4>").
-			array_push($output, implode($val, "\n"));
-		}*/
 		$act['content'] = implode($output, "\n<br>");
 		
 		$cache = $this->load->view('ru/frontend/std_view', $act, true);
-				//.$this->load->view('ru/frontend/frontend_modal_pic', array(), true);
 
 		if($mode === 'file') {
 			write_file('application/views/cache/locations/location_'.$location_id.".src", $cache, "w");

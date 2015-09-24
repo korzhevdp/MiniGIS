@@ -6,8 +6,8 @@ class Ajaxutils extends CI_Controller{
 
 /* UTILS */
 	function gpe($type=0, $rand=0){
-		$out=array();
-		$result=$this->db->query("SELECT 
+		$out    = array();
+		$result = $this->db->query("SELECT
 		`locations`.coord_y as coord,
 		IF(LENGTH(`locations`.`style_override`) > 1, `locations`.`style_override`, `locations_types`.attributes) as `attributes`,
 		`locations_types`.name,
@@ -16,9 +16,12 @@ class Ajaxutils extends CI_Controller{
 		`locations`
 		INNER JOIN `locations_types` ON (`locations`.`type` = `locations_types`.id)
 		WHERE
-		`locations`.owner = ? AND
-		`locations_types`.id = ?", array($this->session->userdata('user_id'),$type));
-		if($result->num_rows()){
+		`locations`.owner = ?
+		AND `locations_types`.id = ?", array(
+			$this->session->userdata('user_id'),
+			$type
+		));
+		if($result->num_rows()) {
 			foreach($result->result() as $row){
 				$string = $row->id." : { attr : '".$row->attributes."' , description : '".$row->name."', ttl: ".$row->id.", contact : '".$row->name."' , coord : '".$row->coord."' , pr : 1 }";
 				array_push($out, $string);
@@ -28,7 +31,7 @@ class Ajaxutils extends CI_Controller{
 		print "bo = { ".implode($out, ",\n")."\n}";
 	}
 
-	function getimagelist($lid=0){
+	function getimagelist( $lid = 0) {
 		$lid = $this->input->post("picref");
 		$out = array();
 		$result=$this->db->query("SELECT 
@@ -59,11 +62,11 @@ class Ajaxutils extends CI_Controller{
 		print implode($out, "\n");
 	}
 
-	function dependencycalc($lid,$input) { //запрос из map_calc.js / locations_container.php
-		$locs = implode(explode("_",$input),",");
-		$out=array();
-		array_push($out, "var set = [];");
-		$result=$this->db->query("SELECT 
+	function dependencycalc($lid, $input) { //запрос из map_calc.js / locations_container.php
+		$locs = implode(explode("_",$input), ",");
+		$out = array("var set = [");
+		array_push($out, );
+		$result = $this->db->query("SELECT 
 		`locations_types`.pr_type,
 		`locations`.coord_y,
 		`locations`.id
@@ -85,30 +88,30 @@ class Ajaxutils extends CI_Controller{
 		(`properties_list`.`id` IN (".$locs."))",array($lid));
 		if($result->num_rows()){
 			foreach($result->result() as $row){
-				array_push($out, "set.push([".$row->id.",".$row->pr_type.",'".$row->coord_y."']);");
+				array_push($out, "[".$row->id.", ".$row->pr_type.", '".$row->coord_y."'],");
 			}
 		}
-		print implode($out,"\n");
+		print implode($out,"\n")."\n]";
 	}
 
 	public function get_objects_by_type(){
 		if(!$this->session->userdata('user_id')){
 			print "Время работы в текущей сессии истекло.<br>Завершите работу и введите имя пользователя и пароль заново";
-			exit;
+		} else {
+			$this->load->model('editormodel');
+			$result = $this->editormodel->get_objects_by_type();
+			print $result;
 		}
-		$this->load->model('editormodel');
-		$result = $this->editormodel->get_objects_by_type();
-		print $result;
 	}
 
 	public function get_object_list_by_type(){
 		if(!$this->session->userdata('user_id')){
 			print "Время работы в текущей сессии истекло.<br>Завершите работу и введите имя пользователя и пароль заново";
-			exit;
+		} else {
+			$this->load->model('editormodel');
+			$result = $this->editormodel->get_object_list_by_type();
+			print $result;
 		}
-		$this->load->model('editormodel');
-		$result = $this->editormodel->get_object_list_by_type();
-		print $result;
 	}
 
 	function moraleup(){ //запрос из main_page_content.js 
