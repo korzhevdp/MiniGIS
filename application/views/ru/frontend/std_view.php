@@ -1,28 +1,19 @@
-<div class="well well-small">
-	<h3><?=$location_name;?>&nbsp;&nbsp;&nbsp;&nbsp;<small><?=$name;?></small></h3>
+<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/map_styles2.js"></script>
+<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/jquery.js"></script>
+<script type="text/javascript" src="<?=$this->config->item('api');?>/bootstrap/js/bootstrap.js"></script>
+<link href="<?=$this->config->item('api');?>/bootstrap/css/bootstrap.css" rel="stylesheet">
+<link href="<?=$this->config->item('api');?>/css/frontend.css" rel="stylesheet" media="screen" type="text/css">
 
 
-	<table>
-	<tr>
-		<td>
-			<img src="<?=$statmap;?>" width="128" height="128" border="0" alt="">
-			<?=(isset($all_images) && strlen($all_images)) ? $all_images : "" ;?>
-		</td>
-		<td>
-			<dl class="dl-horizontal">
-				<dt>Адрес</dt>
-				<dd><address><?=$address;?><address></dd>
-				<dt>Контакты</dt>
-				<dd><?=$contact;?></dd>
-			</dl>
-		</td>
-	</tr>
-	</table>
-
-	<div>
-		<?=$content;?>
-	</div>
-
+<h3  class="stdView"><?=$location_name;?><small><i class="icon-tags"></i><?=$name;?></small></h3>
+<div class="stdView">
+	<img src="<?=$statmap;?>" alt="миникарта">
+	<?=(isset($all_images) && strlen($all_images)) ? $all_images : "" ;?>
+	<span class="address"><i class="icon-home"></i><?=$address;?></span><br>
+	<span class="contacts"><i class="icon-envelope"></i><?=$contact;?></span><br>
+	<span class="coordinates"><i class="icon-map-marker"></i><span class="coord1"><?=$lat.'</span><br><span class="coord2">'.$lon;?></span></span>
 </div>
 
-<?=$this->load->view('frontend/frontend_modal_pic',array(),true);?>
+<div class="stdViewContent">
+	<?=$content;?>
+</div>

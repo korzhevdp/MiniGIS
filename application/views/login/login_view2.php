@@ -12,7 +12,7 @@
 <div class="navbar navbar-inverse">
 	<div class="navbar-inner">
 		<div class="container">
-			<a class="brand span2" href="/"><img src="/images/minigis24.png" width="24" height="24" border="0" alt=""> Minigis.NET</a>
+			<a class="brand span2" href="/"><img src="<?=$this->config->item("api");?>/images/minigis24.png" width="24" height="24" border="0" alt=""> Minigis.NET</a>
 				<?=$menu;?>
 		</div>
 	</div>

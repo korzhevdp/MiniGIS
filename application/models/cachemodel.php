@@ -7,21 +7,24 @@ class Cachemodel extends CI_Model{
 	}
 	
 	// кэширование объекта
-	public function cache_location($location_id = 0, $with_output = 0){ //она же fetch unified information;
+	public function cache_location($location_id = 0, $with_output = 0, $mode = 'file'){ //она же fetch unified information;
 		//выбираем назначенные параметры объекта
 		$location = array();
 		$act      = array();
 		$output   = array();
 		// наполняем $act данными объекта из основного хранилища
-		$result=$this->db->query("SELECT
+		$result = $this->db->query("SELECT
 		`locations`.`address`,
 		`locations`.`contact_info` as contact,
 		`locations`.`coord_y`,
+		`locations`.`coord_obj`,
+		`locations`.`coord_array`,
 		`locations`.`parent`,
-		IF(`locations_types`.`pl_num` = 0, '', `locations_types`.`name`) AS `name`,
 		`locations`.`location_name`,
+		IF(`locations_types`.`pl_num` = 0, '', `locations_types`.`name`) AS `name`,
 		`locations_types`.`object_group`,
-		`locations_types`.pr_type
+		`locations_types`.pr_type,
+		`locations_types`.id as typeid
 		FROM
 		`locations`
 		INNER JOIN `locations_types` ON (`locations`.`type` = `locations_types`.`id`)
@@ -30,9 +33,13 @@ class Cachemodel extends CI_Model{
 			$act = $result->row_array();
 		}
 		if(isset($act['pr_type'])){
+			$act['lat'] = $act['coord_y'];
 			switch($act['pr_type']){
 				case 1 :
 					$act['statmap'] = "http://static-maps.yandex.ru/1.x/?z=13&l=map&size=128,128&pt=".$act['coord_y'].",vkbkm";
+					$act['coord_y'] = explode(",", $act['coord_y']);
+					$act['lat'] = $act['coord_y'][1];
+					$act['lon'] = $act['coord_y'][0];
 				break;
 				case 2 :
 					$act['statmap'] = "http://static-maps.yandex.ru/1.x/?l=map&size=128,128&pl=".$act['coord_y'];
@@ -49,100 +56,101 @@ class Cachemodel extends CI_Model{
 			}
 		}
 		
-		$preoutput = array();
-		$output    = array();
-		$icons     = array();
-		$icons['business'] = '<img src="'.$this->config->item('api').'/images/icons/briefcase.png" width="16" height="16" border="0" alt="">&nbsp;&nbsp;&nbsp;';
-		$icons['health']   = '<img src="'.$this->config->item('api').'/images/icons/health.png" width="16" height="16" border="0" alt="">&nbsp;&nbsp;&nbsp;';
-		$icons['services'] = '<img src="'.$this->config->item('api').'/images/icons/service-bell.png" width="16" height="16" border="0" alt="">&nbsp;&nbsp;&nbsp;';
-		$icons['other']    = '<img src="'.$this->config->item('api').'/images/icons/information.png" width="16" height="16" border="0" alt="">&nbsp;&nbsp;&nbsp;';
-		$icons['sport']    = '<img src="'.$this->config->item('api').'/images/icons/sports.png" width="16" height="16" border="0" alt="">&nbsp;&nbsp;&nbsp;';
-		$icons['sights']   = '<img src="'.$this->config->item('api').'/images/icons/photo.png" width="16" height="16" border="0" alt="">&nbsp;&nbsp;&nbsp;';
-		
-		$this->db->query("SET group_concat_max_len = 8192");
-		$result=$this->db->query("SELECT
-		properties_list.label,
-		properties_list.id,
-		GROUP_CONCAT(
-			CONCAT_WS(
-				'|', 
-				IF(NOT LENGTH(properties_list.selfname), 0, properties_list.selfname),
-				properties_list.cat,
-				CASE
-				WHEN properties_list.fieldtype = 'checkbox' THEN properties_list.selfname
-				WHEN properties_list.fieldtype = 'textarea' THEN properties_assigned.value
-				WHEN properties_list.fieldtype = 'select' THEN properties_list.selfname
-				WHEN properties_list.fieldtype = 'text' THEN IF(properties_list.multiplier <> 1 AND properties_list.divider <> 1, properties_assigned.value % properties_list.divider / properties_list.multiplier, properties_assigned.value) END
-			)
-		ORDER BY properties_list.cat SEPARATOR '^') AS content
+		$input  = array();
+		$output = array();
+		$icons  = array(
+			'business' => '<img src="'.$this->config->item('api').'/images/icons/briefcase.png" width="16" height="16" border="0" alt="">',
+			'health'   => '<img src="'.$this->config->item('api').'/images/icons/health.png" width="16" height="16" border="0" alt="">',
+			'services' => '<img src="'.$this->config->item('api').'/images/icons/service-bell.png" width="16" height="16" border="0" alt="">',
+			'other'    => '<img src="'.$this->config->item('api').'/images/icons/information.png" width="16" height="16" border="0" alt="">',
+			'sport'    => '<img src="'.$this->config->item('api').'/images/icons/sports.png" width="16" height="16" border="0" alt="">',
+			'sights'   => '<img src="'.$this->config->item('api').'/images/icons/photo.png" width="16" height="16" border="0" alt="">'
+		);
+		$result = $this->db->query("SELECT 
+		properties_assigned.property_id,
+		properties_assigned.location_id,
+		properties_assigned.value,
+		properties_list.selfname,
+		properties_list.property_group,
+		properties_list.fieldtype,
+		properties_list.multiplier,
+		properties_list.divider,
+		properties_list.coef,
+		properties_list.algoritm,
+		properties_list.label
 		FROM
 		properties_assigned
 		INNER JOIN properties_list ON (properties_assigned.property_id = properties_list.id)
-		INNER JOIN locations ON (properties_assigned.location_id = locations.id)
-		INNER JOIN `locations_types` ON (locations.`type` = `locations_types`.id)
 		WHERE
-		(properties_list.active) AND
-		(`properties_assigned`.`property_id` <> `locations_types`.`pl_num`) AND
-		(`locations`.id = ?)
-		GROUP BY properties_list.label
-		ORDER BY
-		`properties_list`.`label` ASC,
-		`properties_list`.`selfname` ASC", array($location_id));
+		(properties_assigned.location_id = ?)", array($location_id));
 		if($result->num_rows()){
 			foreach($result->result() as $row){
-				$preoutput[$row->label] = array();
-				$data = explode("^",$row->content);
+				array_push($output, "<h4>".$row->label.'</h4><span class="line">'.$row->selfname.' - '.$row->value.'</span>');
+			}
+			/*
+			foreach($result->result() as $row){
+				$input[$row->label] = array();
+				$data = explode("^", $row->content);
 				foreach($data as $val){
-					$data2 = explode('|',$val);
+					$data2 = explode('|', $val);
 					if(isset($data2[1])){
-						if($data2[1] == 'searange'){
+						if($data2[1] === 'searange'){
 							$preoutput['Расстояние до моря'][0] = $data2[2];
 							break;
 						}
-						if($data2[1] == 'searange_units'){
+						if($data2[1] === 'searange_units'){
 							$preoutput['Расстояние до моря'][1] = $data2[2];
 							break;
 						}
-						if($data2[1] == 'place'){
+						if($data2[1] === 'place'){
 							array_push($output['встреча/проводы'], $data2[2]);
 							break;
 						}
 						$icon = (isset($icons[$data2[1]])) ? $icons[$data2[1]] : "";
 						$string = $icon.$data2[2];
-						array_push($preoutput[$row->label], "<p>".str_replace("\n", "</p><p>", $string)."</p>");
+						array_push($input[$row->label], "<p>".str_replace("\n", "</p><p>", $string)."</p>");
 					}
 				}
 			}
+			*/
 		}
 		//print_r($output);
-		foreach($preoutput as $key=>$val){
+		/*
+		foreach($input as $key => $val){
 			array_push($output, "<h4>".$key."</h4>").
 			array_push($output, implode($val, "\n"));
+		}*/
+		$act['content'] = implode($output, "\n<br>");
+		
+		$cache = $this->load->view('ru/frontend/std_view', $act, true);
+				//.$this->load->view('ru/frontend/frontend_modal_pic', array(), true);
+
+		if($mode === 'file') {
+			write_file('application/views/cache/locations/location_'.$location_id.".src", $cache, "w");
+		}else{
+			print $cache."<hr>";
 		}
-		$act['content']= implode($output, "\n<br>");
-		$cache = $this->load->view('frontend/std_view', $act, true);
-		write_file('application/views/cache/locations/location_'.$location_id.".src", $cache, "w");
+		
 		if($with_output){
 			return $cache;
 		}
 	}
 
-	private function cache_gis_part($gisroot = 0){
-		$root   = ($gisroot) ? $gisroot : $this->config->item('mod_gis');
+	private function cache_gis_part($gisroot = 0) {
 		$langs  = $this->config->item('lang');
 
 		$result = $this->db->query("SELECT
-		locations_types.id AS type_id,
-		properties_list.selfname AS itemname,
-		`objects_groups`.name AS groupname,
-		`objects_groups`.id AS group_id
+		locations_types.id   AS type_id,
+		objects_groups.id    AS group_id,
+		objects_groups.name  AS groupname,
+		locations_types.name AS itemname
 		FROM
-		properties_list
-		LEFT OUTER JOIN locations_types  ON (properties_list.id = locations_types.pl_num)
-		LEFT OUTER JOIN `objects_groups` ON (locations_types.object_group = `objects_groups`.id)
+		locations_types
+		LEFT OUTER JOIN objects_groups ON (locations_types.object_group = objects_groups.id)
 		WHERE
-		LENGTH(properties_list.selfname)
-		ORDER BY groupname, itemname");
+		objects_groups.active
+		ORDER BY
+		groupname, itemname");
 		if ($result->num_rows()) {
 			$this->config->load('translations_g');
 			$this->config->load('translations_c');
@@ -152,10 +160,10 @@ class Cachemodel extends CI_Model{
 			$categories = $this->config->item("categories");
 			// включаем переводчик
 			foreach ($langs as $key => $val) {
-				$gis_tree   = array();
+				$gis_tree      = array();
 				foreach ($result->result() as $row) {
-					$groupname = (strlen($groups[$row->group_id][$key]))    ? $groups[$row->group_id][$key]    : $row->groupname;
-					$itemname  = (strlen($categories[$row->type_id][$key])) ? $categories[$row->type_id][$key] : $row->itemname;
+					$groupname = (isset($groups[$row->group_id]) && strlen($groups[$row->group_id][$key]))       ? $groups[$row->group_id][$key]    : $row->groupname;
+					$itemname  = (isset($categories[$row->type_id]) && strlen($categories[$row->type_id][$key])) ? $categories[$row->type_id][$key] : $row->itemname;
 					$grouplink = '<a href="#"><i class="icon-tags"></i>&nbsp;&nbsp;'.$groupname."</a>";
 					$itemlink  = '<a href="/map/type/'.$row->type_id.'"><i class="icon-tag"></i>&nbsp;&nbsp;'.$itemname."</a>";
 					if (!isset($gis_tree[$grouplink])) {
@@ -163,18 +171,17 @@ class Cachemodel extends CI_Model{
 					}
 					array_push($gis_tree[$grouplink], $itemlink);
 				}
-				//print_r($gis_tree);
 				write_file('application/views/cache/menus/src/menu_'.$key.'.php', ul($gis_tree, array('class' => 'dropdown-menu')));
 			}
 		}
-		//return ul($gis_tree, array('class' => 'dropdown-menu'), 2);
 	}
 
-	public function cache_docs($root = 1, $mode = 'file'){
+	private function cache_docs($root = 1, $mode = 'file'){
 		$this->config->load('translations_a', FALSE);
 		$langs    = $this->config->item('lang');
 		$articles = $this->config->item('articles');
-		$result = $this->db->query("SELECT 
+		$result = $this->db->query("SELECT
+		sheets.redirect,
 		sheets.parent,
 		sheets.id,
 		sheets.header,
@@ -191,10 +198,11 @@ class Cachemodel extends CI_Model{
 			foreach ($langs as $lang => $langname) {
 				$input = array();
 				foreach($result->result() as $row) {
-					$groupname = (strlen($articles[$row->parent][$lang]))    ? $articles[$row->parent][$lang]    : $row->topheader;
-					$itemname  = (strlen($articles[$row->id][$lang])) ? $articles[$row->id][$lang] : $row->header;
+					$link = (strlen($row->redirect)) ? $row->redirect : '/page/docs/'.$row->id;
+					$groupname = (isset($articles[$row->parent]) && strlen($articles[$row->parent][$lang]))    ? $articles[$row->parent][$lang]    : $row->topheader;
+					$itemname  = (isset($articles[$row->id]) && strlen($articles[$row->id][$lang])) ? $articles[$row->id][$lang] : $row->header;
 					$grouplink = '<a href="#"><i class="icon-tags"></i>&nbsp;&nbsp;'.$groupname."</a>";
-					$itemlink  = '<a href="/maps/simple/'.$row->id.'"><i class="icon-tag"></i>&nbsp;&nbsp;'.$itemname."</a>";
+					$itemlink  = '<a href="'.$link.'"><i class="icon-tag"></i>&nbsp;&nbsp;'.$itemname."</a>";
 					if (!isset($input[$grouplink])) {
 						$input[$grouplink] = array();
 					}
@@ -224,7 +232,8 @@ class Cachemodel extends CI_Model{
 		$this->load->helper('html');
 		$this->cache_gis_part($gisroot);
 		$this->cache_docs($docroot);
-		foreach ($this->config->item('lang') as $lang => $val) {
+		$langs = $this->config->item('lang');
+		foreach ($langs as $lang => $val) {
 			$ans = array(
 				'gis'     => $this->load->view("cache/menus/src/menu_".$lang, array(), true),
 				'housing' => $this->load->view("cache/menus/docs_".$lang, array(), true),
@@ -289,9 +298,6 @@ class Cachemodel extends CI_Model{
 			WHERE
 			locations_types.id IN ('.$types.')
 		)
-		OR properties_list.object_group IN (
-			Select locations_types.object_group FROM locations_types WHERE locations_types.id IN('.$types.')
-		)
 		AND properties_list.searchable
 		AND properties_list.active
 		ORDER BY
@@ -311,24 +317,62 @@ class Cachemodel extends CI_Model{
 		}
 		return $output;
 	}
+
+	private function cache_selector_properties($layers){
+		$output = array();
+		$result = $this->db->query("SELECT
+		CONCAT(properties_list.page, properties_list.`row`, properties_list.element) AS marker,
+		properties_list.label,
+		properties_list.selfname,
+		properties_list.algoritm AS alg,
+		properties_list.fieldtype,
+		properties_list.id
+		FROM
+		properties_list
+		WHERE
+		properties_list.`object_group` IN (".$layers.")
+		AND `properties_list`.`id` NOT IN (
+			SELECT `locations_types`.`pl_num` FROM `locations_types` WHERE `locations_types`.`id` IN (
+				SELECT `locations_types`.`id` FROM `locations_types` WHERE `locations_types`.`object_group` = ".$layers."
+			)
+		)
+		AND properties_list.searchable
+		AND properties_list.active
+		ORDER BY
+		marker,
+		properties_list.label,
+		properties_list.selfname");
+		if($result->num_rows()){
+			foreach ($result->result() as $row){
+				if(!isset($output[$row->marker])){ $output[$row->marker] = array(); }
+				if(!isset($output[$row->marker][$row->label])){ $output[$row->marker][$row->label] = array(); }
+				$output[$row->marker][$row->label][$row->id] = array(
+					'name'       => $row->selfname,
+					'fieldtype'  => $row->fieldtype,
+					'alg'        => "ud"
+				);
+			}
+		}
+		return $output;
+	}
 	/*
 	# Для селектора генерируются только поля типа: text, select и checkbox. 
 	# Поле Textarea предназаначено исключительно для ввода больших текстов в админской консоли
 	*/
+	
 	private function generate_selector($src, $map, $mode){
 		//print $map."<br>";
 		//print $mode."<br>";
 		//print_r($src)."<hr>";
 		//exit;
 		$properties = $this->config->item('properties');
-		$categories = $this->config->item('categories');
 		$labels     = $this->config->item('labels');
 		foreach ($this->config->item('lang') as $lang => $val){
 			$table = array();
 			foreach($src as $rowmarker => $elements){
 				$incrementer = 0;
 				foreach($elements as $label => $objects){
-					$label = strlen($labels[$label][$lang]) ? $labels[$label][$lang] : $label;
+					$label = (isset($labels[$label]) && strlen($labels[$label][$lang])) ? $labels[$label][$lang] : $label;
 					array_push($table, '<div class="grouplabel" id="gl_'.$rowmarker.$incrementer.'">'."\n".$label."\n</div>");
 					$backcounter = sizeof($objects);
 					$checkboxes  = array();
@@ -339,7 +383,7 @@ class Cachemodel extends CI_Model{
 						if (!isset($element['alg'])) {
 							$element['alg'] = "u"; 
 						}
-						$element['name'] = strlen($categories[$object_id][$lang]) ? $categories[$object_id][$lang] : $element['name'];
+						$element['name'] = (isset($properties[$object_id]) && strlen($properties[$object_id][$lang])) ? $properties[$object_id][$lang] : $element['name'];
 						/* генерация */
 						switch ($element['fieldtype']){
 							case 'text':
@@ -347,7 +391,7 @@ class Cachemodel extends CI_Model{
 								array_push($htmlcontrol, $string);
 							break;
 							case 'select':
-								$string = '<option value="'.object_id.'">'.$element['name'].'</option>';
+								$string = '<option value="'.$object_id.'">'.$element['name'].'</option>';
 								array_push($values, $string);
 								--$backcounter;
 								if($backcounter === 0) {
@@ -393,7 +437,7 @@ class Cachemodel extends CI_Model{
 						if (!isset($element['alg'])) {
 							$element['alg'] = "u"; 
 						}
-						$element['name'] = strlen($properties[$object_id][$lang]) ? $properties[$object_id][$lang] : $element['name'];
+						$element['name'] = (isset($properties[$object_id]) && strlen($properties[$object_id][$lang])) ? $properties[$object_id][$lang] : $element['name'];
 						/*
 						switch ($element['fieldtype']){
 							case 'text':
@@ -445,6 +489,20 @@ class Cachemodel extends CI_Model{
 		}
 
 		foreach($map_content as $map => $val){
+			$output     = array();
+			$refgroups  = array();
+			if($val[0] == "0" && strlen($val[1]) && $val[1] != 0){
+				$result = $this->db->query("SELECT DISTINCT
+				`locations_types`.object_group
+				FROM
+				`locations_types`
+				WHERE `locations_types`.`id` IN (".$val[1].")");
+				if($result->num_rows()){
+					foreach($result->result() as $row){
+						array_push($refgroups, $row->object_group);
+					}
+				}
+			}
 			if(strlen($val[0]) && $val[0] != 0){
 				$output = $this->cache_selector_layers($val[0]);
 				//print "run layers";
@@ -454,6 +512,12 @@ class Cachemodel extends CI_Model{
 				$output = array_merge($output, $this->cache_selector_types($val[1]));
 				//print "run types";
 			}
+			// затем свойства
+			if($val[0] == "0" && strlen($val[1]) && $val[1] != 0){
+				$output = array_merge($output, $this->cache_selector_properties(implode($refgroups, ",")));
+				//print "run types";
+			}
+
 			//print_r($output);
 			// генерация
 			$this->generate_selector($output, $map, $mode);

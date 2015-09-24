@@ -5,7 +5,7 @@
 	<meta name="keywords" content="<?=$keywords;?>">
 	<!-- API 2.0 -->
 	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/jquery.js"></script>
-	<script src="http://api-maps.yandex.ru/2.0/?coordorder=longlat&amp;load=package.full&amp;lang=ru-RU" type="text/javascript"></script>
+	<script src="http://api-maps.yandex.ru/2.0/?coordorder=longlat&amp;load=package.full&amp;lang=en-US" type="text/javascript"></script>
 	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/map_styles2.js"></script>
 	<script type="text/javascript" src="<?=$this->config->item('api');?>/jqueryui/js/jqueryui.js"></script>
 	<script type="text/javascript" src="<?=$this->config->item('api');?>/bootstrap/js/bootstrap.js"></script>

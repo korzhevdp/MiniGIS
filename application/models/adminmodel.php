@@ -4,7 +4,7 @@ class Adminmodel extends CI_Model{
 		parent::__construct();
 	}
 
-	function get_full_index($obj_group = 0, $loc_type = 0){
+	function get_full_index($obj_group = 0, $loc_type = 0, $page = 1){
 		$controller = ($this->session->userdata('admin')) ? "admin" : "user";
 		$output = array();
 		$out    = array(
@@ -107,10 +107,10 @@ class Adminmodel extends CI_Model{
 		return $this->load->view("admin/library", $out, true);
 	}
 
-	function get_composite_indexes($obj_group, $loc_type, $page = 1){
+	function get_composite_indexes($obj_group, $loc_type, $param = 1, $page = 1){
 		if ($obj_group) {
-			$values         = $this->adminmodel->show_semantics_values($obj_group, $loc_type);
-			$values['list'] = $this->adminmodel->show_semantics($obj_group);
+			$values         = $this->adminmodel->show_semantics_values($obj_group, $loc_type, $param);
+			$values['list'] = $this->adminmodel->show_semantics($obj_group, $loc_type);
 		}
 		$output = array(
 			'content'  => $this->adminmodel->get_full_index($obj_group, $loc_type),
@@ -122,14 +122,15 @@ class Adminmodel extends CI_Model{
 	#######################################################################
 	### управление списками параметров VERIFIED
 	#######################################################################
-	function show_semantics($object_group){
-		$table = array();
-		$result=$this->db->query("SELECT 
+	function show_semantics($object_group, $type_id){
+		$table  = array();
+		$result = $this->db->query("SELECT
 		IF(properties_list.page = 1, 0, 1) AS editable,
 		properties_list.id,
 		properties_list.`label`,
 		properties_list.selfname,
 		properties_list.property_group,
+		`properties_list`.`algoritm`,
 		properties_list.cat,
 		properties_list.linked,
 		properties_list.searchable,
@@ -142,7 +143,7 @@ class Adminmodel extends CI_Model{
 		properties_list.page,
 		properties_list.`row`,
 		properties_list.element", array($object_group));
-		if($result->num_rows()){
+		if($result->num_rows()) {
 			//array_push($table,'<ul class="span12 row-fluid" style="list-style-type: none; margin-left:0px;">');
 			foreach ($result->result_array() as $row){
 				//$ed_btn = ($row->editable) ? '<a href="/admin/semantics/'.$object_group.'/'.$row->id.'" class="btn btn-primary btn-mini">Редактировать</a>' : "";
@@ -152,15 +153,15 @@ class Adminmodel extends CI_Model{
 				$row['title1']		 = ($row['searchable'])	? 'Доступно для поиска' : 'Поиск по параметру не производится';
 				$row['pic2']		 = ($row['active'])		? 'lightbulb.png'		: 'lightbulb_off.png';
 				$row['title2']		 = ($row['active'])		? 'Параметр активен'	: 'Параметр отключен';
+				$row['type_id']		 = $type_id;
 				array_push($table, $this->load->view("admin/parameterline", $row, true));
 			}
-			
 		}
-		$out = (sizeof($table)) ? implode($table,"\n") : "<tr><td colspan=6>Nothing Found!</td></tr>";
+		$out = (sizeof($table)) ? implode($table, "\n") : "<tr><td colspan=6>Nothing Found!</td></tr>";
 		return $out;
 	}
 
-	function show_semantics_values($object_group = 1, $obj = 0){
+	function show_semantics_values($object_group = 1, $type = 0, $obj = 0){
 		//$this->output->enable_profiler(TRUE);
 		$output= array(
 			'row'				=> '',
@@ -176,6 +177,8 @@ class Adminmodel extends CI_Model{
 			'parameters'		=> '',
 			'searchable'		=> '',
 			'active'			=> '',
+			'divider'			=> '',
+			'multiplier'		=> '',
 			'og_name'			=> '',
 			'linked'			=> ''
 		);
@@ -193,6 +196,8 @@ class Adminmodel extends CI_Model{
 		properties_list.property_group,
 		properties_list.fieldtype,
 		properties_list.cat,
+		properties_list.divider,
+		properties_list.multiplier,
 		properties_list.active,
 		`objects_groups`.name AS `og_name`
 		FROM
@@ -274,27 +279,29 @@ class Adminmodel extends CI_Model{
 		//$this->output->enable_profiler(TRUE);
 		//return false;
 		$mode  =  $this->input->post('mode');
-		$group = ($this->input->post('object_group'))? $this->input->post('object_group') : 1;
-		$sb    = ($this->input->post('searchable')) ? 1 : 0;
-		$ac    = ($this->input->post('active')) ? 1 : 0;
+		$group = ($this->input->post('object_group')) ? $this->input->post('object_group') : 1;
+		$sb    = ($this->input->post('searchable'))   ? 1 : 0;
+		$ac    = ($this->input->post('active'))       ? 1 : 0;
 
 		if($mode == "save"){
 			$this->db->query("UPDATE
 			`properties_list`
 			SET
-			`properties_list`.`row` = ?,
-			`properties_list`.element = ?,
-			`properties_list`.label = ?,
-			`properties_list`.selfname = ?,
-			`properties_list`.page = ?,
-			`properties_list`.parameters = ?,
+			`properties_list`.`row`          = ?,
+			`properties_list`.element        = ?,
+			`properties_list`.label          = ?,
+			`properties_list`.selfname       = ?,
+			`properties_list`.page           = ?,
+			`properties_list`.parameters     = ?,
 			`properties_list`.property_group = ?,
-			`properties_list`.searchable = ?,
-			`properties_list`.fieldtype = ?,
-			`properties_list`.cat = ?,
-			`properties_list`.active = ?,
-			`properties_list`.algoritm = ?,
-			`properties_list`.`linked` = ?
+			`properties_list`.searchable     = ?,
+			`properties_list`.fieldtype      = ?,
+			`properties_list`.cat            = ?,
+			`properties_list`.active         = ?,
+			`properties_list`.`algoritm`     = ?,
+			`properties_list`.`linked`       = ?,
+			`properties_list`.`multiplier`   = ?,
+			`properties_list`.`divider`      = ?
 			WHERE
 			`properties_list`.`id` = ?", array(
 				$this->input->post('row'),
@@ -310,6 +317,8 @@ class Adminmodel extends CI_Model{
 				$ac,
 				$this->input->post('algoritm'),
 				$this->input->post('linked'),
+				$this->input->post('multiplier'),
+				$this->input->post('divider'),
 				$this->input->post('obj')
 			));
 		}
@@ -329,8 +338,10 @@ class Adminmodel extends CI_Model{
 			`properties_list`.`active`,
 			`properties_list`.`object_group`,
 			`properties_list`.`algoritm`,
-			`properties_list`.`linked`
-			) VALUES ( ?,?,?,?,?,?,?,?,?,?,?,?,?,? )",
+			`properties_list`.`linked`,
+			`properties_list`.`multiplier`,
+			`properties_list`.`divider`
+			) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )",
 			array(
 				$this->input->post('row'),
 				$this->input->post('element'),
@@ -345,7 +356,9 @@ class Adminmodel extends CI_Model{
 				$ac,
 				$group,
 				$this->input->post('algoritm'),
-				$this->input->post('linked')
+				$this->input->post('linked'),
+				$this->input->post('multiplier'),
+				$this->input->post('divider')
 			));
 		}
 		/*
@@ -375,12 +388,12 @@ class Adminmodel extends CI_Model{
 		// сделать распаковку массива и запись в файл
 
 		if($this->input->post('linked')){
-			$this->db->query("DELETE 
+			$this->db->query("DELETE
 			FROM 
 			`properties_assigned`
 			WHERE 
-			`properties_assigned`.location_id = ? AND
-			`properties_assigned`.property_id = ?", array(
+			`properties_assigned`.location_id = ?
+			AND `properties_assigned`.property_id = ?", array(
 				$this->input->post('linked'),
 				$this->input->post('obj')
 			));
@@ -394,13 +407,11 @@ class Adminmodel extends CI_Model{
 				$this->input->post('obj')
 			));
 		}
-		redirect('admin/semantics/'.$group);
+		redirect('admin/library/'.$group."/0/".$this->input->post('obj')."/2");
 	}
-
-
-#######################################################################
-### объекты ГИС VERIFIED
-#######################################################################
+	#######################################################################
+	### объекты ГИС VERIFIED
+	#######################################################################
 	function gis_objects_show($obj = 0){
 		//Выбираем объект
 		$object = array(
@@ -586,10 +597,9 @@ class Adminmodel extends CI_Model{
 			$this->usefulmodel->insert_audit($text);
 		}
 	}
-
-#######################################################################
-### редактор страниц VERIFIED
-#######################################################################
+	#######################################################################
+	### редактор страниц VERIFIED
+	#######################################################################
 	function find_initial_sheet($root = 1){
 		$result=$this->db->query("SELECT 
 		sheets.id

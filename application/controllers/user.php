@@ -14,6 +14,9 @@ class User extends CI_Controller{
 			$this->load->model('adminmodel');
 			$this->load->helper('form');
 		}
+		if(!$this->session->userdata('lang')){
+			$this->session->set_userdata('lang', 'en');
+		}
 	}
 
 	function index($obj_group = 0, $loc_type = 0){

@@ -10,6 +10,9 @@ class Admin extends CI_Controller{
 			$this->load->model('adminmodel');
 			$this->session->set_userdata("c_l", 0);
 		}
+		if(!$this->session->userdata('lang')){
+			$this->session->set_userdata('lang', 'en');
+		}
 	}
 
 	public function index() {
@@ -22,12 +25,12 @@ class Admin extends CI_Controller{
 		$this->load->view('admin/view', $output);
 	}
 
-	public function library($obj_group = 0, $loc_type = 0, $page = 1) {
+	public function library($obj_group = 0, $loc_type = 0, $param = 1, $page = 1) {
 		$this->usefulmodel->check_admin_status();
 		$output = array(
 			'menu'     => $this->load->view('admin/menu', array(), true)
 						 .$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true),
-			'content'  => $this->adminmodel->get_composite_indexes($obj_group, $loc_type, $page)
+			'content'  => $this->adminmodel->get_composite_indexes($obj_group, $loc_type, $param, $page)
 		);
 		$this->load->view('admin/view', $output);
 	}
@@ -53,13 +56,13 @@ class Admin extends CI_Controller{
 		$mapset = ($this->input->post('map_view')) ? $this->input->post('map_view') : 0;
 		if($this->input->post('save')){
 			$this->adminmodel->mc_save();
-			$this->cachemodel->cache_selector_content('file');
 			$this->cachemodel->menu_build(1, 0, 'file');
+			$this->cachemodel->cache_selector_content('file');
 		}
 		if($this->input->post('new')){
 			$mapsetid = $this->adminmodel->mc_new();
-			$this->cachemodel->cache_selector_content('file');
 			$this->cachemodel->menu_build(1, 0, 'file');
+			$this->cachemodel->cache_selector_content('file');
 		}
 		$output = array(
 			'menu'    => $this->load->view('admin/menu', array(), true)
@@ -158,8 +161,8 @@ class Admin extends CI_Controller{
 		properties_list.id = ?", array($prop));
 		redirect('admin/semantics/'.$group);
 	}
-
-	public function cachemap($mode = "file"){
+	// user-calls for caching model
+	public function cachemap($mode = "browser"){
 		$this->load->model('cachemodel');
 		$this->cachemodel->cache_selector_content($mode);
 	}
@@ -169,6 +172,36 @@ class Admin extends CI_Controller{
 		$this->cachemodel->cache_docs(1, 'file');
 	}
 
+	public function cacheloc($loc_id){
+		$this->load->model('cachemodel');
+		$this->cachemodel->cache_location($loc_id, 0, 'browser');
+	}
+	// Reconciler
+
+	public function reconcile() {
+		$result = $this->db->query("DELETE
+		FROM `properties_assigned`
+		WHERE 
+		`properties_assigned`.`property_id` IN (
+			SELECT
+			`locations_types`.pl_num
+			FROM
+			`locations_types`
+		)");
+		$run1 = $this->db->affected_rows();
+		$result = $this->db->query("INSERT INTO `properties_assigned` (
+		`properties_assigned`.`property_id`,
+		`properties_assigned`.`location_id`
+		)
+		SELECT
+		`locations_types`.pl_num,
+		`locations`.id
+		FROM
+		`locations`
+		INNER JOIN `locations_types` ON (`locations`.`type` = `locations_types`.id)");
+		$run2 = $this->db->affected_rows();
+		print "Reconcillation DONE<br>Deleted: ".$run1.",<br>Inserted: ".$run2;
+	}
 
 	public function translations($mode="groups"){
 		$this->config->load('translations_g', FALSE);

@@ -28,8 +28,14 @@ class Map extends CI_Controller {
 
 	public function type($type){
 		$map_header = "";
+		$this->load->config('translations_g');
+		$this->load->config('translations_c');
+		$groups = $this->config->item('groups');
+		$categories = $this->config->item('categories');
+		$lang = $this->session->userdata('lang');
 		$result = $this->db->query("SELECT 
-			CONCAT_WS( ' - ', `objects_groups`.name, `locations_types`.name ) AS name
+			`objects_groups`.id,
+			`locations_types`.id as type
 			FROM
 			`locations_types`
 			INNER JOIN `objects_groups` ON (`locations_types`.object_group = `objects_groups`.id)
@@ -37,7 +43,7 @@ class Map extends CI_Controller {
 			LIMIT 1", array($type));
 		if($result->num_rows()){
 			$row = $result->row(0);
-			$map_header = $row->name;
+			$map_header = $groups[$row->id][$lang]." - ".$categories[$row->type][$lang];
 		}
 		$act = array(
 			'footer'		=> $this->load->view($this->session->userdata('lang').'/frontend/page_footer', array(), true),
