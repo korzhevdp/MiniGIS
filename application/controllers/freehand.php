@@ -9,6 +9,9 @@ class Freehand extends CI_Controller {
 		if(!$this->session->userdata('objects')){
 			$this->session->set_userdata('objects', array());
 		}
+		if(!$this->session->userdata('lang')){
+			$this->session->set_userdata('lang', 'en');
+		}
 		if(!$this->session->userdata('map')){
 			$this->map_init();
 		}
@@ -31,7 +34,7 @@ class Freehand extends CI_Controller {
 			'title'			=> $this->config->item('site_title_start')." Интерактивная карта 0.3b",
 			'gcounter'		=> $this->session->userdata('gcounter'),
 			'userid'		=> $this->session->userdata('common_user'),
-			'menu'			=> $this->load->view('cache/menus/menu', array(), TRUE),
+			'menu'			=> $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), TRUE),
 			'navigator'		=> $this->load->view('freehand/navigator', array(), TRUE),
 			'header'		=> $this->load->view('frontend/page_header', array(), TRUE),
 			'footer'		=> $this->load->view('frontend/page_footer', array(), TRUE),
@@ -156,20 +159,23 @@ class Freehand extends CI_Controller {
 		foreach($data as $hash_a => $val){
 			$name   = (isset($val[0])) ? $val[0] : "";
 			$public = (isset($val[1])) ? 1 : 0;
-			$result = $this->db->query("UPDATE
-			usermaps
-			SET
-			usermaps.name   = IF(usermaps.author = ?, ?, usermaps.name),
-			usermaps.public = IF(usermaps.author = ?, ?, usermaps.public)
-			WHERE
-			(usermaps.`hash_a` = ?)", array(
-				$this->session->userdata('uidx'),
-				$name,
-				$this->session->userdata('uidx'),
-				$public,
-				$hash_a
-			));
+			if($this->session->userdata('uidx') && strlen($this->session->userdata('uidx')) && strlen($hash_a) && $hash_a != 0 ){
+				$result = $this->db->query("UPDATE
+				usermaps
+				SET
+				usermaps.name   = IF(usermaps.author = ?, ?, usermaps.name),
+				usermaps.public = IF(usermaps.author = ?, ?, usermaps.public)
+				WHERE
+				(usermaps.`hash_a` = ?)", array(
+					$this->session->userdata('uidx'),
+					$name,
+					$this->session->userdata('uidx'),
+					$public,
+					$hash_a
+				));
+			}
 		}
+
 		$this->load->helper("url");
 		redirect("freehand");
 	}
@@ -177,16 +183,18 @@ class Freehand extends CI_Controller {
 	public function savemapname(){
 		//$this->output->enable_profiler(TRUE);
 		//return false;
-		$result = $this->db->query("UPDATE
-		`usermaps`
-		SET
-		`usermaps`.name = ?,
-		`usermaps`.public = ?
-		WHERE `usermaps`.`hash_a` = ?", array(
-			$this->input->post('name'),
-			$this->input->post('pub'),
-			$this->input->post('uhash')
-		));
+		if ($this->input->post('uhash')) {
+			$result = $this->db->query("UPDATE
+			`usermaps`
+			SET
+			`usermaps`.name = ?,
+			`usermaps`.public = ?
+			WHERE `usermaps`.`hash_a` = ?", array(
+				$this->input->post('name'),
+				$this->input->post('pub'),
+				$this->input->post('uhash')
+			));
+		}
 		print implode(array($this->input->post('name'), $this->input->post('pub'), $this->input->post('uhash')), ", ");
 	}
 

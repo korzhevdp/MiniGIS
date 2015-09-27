@@ -55,8 +55,10 @@ class Foxhound extends CI_Controller{
 		if(sizeof($list)) {
 			print implode($list, ",");
 		} else {
-			print "console.log('No Data')";
+			//print "console.log('No Data')";
 		}
+
+		//$this->output->enable_profiler(TRUE);
 	}
 
 	private function select_by_type($type){

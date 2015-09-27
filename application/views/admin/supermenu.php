@@ -17,6 +17,10 @@
 	<a href="/admin/maps" title="Наборы данных для карт AM">Содержимое карт</a>
 </li>
 
+<li<?=($_SERVER["REQUEST_URI"]=="/admin/semantics") ? ' class="active"': "";?>>
+	<a href="/admin/semantics" title="Свойства семантики (главный каталог)">Свойства семантики</a>
+</li>
+
 <li<?=($_SERVER["REQUEST_URI"]=="/admin/translations") ? ' class="active"': "";?>>
 <a href="/admin/translations" title="Переводы названий групп, категорий и параметров AM">Переводы</a></li>
 

@@ -240,17 +240,20 @@ class Editormodel extends CI_Model{
 	function get_assigned_properties($location_id){
 		$assigned = array();
 		if($location_id){
-			$result = $this->db->query('SELECT
-			`properties_assigned`.property_id,
-			IF(`properties_list`.multiplier <> 1, ((`properties_assigned`.value % `properties_list`.divider) / `properties_list`.multiplier), `properties_assigned`.value) as value
+			$result = $this->db->query("SELECT
+			IF(properties_list.fieldtype = 'select', `properties_assigned`.value, `properties_assigned`.property_id) AS property_id,
+			IF(`properties_list`.coef <> 1,
+				((`properties_assigned`.value % `properties_list`.divider) / `properties_list`.multiplier),
+				`properties_assigned`.value
+			) AS value
 			FROM
 			`properties_assigned`
 			INNER JOIN properties_list ON (`properties_assigned`.property_id = properties_list.id)
 			WHERE
-			`properties_assigned`.`location_id` = ?', array($location_id));
+			`properties_assigned`.`location_id` = ?", array($location_id));
 			if($result->num_rows()){
 				foreach ($result->result() as $row){
-					$assigned[$row->property_id]=$row->value;
+					$assigned[$row->property_id] = $row->value;
 				}
 			}
 		}
@@ -264,8 +267,7 @@ class Editormodel extends CI_Model{
 		$output   = array();
 		$query    = $this->db->query('SELECT
 		properties_list.id,
-		properties_list.`row`,
-		properties_list.element,
+		CONCAT(properties_list.`page`,properties_list.`row`,properties_list.element) AS marker,
 		properties_list.label,
 		properties_list.selfname,
 		properties_list.fieldtype,
@@ -274,115 +276,114 @@ class Editormodel extends CI_Model{
 		properties_list
 		WHERE
 		properties_list.object_group = ?
-		AND properties_list.active = 1
+		AND properties_list.active
 		AND properties_list.page = ?
 		ORDER BY
-		properties_list.`row`,
-		properties_list.element,
-		properties_list.cat,
+		marker,
 		properties_list.selfname', array($object_group, $page));
 		if ($query->num_rows() ){
 			foreach ($query->result() as $row){
-				if(!isset($output[$row->row]))							{ $output[$row->row] = array(); }
-				if(!isset($output[$row->row]['label']))					{ $output[$row->row]['label'] = $row->label; }
-				if(!isset($output[$row->row][$row->element]))			{ $output[$row->row][$row->element] = array(); }
-				if(!isset($output[$row->row][$row->element][$row->id]))	{ $output[$row->row][$row->element][$row->id] = array(); }
-
-				$output[$row->row][$row->element][$row->id]['name']       = $row->selfname;
-				$output[$row->row][$row->element][$row->id]['fieldtype']  = $row->fieldtype;
-				$output[$row->row][$row->element][$row->id]['parameters'] = $row->parameters;
+				if(!isset($output[$row->label])){ $output[$row->label] = array(); }
+				$output[$row->label][$row->id] = array(
+					'name'       => $row->selfname,
+					'fieldtype'  => $row->fieldtype,
+					'parameters' => $row->parameters
+				);
 			}
 		}
-		//print_r($assigned);
-		$table = array();
-		foreach($output as $key => $val){
-			$element		= array();
-			$elementarray	= array();
-			foreach($val as $key2 => $val2){
-				if($key2 !== "label"){
-					$values			= array();// исключительно для случая, если элемент типа select
-					$backcounter	= sizeof($val2);
-					foreach($val2 as $obj => $val3){
-						$value   = "";
-						$options = array();
-						if(isset($assigned[$obj])){
-							$value = $assigned[$obj];
-						}
-						switch ($val3['fieldtype']){
-							case 'text' :
-								$sting      = '<input type="text" ref="'.$obj.'" id="param_'.$obj.'" '.$val3['parameters'].' value="'.$value.'">'.$val3['name'];
-								array_push($element,$string);
-							break;
-							case 'textarea' :
-								$string     = $val3['name'].'<textarea ref="'.$obj.'" id="param_'.$obj.'" '.$val3['parameters'].' rows="5" cols="20">'.(strlen($value) ? $value : '').'</textarea>';
-								array_push($element,$string);
-							break;
-							case 'select' :
-								$selected   = (isset($assigned[$obj])) ? 'selected="selected"' : "";
-								array_push($values,'<option value="'.$obj.'" '.$selected.'>'.$val3['name'].'</option>');
-								--$backcounter;
-								if(!$backcounter){
-									$string = '<select name="sel_'.$obj.'" id="sel_'.$obj.'">'.implode($values,"\n").'</select>';
-									array_push($element,$string);
-								}
-							break;
-							case 'checkbox' :
-								$value      = (isset($assigned[$obj])) ? 'checked="checked"' : '';
-								array_push($elementarray,'<label title="'.$val['label'].' - '.$val3['name'].'" for="p'.$obj.'"><input type="checkbox" id="p'.$obj.'" name="param[]" '.$value.' value="'.$obj.'">'.$val3['name'].'</label>');
-								--$backcounter;
-								if (!$backcounter){
-									array_push($element, implode($elementarray,"\n"));
-								}
-							break;
-						}
-					}
-				}
-			}
-			(!strlen($val['label'])) ? $val['label'] = "&nbsp;" : "";
-			array_push($table, '<fieldset style="width:99%">
-			<legend>
-				'.$val['label'].
-			'</legend>'.implode($element, "\n").
-			'</fieldset>');
-		}
-
+		//print_r($output);
+		$table = $this->generate_form_content($output, $assigned);
 		return implode($table,"\n");
 	}
 
-	private function geoeditor($object_group, $mode=1){
-		//$this->output->enable_profiler(TRUE);
+	private function generate_form_content($input, $assigned){
 		$output = array();
-		$data = array();
-		$output['objects'] = $this->get_unbound_objects($object_group, $mode);
-		$output['content'] = $this->load->view('editor/geosemantics',$data,true);
-		$output['panel'] = $this->load->view('editor/btncontrol1', $data, true);
-		$output['baspointstypes'] = $this->get_bas_points_types();
+		foreach ($input as $label => $controls) {
+			$element		= array();
+			$elementarray	= array();
+			$values			= array();// исключительно для случая, если элемент типа select
+			$options		= array();
+			$backcounter	= sizeof($controls);
+			foreach ($controls as $object => $data) {
+				$value    = "";
+				$checked  = "";
+				$selected = "";
+				if(isset($assigned[$object])){
+					$value    = $assigned[$object];
+					$checked  = ' checked="checked"';
+					$selected = ' selected="selected"';
+				}
+				switch ($data['fieldtype']){
+					case 'text':
+						$string     = '<div><div class="input-prepend"><label class="add-on" for="param_'.$object.'">'.$data['name'].'</label><input type="text" id="ogp4" ref="'.$object.'" id="param_'.$object.'" '.$data['parameters'].' value="'.$value.'"></div></div>';
+						array_push($element, $string);
+					break;
+					case 'textarea':
+						$string     = $data['name'].'<textarea ref="'.$object.'" id="param_'.$object.'" '.$data['parameters'].' rows="5" cols="20">'.(strlen($value) ? $value : '').'</textarea>';
+						array_push($element,$string);
+					break;
+					case 'select':
+						array_push($values, '<option value="'.$object.'"'.$selected.'>'.$data['name'].'</option>');
+						--$backcounter;
+						if(!$backcounter){
+							array_unshift($values, '<option value="0"> - - - </option>');
+							$string = '<select ref="'.$object.'" name="sel_'.$object.'" id="sel_'.$object.'">'.implode($values,"\n").'</select>';
+							array_push($element, $string);
+						}
+					break;
+					case 'checkbox':
+						$string = '<label title="'.$label.' - '.$data['name'].'" for="p'.$object.'"><input type="checkbox" id="p'.$object.'" name="param[]" '.$checked.' value="'.$object.'">'.$data['name'].'</label>';
+						array_push($elementarray, $string);
+						--$backcounter;
+						if (!$backcounter){
+							array_push($element, implode($elementarray,"\n"));
+						}
+					break;
+				}
+			}
+			array_push($output, '<fieldset style="width:99%">
+			<legend>
+				'.$label.
+			'</legend>'.implode($element, "\n").
+			'</fieldset>');
+		}
 		return $output;
 	}
 
-	private function get_unbound_objects($object_group, $mode=1){
+	private function geoeditor($object_group, $mode = 1){
+		$data = array();
+		$output = array(
+			'objects'        => $this->get_unbound_objects($object_group, $mode),
+			'content'        => $this->load->view('editor/geosemantics', $data, true),
+			'panel'          => $this->load->view('editor/btncontrol1', $data, true),
+			'baspointstypes' => $this->get_bas_points_types()
+		);
+		return $output;
+	}
+
+	private function get_unbound_objects($object_group, $mode = 1){
 		//$this->output->enable_profiler(TRUE);
-		$output	= array();
-		$mode	= ($mode == 2) ? "AND LENGTH(`locations`.coord_y) = 0" : "AND LENGTH(`locations`.coord_y) > 0";
-		$result	= $this->db->query("SELECT 
+		$output = array();
+		$mode   = ($mode == 2) ? "NOT" : "";
+		$result = $this->db->query("SELECT
 		`locations`.id,
 		`locations`.location_name,
-		IF(LENGTH(`locations`.style_override) > 0, `locations`.style_override, `locations_types`.attributes) AS attr,
+		IF(LENGTH(`locations`.style_override), `locations`.style_override, `locations_types`.attributes) AS attr,
 		`locations`.coord_y,
-		IF(LENGTH(`locations`.coord_y) > 0, 1, 0) AS `has_coord`,
+		IF(LENGTH(`locations`.coord_y), 1, 0) AS `has_coord`,
 		`locations_types`.name AS type_name,
 		`locations_types`.pr_type
 		FROM
 		`locations`
 		INNER JOIN `locations_types` ON (`locations`.`type` = `locations_types`.id)
 		WHERE `locations_types`.`object_group` = ?
-		".$mode."
+		AND ".$mode." LENGTH(`locations`.coord_y)
 		ORDER BY has_coord", array($object_group));
 		if($result->num_rows()){
 			foreach($result->result() as $row){
-				$coords	= ($row->has_coord) ? "btn-success" : "btn-warning" ;
-				$img	= $this->config->item('icons');
-				$object	= '<button class="btn '.$coords.'" ref='.$row->id.' style="width:98%; margin-bottom:3px;">'.$img['system'][$row->pr_type].$row->type_name.' '.$row->location_name.'</button>';
+				$coords = ($row->has_coord) ? "btn-success" : "btn-warning" ;
+				$img    = $this->config->item('icons');
+				$object = '<button class="btn '.$coords.'" ref='.$row->id.' style="width:98%; margin-bottom:3px;">'.$img['system'][$row->pr_type].$row->type_name.' '.$row->location_name.'</button>';
 				array_push($output, $object);
 			}
 		}

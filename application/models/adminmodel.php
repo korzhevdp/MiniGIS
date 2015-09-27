@@ -2,6 +2,7 @@
 class Adminmodel extends CI_Model{
 	function __construct(){
 		parent::__construct();
+		//$this->output->enable_profiler(TRUE);
 	}
 
 	function get_full_index($obj_group = 0, $loc_type = 0, $page = 1){
@@ -13,101 +14,136 @@ class Adminmodel extends CI_Model{
 			'controller' => $controller
 		);
 
-		$result=$this->db->query("SELECT 
-		`locations_types`.name AS `type_name`
-		FROM
-		`locations_types`,
-		`objects_groups`
-		WHERE `locations_types`.`id` = ?", array($loc_type));
-		if($result->num_rows()){
-			$row = $result->row();
-			$out['type_name'] = $row->type_name;
-		}
-
-		$result=$this->db->query("SELECT 
-		`objects_groups`.name
-		FROM
-		`objects_groups`
-		WHERE
-		`objects_groups`.id = ?", array($obj_group));
-		if($result->num_rows()){
-			$row = $result->row();
-			$out['name'] = $row->name;
-		}
+		$out['type_name'] = $this->get_type_name($loc_type);
+		$out['name']      = $this->get_group_name($obj_group);
 		
 		if(!$obj_group) {
-			$result = $this->db->query('SELECT 
-			`objects_groups`.name,
-			`objects_groups`.id
-			FROM
-			`objects_groups`
-			WHERE `objects_groups`.`active`
-			AND `objects_groups`.`id` IN ('.$this->session->userdata('access').')
-			ORDER BY `objects_groups`.name ASC');
-			if($result->num_rows()){
-				foreach ($result->result_array() as $row){
-					$row['title']     = "";
-					$row['obj_group'] = $obj_group;
-					$row['img']       = '<img src="'.$this->config->item("api").'/images/folder.png" alt="">';
-					$row['link']      = '/'.$controller.'/library/'.$row['id'];
-					array_push($output, $this->load->view("admin/libraryitem", $row, true));
-				}
-			}
+			$output = $this->get_library_group_list($controller);
 		} else {
 			if(!$loc_type){
-				$result=$this->db->query("SELECT 
-				locations_types.id,
-				locations_types.name AS `title`,
-				IF(LENGTH(locations_types.name) > 49, CONCAT(LEFT(locations_types.name, 46) ,'...'), locations_types.name) AS name
-				FROM
-				locations_types
-				WHERE
-				`locations_types`.`pl_num` AND
-				`locations_types`.`object_group` = ?
-				ORDER BY title", array($obj_group));
-				if($result->num_rows()){
-					foreach ($result->result_array() as $row){
-						$row['obj_group'] = $obj_group;
-						$row['img']  = '<img src="'.$this->config->item("api").'/images/folder.png" alt="">';
-						$row['link'] = '/'.$controller.'/library/'.$obj_group.'/'.$row['id'];
-						array_push($output, $this->load->view("admin/libraryitem", $row, true));
-					}
-				}
+				$output = $this->get_library_type_list($obj_group, $controller);
 			} else {
-				$result = $this->db->query("SELECT 
-				IF(LENGTH(`locations`.location_name) > 49, CONCAT(LEFT(`locations`.location_name, 46), '...'),`locations`.location_name) AS name,
-				`locations`.location_name AS title,
-				`locations`.id
-				FROM
-				`locations`
-				WHERE
-				`locations`.`type`    = ?
-				AND `locations`.owner = ?
-				ORDER BY title", array(
-					$loc_type,
-					$this->session->userdata("user_id"))
-				);
-				if($result->num_rows()){
-					foreach ($result->result_array() as $row){
-						$row['img']  = '<img src="'.$this->config->item("api").'/images/location_pin.png" alt="">';
-						$row['link'] = '/editor/edit/'.$row['id'];
-						array_push($output, $this->load->view("admin/libraryitem", $row, true));
-					}
-				}
-				$row = array(
-					'img'   => '<img src="'.$this->config->item("api").'/images/location_pin.png" alt="">',
-					'name'  => 'Добавить объект',
-					'link'  => '/editor/add/'.$loc_type,
-					'title' => "Добавить новый объект этого класса"
-				);
-				array_push($output, $this->load->view("admin/libraryitem", $row, true));
+				$output = $this->get_library_locations_list_by_type($loc_type);
 			}
 		}
 		$out['library'] = implode($output, "\n");
 		return $this->load->view("admin/library", $out, true);
 	}
 
-	function get_composite_indexes($obj_group, $loc_type, $param = 1, $page = 1){
+	private function get_type_name($loc_type) {
+		$output = "Нет названия типа";
+		$result = $this->db->query("SELECT
+		`locations_types`.name AS `type_name`
+		FROM
+		`locations_types`,
+		`objects_groups`
+		WHERE `locations_types`.`id` = ?", array($loc_type));
+		if($result->num_rows()){
+			$row    = $result->row();
+			$output = $row->type_name;
+		}
+		return $output;
+	}
+
+	private function get_group_name($obj_group){
+		$output = "Нет названия группы";
+		$result = $this->db->query("SELECT 
+		`objects_groups`.name
+		FROM
+		`objects_groups`
+		WHERE
+		`objects_groups`.id = ?", array($obj_group));
+		if($result->num_rows()){
+			$row    = $result->row();
+			$output = $row->name;
+		}
+		return $output;
+	}
+
+	private function get_library_group_list($controller){
+		$output = array();
+		$result = $this->db->query('SELECT 
+		`objects_groups`.name,
+		`objects_groups`.id
+		FROM
+		`objects_groups`
+		WHERE `objects_groups`.`active`
+		AND `objects_groups`.`id` IN ('.$this->session->userdata('access').')
+		ORDER BY `objects_groups`.name ASC');
+		if($result->num_rows()){
+			foreach ($result->result_array() as $row){
+				$row['title']     = "";
+				$row['obj_group'] = $obj_group;
+				$row['img']       = '<img src="'.$this->config->item("api").'/images/folder.png" alt="">';
+				$row['link']      = '/'.$controller.'/library/'.$row['id'];
+				array_push($output, $this->load->view("admin/libraryitem", $row, true));
+			}
+		}
+		return $output;
+	}
+
+	private function get_library_type_list($obj_group, $controller){
+		$output = array();
+		$result = $this->db->query("SELECT 
+		locations_types.id,
+		locations_types.name AS `title`,
+		IF(LENGTH(locations_types.name) > 49, CONCAT(LEFT(locations_types.name, 46) ,'...'), locations_types.name) AS name
+		FROM
+		locations_types
+		WHERE
+		`locations_types`.`pl_num` 
+		AND `locations_types`.`object_group` = ?
+		ORDER BY title", array($obj_group));
+		if($result->num_rows()){
+			foreach ($result->result_array() as $row){
+				$row['obj_group'] = $obj_group;
+				$row['img']  = '<img src="'.$this->config->item("api").'/images/folder.png" alt="">';
+				$row['link'] = '/'.$controller.'/library/'.$obj_group.'/'.$row['id'];
+				array_push($output, $this->load->view("admin/libraryitem", $row, true));
+			}
+		}
+		return $output;
+	}
+
+	private function get_library_locations_list_by_type($loc_type){
+		$output = array();
+		$view_user_locations = "AND `locations`.owner = ?";
+		if($this->config->item('admin_can_edit_user_locations') === true){
+			if($this->session->userdata('admin')){
+				$view_user_locations = "";
+			}
+		}
+		$result = $this->db->query("SELECT 
+		IF(LENGTH(`locations`.location_name) > 49, CONCAT(LEFT(`locations`.location_name, 46), '...'),`locations`.location_name) AS name,
+		`locations`.location_name AS title,
+		`locations`.id
+		FROM
+		`locations`
+		WHERE
+		`locations`.`type`    = ?"
+		.$view_user_locations."
+		ORDER BY title", array(
+			$loc_type,
+			$this->session->userdata("user_id"))
+		);
+		if($result->num_rows()){
+			foreach ($result->result_array() as $row){
+				$row['img']  = '<img src="'.$this->config->item("api").'/images/location_pin.png" alt="">';
+				$row['link'] = '/editor/edit/'.$row['id'];
+				array_push($output, $this->load->view("admin/libraryitem", $row, true));
+			}
+		}
+		$row = array(
+			'img'   => '<img src="'.$this->config->item("api").'/images/location_pin.png" alt="">',
+			'name'  => 'Добавить объект',
+			'link'  => '/editor/add/'.$loc_type,
+			'title' => "Добавить новый объект этого класса"
+		);
+		array_push($output, $this->load->view("admin/libraryitem", $row, true));
+		return $output;
+	}
+
+	public function get_composite_indexes($obj_group, $loc_type, $param = 1, $page = 1){
 		if ($obj_group) {
 			$values         = $this->adminmodel->show_semantics_values($obj_group, $loc_type, $param);
 			$values['list'] = $this->adminmodel->show_semantics($obj_group, $loc_type);
@@ -119,10 +155,11 @@ class Adminmodel extends CI_Model{
 		);
 		return $this->load->view("admin/library2", $output, true);
 	}
+
 	#######################################################################
 	### управление списками параметров VERIFIED
 	#######################################################################
-	function show_semantics($object_group, $type_id){
+	function show_semantics($object_group, $type_id) {
 		$table  = array();
 		$result = $this->db->query("SELECT
 		IF(properties_list.page = 1, 0, 1) AS editable,
@@ -137,18 +174,17 @@ class Adminmodel extends CI_Model{
 		properties_list.active
 		FROM
 		properties_list
-		WHERE
-		(properties_list.object_group = ?)
-		ORDER BY
+		".(($object_group) ? "WHERE (properties_list.id IN (SELECT properties_bindings.property_id FROM properties_bindings WHERE properties_bindings.groups = ?))" : "").
+		" ORDER BY
 		properties_list.page,
 		properties_list.`row`,
 		properties_list.element", array($object_group));
-		if($result->num_rows()) {
+		if ($result->num_rows()) {
 			//array_push($table,'<ul class="span12 row-fluid" style="list-style-type: none; margin-left:0px;">');
 			foreach ($result->result_array() as $row){
 				//$ed_btn = ($row->editable) ? '<a href="/admin/semantics/'.$object_group.'/'.$row->id.'" class="btn btn-primary btn-mini">Редактировать</a>' : "";
 				$row['object_group'] = $object_group;
-				$row['infoclass']	 = ($row['editable'])	? ' title="Назначаемое свойство"' : ' class="warning" title="Признак типа/категории объекта"';
+				$row['infoclass']	 = ($row['editable'])	? ' title="Назначаемое свойство"' : ' class="warning" title="Главный признак типа/категории объекта"';
 				$row['pic1']		 = ($row['searchable'])	? 'find.png'			: 'lightbulb_off.png';
 				$row['title1']		 = ($row['searchable'])	? 'Доступно для поиска' : 'Поиск по параметру не производится';
 				$row['pic2']		 = ($row['active'])		? 'lightbulb.png'		: 'lightbulb_off.png';
@@ -161,9 +197,9 @@ class Adminmodel extends CI_Model{
 		return $out;
 	}
 
-	function show_semantics_values($object_group = 1, $type = 0, $obj = 0){
+	function show_semantics_values($object_group = 1, $type = 0, $obj = 0) {
 		//$this->output->enable_profiler(TRUE);
-		$output= array(
+		$output = array(
 			'row'				=> '',
 			'element'			=> '',
 			'label'				=> '',
@@ -183,7 +219,7 @@ class Adminmodel extends CI_Model{
 			'linked'			=> ''
 		);
 
-		$result=$this->db->query("SELECT 
+		$result = $this->db->query("SELECT 
 		properties_list.`row`,
 		properties_list.element,
 		properties_list.label,
@@ -205,52 +241,38 @@ class Adminmodel extends CI_Model{
 		INNER JOIN properties_list ON (`objects_groups`.id = properties_list.object_group)
 		WHERE
 		(properties_list.id = ?)", array($obj));
-		if($result->num_rows() ){
-			$output=$result->row_array();
+		if ($result->num_rows()) {
+			$output = $result->row_array();
 		}
 		$result->free_result();
 
+		$output['object_group']			= $object_group;
+		$output['obj']					= $obj;
 		$output['searchable']			= (($output['searchable']) ? 'checked="checked"' : '');
 		$output['active']				= (($output['active']) ? 'checked="checked"' : '');
 		$output['property_group_name']	= $output['property_group'];
 		$output['cat_name']				= $output['cat'];
-		//$output['og_name']	= $output['og_name'];
+		$output['property_group']		= $this->pack_datalist($this->db->query("SELECT DISTINCT properties_list.property_group AS vals FROM properties_list ORDER BY vals"));
+		$output['cat']					= $this->pack_datalist($this->db->query("SELECT DISTINCT properties_list.cat AS vals FROM properties_list ORDER BY vals"));
+		$output['linked']				= $this->get_geosemantic_links($output['linked']);
+		return $output;
+	}
 
-		function pack_select($result){
-			$array = array();
-			if($result->num_rows()){
-				foreach($result->result() as $row){
-					$selected = ($row->act) ? ' selected="selected"' : '';
-					$string   = '<option value="'.$row->vals.'"'.$selected.'>'.$row->vals.'</option>';
-					array_push($array, $string);
-				}
+	private function pack_datalist($result) {
+		$array = array();
+		if($result->num_rows()){
+			foreach($result->result() as $row){
+				$string = '<option value="'.$row->vals.'">'.$row->vals.'</option>';
+				array_push($array, $string);
 			}
-			$result->free_result();
-			return implode($array, "\n");
 		}
+		$result->free_result();
+		return implode($array, "\n");
+	}
 
-		function pack_datalist($result){
-			$array = array();
-			if($result->num_rows()){
-				foreach($result->result() as $row){
-					$string = '<option value="'.$row->vals.'">'.$row->vals.'</option>';
-					array_push($array, $string);
-				}
-			}
-			$result->free_result();
-			return implode($array, "\n");
-		}
-
-		$result = $this->db->query("SELECT DISTINCT properties_list.fieldtype AS vals, IF(properties_list.fieldtype = ?, 1, 0) AS act FROM properties_list ORDER BY vals", array($output['fieldtype']));
-		$output['fieldtype'] = pack_select($result);
-
-		$result=$this->db->query("SELECT DISTINCT properties_list.property_group AS vals FROM properties_list ORDER BY vals");
-		$output['property_group'] = pack_datalist($result);
-
-		$result=$this->db->query("SELECT DISTINCT properties_list.cat AS vals FROM properties_list ORDER BY vals");
-		$output['cat'] = pack_datalist($result);
-
-		$result=$this->db->query("SELECT 
+	private function get_geosemantic_links($link) {
+		$output = array('<option value=0>Не установлена</option>');
+		$result = $this->db->query("SELECT
 		locations.id,
 		CONCAT_WS(' ', locations_types.name, locations.location_name) AS name,
 		IF(locations.id = ?, 1, 0) AS act
@@ -259,23 +281,18 @@ class Adminmodel extends CI_Model{
 		INNER JOIN locations_types ON (locations.`type` = locations_types.id)
 		WHERE
 		(locations_types.pr_type = 3)
-		ORDER BY name", array($output['linked']));
-		$array = array('<option value=0>Не установлена</option>');
+		ORDER BY name", array($link));
 		if($result->num_rows()){
 			foreach($result->result() as $row){
 				$string = '<option value="'.$row->id.'"'.(($row->act) ? ' selected="selected"' : '').'>'.$row->name.'</option>';
-				array_push($array, $string);
+				array_push($output, $string);
 			}
 		}
 		$result->free_result();
-		$output['linked'] = implode($array, "\n");
-
-		$output['object_group'] = $object_group;
-		$output['obj'] = $obj;
-		return $output;
+		return implode($output, "\n");
 	}
 
-	function save_semantics(){
+	function save_semantics() {
 		//$this->output->enable_profiler(TRUE);
 		//return false;
 		$mode  =  $this->input->post('mode');
@@ -412,7 +429,7 @@ class Adminmodel extends CI_Model{
 	#######################################################################
 	### объекты ГИС VERIFIED
 	#######################################################################
-	function gis_objects_show($obj = 0){
+	function gis_objects_show($obj = 0) {
 		//Выбираем объект
 		$object = array(
 			'id'			=> 0,
@@ -507,7 +524,7 @@ class Adminmodel extends CI_Model{
 		return $this->load->view('admin/object_types_control_table', $object, true);
 	}
 
-	function gis_save(){
+	function gis_save() {
 		//print $this->input->post('obj');
 		$hc = ($this->input->post('has_child')) ? 1 : 0;
 		if(!$this->input->post('obj')){
@@ -600,7 +617,7 @@ class Adminmodel extends CI_Model{
 	#######################################################################
 	### редактор страниц VERIFIED
 	#######################################################################
-	function find_initial_sheet($root = 1){
+	function find_initial_sheet($root = 1) {
 		$result=$this->db->query("SELECT 
 		sheets.id
 		FROM
@@ -618,7 +635,7 @@ class Adminmodel extends CI_Model{
 		return $out;
 	}
 	
-	function _sheet_tree($root = 0, $sheet_id = 1){
+	function _sheet_tree($root = 0, $sheet_id = 1) {
 		$tree="";
 		if(!$root){
 			$result=$this->db->query("SELECT 

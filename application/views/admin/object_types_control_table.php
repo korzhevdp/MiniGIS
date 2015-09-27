@@ -59,11 +59,10 @@
 		pr_type    = <?=$pr_type;?>,
 		a;
 	$("#attributes").prepend('<option value="">Выберите тип</option>');
-	for (a in userstyles){
-		if (userstyles.hasOwnProperty(a)){
-			if(pr_type !== undefined && userstyles[a].type === pr_type) {
-				selected = (attributes !== undefined && attributes == a) ? ' selected="selected"' : '';
-				string   = '<option value="' + a + '"' + selected + '>' + userstyles[a].name + '</option>';
+	for (a in userstyles) {
+		if (userstyles.hasOwnProperty(a)) {
+			if (pr_type !== undefined && userstyles[a].type === pr_type) {
+				string   = '<option value="' + a + '">' + userstyles[a].name + '</option>';
 				$("#attributes").append(string);
 			}
 		}
@@ -73,5 +72,7 @@
 		$("#attributes").append(yandex_styles.join("\n"));
 		$("#attributes").append(yandex_markers.join("\n"));
 	}
+
+	$("#attributes option[value=\"" + attributes + "\"]").prop('selected', true);
 //-->
 </script>

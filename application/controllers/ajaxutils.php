@@ -65,7 +65,6 @@ class Ajaxutils extends CI_Controller{
 	function dependencycalc($lid, $input) { //запрос из map_calc.js / locations_container.php
 		$locs = implode(explode("_",$input), ",");
 		$out = array("var set = [");
-		array_push($out, );
 		$result = $this->db->query("SELECT 
 		`locations_types`.pr_type,
 		`locations`.coord_y,

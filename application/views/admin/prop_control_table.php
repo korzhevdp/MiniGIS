@@ -86,6 +86,7 @@
 			<label class="add-on" for="ogp14">Привязка:</label>
 			<select form="ogp_edit_form" name="linked" id="ogp14">
 				<?=$linked;?>
+			</select>
 		</div>
 		</div>
 
@@ -93,7 +94,10 @@
 		<div class="input-prepend">
 			<label class="add-on" for="ogp8">Тип поля:</label>
 			<select form="ogp_edit_form" name="fieldtype" id="ogp8">
-				<?=$fieldtype;?>
+				<option value="select"   <? if ($fieldtype === "select" )   {?> selected="selected"<? } ?>>Выпадающий список</option>
+				<option value="checkbox" <? if ($fieldtype === "checkbox" ) {?> selected="selected"<? } ?>>Флажок</option>
+				<option value="text"     <? if ($fieldtype === "text" )     {?> selected="selected"<? } ?>>Текст</option>
+				<option value="textarea" <? if ($fieldtype === "textarea" ) {?> selected="selected"<? } ?>>Текстовое поле</option>
 			</select>
 		</div>
 		</div>

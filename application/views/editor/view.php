@@ -142,6 +142,13 @@
 			z-index: 100000;
 			display: none;
 		}
+		.langMark {
+			width:32px;
+			height:32px;
+			border:0px;
+			margin-top:8px;
+			cursor:pointer;
+		}
 	</style>
 </head>
 
@@ -151,7 +158,7 @@
 		<td colspan=2 class="navbar navbar-inverse">
 			<div class="navbar-inner">
 				<div class="container">
-					<a class="brand" href="/">KORZHEVDP.COM <img src="<?=$this->config->item('api');?>/images/minigis24.png" alt="MiniGIS" title="MiniGis Project"></a>
+					<a class="brand" href="/">ПРОЕКТ&nbsp;&nbsp;<small>Minigis.NET <img src="<?=$this->config->item('api');?>/images/minigis24.png" alt="MiniGIS" title="MiniGis Project"></a>
 					<?=$this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), TRUE).$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu();?>
 				</div>
 			</div>

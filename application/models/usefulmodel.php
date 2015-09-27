@@ -7,9 +7,16 @@ class Usefulmodel extends CI_Model{
 	public function check_owner($location_id){
 		//на будущее: создание хэша// UPDATE `users_admins` SET `users_admins`.`uid` = sha1(concat(sha1('uid'),`users_admins`.`id`))
 		// or GOLDEN hash :)
+		if($this->config->item('admin_can_edit_user_locations') === true){
+			if($this->session->userdata('admin')){
+				return TRUE;
+			}
+		}
+		/*
 		if($this->session->userdata('user_id') == $this->config->item('golden_hash')){
 			return TRUE;
 		}
+		*/
 		$result=$this->db->query("SELECT
 		`locations`.`owner`
 		FROM

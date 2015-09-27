@@ -7,6 +7,7 @@ class Cachemodel extends CI_Model{
 	}
 	private function get_statmap($type = 1, $coords = "0,0"){
 		$output = array();
+		
 		$maps   = array(
 			1 => "http://static-maps.yandex.ru/1.x/?z=13&l=map&size=128,128&pt=".$coords.",vkbkm",
 			2 => "http://static-maps.yandex.ru/1.x/?l=map&size=128,128&pl=".$coords,
@@ -16,8 +17,9 @@ class Cachemodel extends CI_Model{
 		);
 		$output['statmap'] = $maps[$type];
 		if ($type == 1) {
-			$output['lat'] = $act['coord_y'][1];
-			$output['lon'] = $act['coord_y'][0];
+			$act = explode(",", $coords);
+			$output['lat'] = $act[1];
+			$output['lon'] = $act[0];
 		}
 		return $output;
 	}
@@ -337,7 +339,7 @@ class Cachemodel extends CI_Model{
 						/* генерация */
 						switch ($element['fieldtype']){
 							case 'text':
-								$string = '<li class="itemcontainer" obj="'.$object_id.'"><input type="text">'.$element['name']."</li>";
+								$string = '<li class="itemcontainer"><input type="text" class="itemtext" obj="'.$object_id.'">'.$element['name']."</li>";
 								array_push($htmlcontrol, $string);
 							break;
 							case 'select':
@@ -345,12 +347,13 @@ class Cachemodel extends CI_Model{
 								array_push($values, $string);
 								--$backcounter;
 								if($backcounter === 0) {
-									$string = '<li class="itemcontainer" obj="'.$object_id.'"><select>'."\n".implode($values,"\n").'</select></li>';
+									array_unshift($values, '<option value="0" selected="selected"> - - - </option>');
+									$string = '<li class="itemcontainer"><select class="itemselect" obj="'.$object_id.'">'."\n".implode($values,"\n").'</select></li>';
 									array_push($htmlcontrol, $string);
 								}
 							break;
 							case 'checkbox':
-								$string = '<li class="itemcontainer" obj="'.$object_id.'"><img src="'.$this->config->item('api').'/images/clean_grey.png" alt=" ">'.$element['name'].'</li>';
+								$string = '<li class="itemcontainer itemcheckbox" obj="'.$object_id.'"><img src="'.$this->config->item('api').'/images/clean_grey.png" alt=" ">'.$element['name'].'</li>';
 								array_push($checkboxes, $string);
 								--$backcounter;
 								if ($backcounter === 0){

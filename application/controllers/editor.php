@@ -103,53 +103,84 @@ class Editor extends CI_Controller{
 	public function saveobject(){
 		$location_id = $this->input->post('ttl');
 		if (!$this->checkdatafullness()){
-			print "data = { ttl : ".$location_id." }";
+			//print 'console.log("Data is inconsistent. Operation was aborted.")';
 			return false;
 		}
 
 		if ($location_id == 0 && $location_id !== FALSE) {
 			$location_id = $this->createobject();
 		} else {
-			if (!$this->usefulmodel->check_owner($location_id)){
+			if (!$this->usefulmodel->check_owner($location_id)) {
 				$this->usefulmodel->insert_audit("При сохранении объекта: #".$location_id." - владелец не совпадает");
 				redirect('admin/library');
 			}
-			if($location_id != $this->session->userdata("c_l")){
+			if($location_id != $this->session->userdata("c_l")) {
 				$this->usefulmodel->insert_audit("При сохранении объекта: #".$location_id." - подмена целевого объекта (".$this->session->userdata("c_l").")");
 			}
-
-			$result = $this->db->query("UPDATE
-			`locations` 
-			SET
-			`locations`.location_name = ?,
-			`locations`.owner = ?,
-			`locations`.`type` = ?,
-			`locations`.style_override = ?,
-			`locations`.contact_info = ?,
-			`locations`.address = ?,
-			`locations`.coord_y = ?,
-			`locations`.coord_array = ?,
-			`locations`.coord_obj = ?,
-			`locations`.parent = ?,
-			`locations`.active = ?,
-			`locations`.comments = ?
-			WHERE
-			`locations`.id = ?", array(
-				$this->input->post('name'),
-				$this->session->userdata("user_id"),
-				$this->input->post('type'),
-				$this->input->post('attr'),
-				$this->input->post('contact'),
-				$this->input->post('address'),
-				$this->input->post('coords'),
-				$this->input->post('coords_array'),
-				$this->input->post('coords_aux'),
-				0,
-				$this->input->post('active'),
-				$this->input->post('comments'),
-				$location_id
-			));
-
+			
+			if($this->config->item('admin_can_edit_user_locations') === true && $this->session->userdata("admin") === 1){
+				$result = $this->db->query("UPDATE
+				`locations` 
+				SET
+				`locations`.location_name  = ?,
+				`locations`.`type`         = ?,
+				`locations`.style_override = ?,
+				`locations`.contact_info   = ?,
+				`locations`.address        = ?,
+				`locations`.coord_y        = ?,
+				`locations`.coord_array    = ?,
+				`locations`.coord_obj      = ?,
+				`locations`.parent         = ?,
+				`locations`.active         = ?,
+				`locations`.comments       = ?
+				WHERE
+				`locations`.id             = ?", array(
+					$this->input->post('name'),
+					$this->input->post('type'),
+					$this->input->post('attr'),
+					$this->input->post('contact'),
+					$this->input->post('address'),
+					$this->input->post('coords'),
+					$this->input->post('coords_array'),
+					$this->input->post('coords_aux'),
+					0,
+					$this->input->post('active'),
+					$this->input->post('comments'),
+					$location_id
+				));
+			} else {
+				$result = $this->db->query("UPDATE
+				`locations` 
+				SET
+				`locations`.location_name  = ?,
+				`locations`.owner          = ?,
+				`locations`.`type`         = ?,
+				`locations`.style_override = ?,
+				`locations`.contact_info   = ?,
+				`locations`.address        = ?,
+				`locations`.coord_y        = ?,
+				`locations`.coord_array    = ?,
+				`locations`.coord_obj      = ?,
+				`locations`.parent         = ?,
+				`locations`.active         = ?,
+				`locations`.comments       = ?
+				WHERE
+				`locations`.id             = ?", array(
+					$this->input->post('name'),
+					$this->session->userdata("user_id"),
+					$this->input->post('type'),
+					$this->input->post('attr'),
+					$this->input->post('contact'),
+					$this->input->post('address'),
+					$this->input->post('coords'),
+					$this->input->post('coords_array'),
+					$this->input->post('coords_aux'),
+					0,
+					$this->input->post('active'),
+					$this->input->post('comments'),
+					$location_id
+				));
+			}
 			$result = $this->db->query("DELETE
 			FROM `properties_assigned`
 			WHERE
@@ -231,6 +262,7 @@ class Editor extends CI_Controller{
 		$checks = $this->input->post("check");
 		$text   = $this->input->post("te");
 		$tarea  = $this->input->post("ta");
+		$select = $this->input->post("se");
 
 		if($checks && sizeof($checks)){
 			foreach($checks as $val){
@@ -246,6 +278,12 @@ class Editor extends CI_Controller{
 		}
 		if($tarea && sizeof($tarea)){
 			foreach($tarea as $key => $val){
+				array_push($output, '('.$location_id.', '.$key.', \''.$val.'\')');
+				array_push($ids, $key);
+			}
+		}
+		if($select && sizeof($select)){
+			foreach($select as $key => $val){
 				array_push($output, '('.$location_id.', '.$key.', \''.$val.'\')');
 				array_push($ids, $key);
 			}
@@ -270,11 +308,11 @@ class Editor extends CI_Controller{
 					properties_assigned.property_id,
 					properties_assigned.value
 				) VALUES ".implode($output, ",\n"));
-				//print implode($output, ",\n");
-			}else{
+				//print 'console.log("This save was successful")';
+			} else {
 				// Идентификаторы свойств принадлежат более чем одной странице. Флуд параметров.
 				// print "NO! Flooding page: ".$row->page;
-				print "data = { ttl : ".$location_id." }";
+				//print 'console.log("Page flood detected. Operation was aborted. Use proper tool to access storage")';
 				return false;
 			}
 		}

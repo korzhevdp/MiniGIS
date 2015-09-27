@@ -17,6 +17,7 @@
 		"de" => 'Deutsch',
 		"es" => 'Español'
 	);
+	$config['admin_can_edit_user_locations'] = true;
 ############
 ############ параметры вызовов модулей
 ############
