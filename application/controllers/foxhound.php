@@ -12,10 +12,6 @@ class Foxhound extends CI_Controller{
 		}
 	}
 
-	public function msearch(){
-		print $this->select_by_type($this->input->post('type', true));
-	}
-
 	private function select_filtered_group($input, $mapset, $current){
 		$full         = array(); // массив в который будем складывать все пришедшие параметры в соответствии с алгоритмами :)
 		$list         = array(); // массив накопитель найденных объектов. Над ним проводятся операции
@@ -59,38 +55,6 @@ class Foxhound extends CI_Controller{
 		}
 
 		//$this->output->enable_profiler(TRUE);
-	}
-
-	private function select_by_type($type){
-		$result=$this->db->query("SELECT 
-		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
-		locations.id,
-		IF(locations_types.pl_num = 0, 'объект', locations_types.name) AS typename,
-		locations.location_name,
-		IF(LENGTH(locations.contact_info), locations.contact_info, 'контактная информация отсутствует') AS contact_info,
-		IF(LENGTH(locations.address), locations.address, ?) AS address,
-		locations.coord_y,
-		locations_types.pr_type,
-		CONCAT('/page/gis/', locations.id) AS link,
-		objects_groups.array,
-		IF(LENGTH(`locations`.`style_override`) > 1, `locations`.`style_override`, IF(LENGTH(locations_types.attributes), locations_types.attributes, 'default#houseIcon')) AS attr
-		FROM
-		locations_types
-		INNER JOIN locations ON (locations_types.id = locations.`type`)
-		INNER JOIN objects_groups ON (locations_types.object_group = objects_groups.id)
-		INNER JOIN users_admins ON (locations.owner = users_admins.uid)
-		WHERE
-		(locations_types.id = ?)
-		AND locations.active
-		AND users_admins.active
-		AND (LENGTH(locations.coord_y) > 3)
-		ORDER BY
-		locations.location_name", array($this->config->item('maps_def_loc'), $type));
-		$out = array();
-		if($result->num_rows()){
-			$out = $this->pack_results($result);
-		}
-		return "data = { ".implode($out, ",\n")."\n}";
 	}
 
 	private function test_search_array($list, $addition){
@@ -302,15 +266,7 @@ class Foxhound extends CI_Controller{
 		return $output;
 	}
 
-	private function pack_results($result){
-		$out = array();
-		foreach($result->result() as $row){
-			$image  = (strlen($row->img)) ? $row->img : "nophoto.gif";
-			$string = "\t".$row->id.": { img: '".$image."', description: '".$row->address."', type: '".$row->typename."', name: '".$row->location_name."', attr: '".$row->attr."', coord: '".$row->coord_y."', pr: ".$row->pr_type.", contact: '".$row->contact_info."', link: '".$row->link."' }";
-			array_push($out, $string);
-		}
-		return $out;
-	}
+
 }
 
 /* End of file ajax.php */

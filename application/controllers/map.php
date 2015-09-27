@@ -4,7 +4,6 @@ class Map extends CI_Controller {
 		parent::__construct();
 		$this->load->model('mapmodel');
 		$this->load->model('usefulmodel');
-		//$this->output->enable_profiler(TRUE);
 		if(!$this->session->userdata('lang')){
 			$this->session->set_userdata('lang', 'en');
 		}
@@ -199,6 +198,42 @@ class Map extends CI_Controller {
 			$out = $this->pack_results($result);
 		}
 		return $out;
+	}
+	
+	private function select_by_type($type){
+		$result = $this->db->query("SELECT 
+		(SELECT `images`.`filename` FROM `images` WHERE `images`.`location_id` = `locations`.`id` AND `images`.`order` <= 1 LIMIT 1) as img,
+		locations.id,
+		IF(locations_types.pl_num = 0, 'объект', locations_types.name) AS typename,
+		locations.location_name,
+		IF(LENGTH(locations.contact_info), locations.contact_info, 'контактная информация отсутствует') AS contact_info,
+		IF(LENGTH(locations.address), locations.address, ?) AS address,
+		locations.coord_y,
+		locations_types.pr_type,
+		CONCAT('/page/gis/', locations.id) AS link,
+		objects_groups.array,
+		IF(LENGTH(`locations`.`style_override`) > 1, `locations`.`style_override`, IF(LENGTH(locations_types.attributes), locations_types.attributes, 'default#houseIcon')) AS attr
+		FROM
+		locations_types
+		INNER JOIN locations ON (locations_types.id = locations.`type`)
+		INNER JOIN objects_groups ON (locations_types.object_group = objects_groups.id)
+		INNER JOIN users_admins ON (locations.owner = users_admins.uid)
+		WHERE
+		(locations_types.id = ?)
+		AND locations.active
+		AND users_admins.active
+		AND (LENGTH(locations.coord_y) > 3)
+		ORDER BY
+		locations.location_name", array($this->config->item('maps_def_loc'), $type));
+		$out = array();
+		if($result->num_rows()){
+			$out = $this->pack_results($result);
+		}
+		return "data = { ".implode($out, ",\n")."\n}";
+	}
+
+	public function msearch(){
+		print $this->select_by_type($this->input->post('type', true));
 	}
 
 }
