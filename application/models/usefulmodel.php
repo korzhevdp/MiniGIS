@@ -75,7 +75,7 @@ class Usefulmodel extends CI_Model{
 		return $menu;
 	}
 
-	public function _captcha_make(){
+	public function captcha_make(){
 		$imgname="captcha/src.gif";
 		$im = @ImageCreateFromGIF($imgname);
 		//$im = @ImageCreate (100, 50) or die ("Cannot Initialize new GD image stream");
