@@ -67,10 +67,10 @@ class Reconcile extends CI_Controller{
 		
 		
 		foreach($input as $key => $data) {
-			$id = $data['lowest_id'];
+			$lowest_id = $data['lowest_id'];
 			unset($data['lowest_id']);
 			foreach($data as $val) {
-				array_push($output, "(".$id.", ".$val.", 1)");
+				array_push($output, "(".$lowest_id.", ".$val.", 1)");
 			}
 			
 		}

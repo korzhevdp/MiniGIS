@@ -25,55 +25,36 @@ class Docmodel extends CI_Model{
 	}
 	
 	private function sheet_tree($root = 0, $sheet_id = 1) {
-		$tree="";
-		if(!$root){
-			$result=$this->db->query("SELECT 
-			`sheets`.`id`,
-			`sheets`.`parent`,
-			`sheets`.`pageorder`,
-			`sheets`.`header`,
-			`sheets`.`active`,
-			`sheets`.`root`
-			FROM
-			`sheets`
-			ORDER BY `sheets`.`parent`,
-			`sheets`.`pageorder`",array($root));
-		}else{
-			$result=$this->db->query("SELECT 
-			`sheets`.`id`,
-			`sheets`.`parent`,
-			`sheets`.`pageorder`,
-			`sheets`.`header`,
-			`sheets`.`active`,
-			`sheets`.`root`
-			FROM
-			`sheets`
-			WHERE
-			`sheets`.`root` = ?
-			ORDER BY `sheets`.`parent`,
-			`sheets`.`pageorder`",array($root));
-		}
+		$tree = "";
+		$result = $this->db->query("SELECT
+		`sheets`.`id`,
+		`sheets`.`parent`,
+		`sheets`.`pageorder`,
+		`sheets`.`header`,
+		`sheets`.`active`,
+		IF(`sheets`.`root` = 1, 'Ст', 'П') AS root
+		FROM
+		`sheets`
+		".(($root) ? "" : " WHERE `sheets`.`root` = ? ")."
+		ORDER BY `sheets`.`parent`,
+		`sheets`.`pageorder`", array($root));
 
 		if($result->num_rows() ){
 			foreach($result->result() as $row){
-				$style=array();
-				(!$row->active) ? array_push($style,'muted') : '';
-				($row->id == $sheet_id) ? array_push($style,"active") : '';
-				switch ($row->root){
-					case 2 :
-						$type="П";
-					break;
-					case 1 :
-						$type="Ст";
-					break;
+				$style = array();
+				if (!$row->active) {
+					array_push($style, 'muted');
 				}
-				$tree.=(!strlen($tree)) ? "\..--".$row->parent."--" : '';
-
-				$tree=str_replace("--".$row->parent."--",'<a href="/admin/sheets/edit/'.$row->id.'"><div class="menu_item" class="'.implode($style,";").'">'.$row->id.". ".$row->header.' ('.$type.')</div></a><div class="menu_item_container">--'.$row->id.'--</div>
-				--'.$row->parent.'--',$tree);
+				if ($row->id == $sheet_id) {
+					array_push($style, "active");
+				}
+				if (!strlen($tree)) {
+					$tree .=  "\..--".$row->parent."--";
+				}
+				$tree  = str_replace("--".$row->parent."--", '<a href="/admin/sheets/edit/'.$row->id.'"><div class="menu_item" class="'.implode($style, ";").'">'.$row->id.". ".$row->header.' ('.$row->root.')</div></a><div class="menu_item_container">--'.$row->id.'--</div>--'.$row->parent.'--', $tree);
 			}
 		}
-		$tree=preg_replace("/(\-\-)(\d+)(\-\-)/","",$tree);
+		$tree = preg_replace("/(\-\-)(\d+)(\-\-)/", "", $tree);
 		return $tree;
 	}
 
@@ -90,13 +71,13 @@ class Docmodel extends CI_Model{
 			'date'       => '00.00.0000',
 			'ts'         => 0,
 			'active'     => 1,
-			'is_active'  => 1,
+			'is_active'  => "",
 			'parent'     => 0,
 			'pageorder'  => 0,
-			'comment'    => "Умолчательный комментарий",
+			'comment'    => 0,
 			'sheet_tree' => ''
 		);
-		$result=$this->db->query("SELECT 
+		$result = $this->db->query("SELECT 
 		`sheets`.`id`,
 		`sheets`.`text` as sheet_text,
 		`sheets`.`root`,
@@ -112,45 +93,50 @@ class Docmodel extends CI_Model{
 		FROM
 		`sheets`
 		WHERE `sheets`.`id` = ?
-		LIMIT 1",array($sheet_id));
+		LIMIT 1", array($sheet_id));
 		if($result->num_rows()){
 			$act = $result->row_array();
-			$act['sheet_id'] = $sheet_id;
-			$act['sheet_tree'] = $this->sheet_tree(0,$sheet_id);
-			$act['is_active'] = ($act['active']) ? 'checked="checked"' : "";
+			$act['sheet_id']   = $sheet_id;
+			$act['sheet_tree'] = $this->sheet_tree(0, $sheet_id);
+			$act['is_active']  = ($act['active']) ? 'checked="checked"' : "";
 		}
-		$result=$this->db->query("SELECT 
-		CONCAT('/map/simple/',`map_content`.id) as id,
+		$act['redirect'] = $this->get_redirects();
+		return $this->load->view('fragments/sheets_editor', $act, true);
+	}
+	
+	private function get_redirects() {
+		$redirect = array();
+		$result   = $this->db->query("SELECT
+		`map_content`.id,
 		`map_content`.name
 		FROM
 		`map_content`");
 		if($result->num_rows()){
 			foreach($result->result() as $row){
-				$selected = ($row->id == $act['redirect']) ? 'selected="selected"' : "";
-				$string = '<option value="'.$row->id.'" '.$selected.'>'.$row->name.'</option>';
+				$selected = ($row->id == $act['redirect']) ? ' selected="selected"' : "";
+				$string   = '<option value="/map/simple/'.$row->id.'"'.$selected.'>'.$row->name.'</option>';
 				array_push($redirect, $string);
 			}
 		}
-		$act['redirect'] = implode($redirect, "\n");
-		$out = $this->load->view('fragments/sheets_editor',$act,true);
-		return $out;
+		return implode($redirect, "\n");
+	}
+
+	private function get_pageorder($sheet_id) {
+		$pageorder = 10;
+		$result = $this->db->query("SELECT 
+		MAX(`sheets`.pageorder) + 10 AS pageorder
+		FROM `sheets` 
+		WHERE `sheets`.`parent` = ?", array($sheet_id));
+		if($result->num_rows()){
+			$row = $result->row();
+			$pageorder = $row->pageorder;
+		}
+		return $pageorder;
 	}
 
 	public function sheet_save($sheet_id){
-		//$this->output->enable_profiler(TRUE);
-		$is_active = ($this->input->post('is_active')) ? 1 : 0;
-		if($this->input->post('save_new')){
-			$result = $this->db->query("SELECT 
-			MAX(`sheets`.pageorder) + 10 AS pageorder
-			FROM
-			`sheets`
-			WHERE `sheets`.`parent` = ?",array($sheet_id));
-			if($result->num_rows()){
-				$row = $result->row();
-				$pageorder = $row->pageorder;
-			}else{
-				$pageorder = 10;
-			}
+		$pageorder = $this->get_pageorder($sheet_id)
+		if ($this->input->post('save_new')) {
 			$this->db->query("INSERT INTO `sheets`(
 				`sheets`.`text`,
 				`sheets`.`root`,
@@ -160,14 +146,13 @@ class Docmodel extends CI_Model{
 				`sheets`.active,
 				`sheets`.parent,
 				`sheets`.redirect,
-				`sheets`.comment
-			) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )", array(
+				`sheets`.comment ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )", array(
 				$this->input->post('sheet_text',     TRUE),
 				$this->input->post('sheet_root',     TRUE),
 				date("Y-m-d"),
 				$this->input->post('sheet_header',   TRUE),
 				$pageorder,
-				$is_active,
+				$this->input->post('is_active')) ? 1 : 0,
 				$sheet_id,
 				$this->input->post('sheet_redirect', TRUE),
 				$this->input->post('sheet_comment',  TRUE)
@@ -183,12 +168,11 @@ class Docmodel extends CI_Model{
 				`sheets`.`redirect`  = ?,
 				`sheets`.`comment`   = ?,
 				`sheets`.`root`      = ?
-			WHERE
-			`sheets`.`id`        = ?", array(
+			WHERE `sheets`.`id`        = ?", array(
 				$this->input->post('sheet_text',     TRUE),
 				$this->input->post('sheet_header',   TRUE),
 				$this->input->post('pageorder',      TRUE),
-				$is_active,
+				$this->input->post('is_active')) ? 1 : 0,
 				$this->input->post('sheet_parent',   TRUE),
 				$this->input->post('sheet_redirect', TRUE),
 				$this->input->post('sheet_comment',  TRUE),
@@ -198,7 +182,6 @@ class Docmodel extends CI_Model{
 		}
 		$this->load->model('cachemodel');
 		$this->cachemodel->menu_build(1, 0, 'file');
-		//return "sheet_save";
 	}
 
 }
