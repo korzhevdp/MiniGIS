@@ -37,15 +37,15 @@ class Admin extends CI_Controller{
 
 	public function sheets($mode, $sheet_id="0") {
 		$this->usefulmodel->check_admin_status();
-		$this->load->model('cachemodel');
+
+		$this->load->model('docmodel');
 		if ($mode === 'save') {
-			$this->adminmodel->sheet_save($sheet_id);
-			$this->cachemodel->menu_build(1, 0, 'file');
+			$this->docmodel->sheet_save($sheet_id);
 		}
 		$output = array(
 			'menu'    => $this->load->view('admin/menu', array(), true)
 						.$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true),
-			'content' => $this->adminmodel->sheet_edit($sheet_id)
+			'content' => $this->docmodel->sheet_edit($sheet_id)
 		);
 		$this->load->view('admin/view', $output);
 	}
@@ -147,10 +147,14 @@ class Admin extends CI_Controller{
 	}
 	####################################################
 	public function swpropsearch($group = 1, $type = 0, $prop = 0, $page){
-		$result = $this->db->query("UPDATE properties_list 
-		SET properties_list.searchable = IF(properties_list.searchable = 1, 0, 1) 
+		$result = $this->db->query("
+		UPDATE
+		`properties_bindings`
+		SET
+		`properties_bindings`.searchable = IF(`properties_bindings`.searchable = 1, 0, 1)
 		WHERE 
-		properties_list.id = ?", array($prop));
+		`properties_bindings`.property_id = ?
+		AND `properties_bindings`.groups  = ?", array($prop, $group));
 		redirect('admin/library/'.$group."/".$type."/".$prop."/".$page);
 	}
 
@@ -160,83 +164,6 @@ class Admin extends CI_Controller{
 		WHERE 
 		properties_list.id = ?", array($prop));
 		redirect('admin/library/'.$group."/".$type."/".$prop."/".$page);
-	}
-	// user-calls for caching model
-	public function cachemap($mode = "browser"){
-		$this->load->model('cachemodel');
-		$this->cachemodel->cache_selector_content($mode);
-	}
-
-	public function cachemenu(){
-		$this->load->model('cachemodel');
-		$this->cachemodel->cache_docs(1, 'file');
-	}
-
-	public function cacheloc($loc_id){
-		$this->load->model('cachemodel');
-		$this->cachemodel->cache_location($loc_id, 0, 'browser');
-	}
-	// Reconciler
-	/*
-	public function reconcile() {
-		$result = $this->db->query("DELETE
-		FROM `properties_assigned`
-		WHERE 
-		`properties_assigned`.`property_id` IN (
-			SELECT
-			`locations_types`.pl_num
-			FROM
-			`locations_types`
-		)");
-		$run1 = $this->db->affected_rows();
-		$result = $this->db->query("INSERT INTO `properties_assigned` (
-		`properties_assigned`.`property_id`,
-		`properties_assigned`.`location_id`
-		)
-		SELECT
-		`locations_types`.pl_num,
-		`locations`.id
-		FROM
-		`locations`
-		INNER JOIN `locations_types` ON (`locations`.`type` = `locations_types`.id)");
-		$run2 = $this->db->affected_rows();
-		print "Reconcillation DONE<br>Deleted: ".$run1.",<br>Inserted: ".$run2;
-	}
-	*/
-	public function restore_property_bindings() {
-		$result = $this->db->query("SELECT
-		`properties_list`.id,
-		`properties_list`.selfname,
-		`properties_list`.object_group
-		FROM
-		`properties_list`
-		order by `properties_list`.id");
-		$input = array();
-		if($result->num_rows()){
-			foreach($result->result() as $row){
-				if(!isset($input[$row->selfname])) { 
-					$input[$row->selfname] = array('lowest_id' => $row->id);
-				}
-				array_push($input[$row->selfname], $row->object_group);
-			}
-		}
-		
-		$output = array();
-		foreach($input as $key => $data) {
-			$id = $data['lowest_id'];
-			unset($data['lowest_id']);
-			foreach($data as $val) {
-				array_push($output, "(".$id.", ".$val.", 1)");
-			}
-			
-		}
-		//print_r($output);
-		$result = $this->db->query("INSERT INTO
-		`properties_bindings`(
-		property_id,
-		groups,
-		searchable)
-		VALUES ".implode($output, ", "));
 	}
 
 	public function translations($mode = "groups"){
@@ -248,9 +175,9 @@ class Admin extends CI_Controller{
 		$this->config->load('translations_a', FALSE);
 		$this->usefulmodel->check_admin_status();
 		$output = array(
-			'menu'         => $this->load->view('admin/menu', array(), true)
-							 .$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true),
-			'content'      => $this->adminmodel->translations($mode)
+			'menu'     => $this->load->view('admin/menu', array(), true)
+						 .$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true),
+			'content'  => $this->adminmodel->translations($mode)
 		);
 		$this->load->view('admin/view', $output);
 	}

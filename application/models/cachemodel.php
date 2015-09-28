@@ -27,7 +27,7 @@ class Cachemodel extends CI_Model{
 	// кэширование объекта
 	public function cache_location($location_id = 0, $with_output = 0, $mode = 'file'){
 		$act      = array();
-		$input  = array();
+		$input    = array();
 		$output   = array();
 		// наполняем $act данными объекта из основного хранилища
 		$result = $this->db->query("SELECT
@@ -263,7 +263,7 @@ class Cachemodel extends CI_Model{
 				$output[$row->marker][$row->label][$row->id] = array(
 					'name'       => $row->selfname,
 					'fieldtype'  => $row->fieldtype,
-					'alg'        => "ud"
+					'alg'        => $row->alg
 				);
 			}
 		}
@@ -280,28 +280,29 @@ class Cachemodel extends CI_Model{
 		properties_list.fieldtype,
 		properties_list.id
 		FROM
-		properties_list
+		properties_bindings
+		RIGHT OUTER JOIN properties_list ON (properties_bindings.property_id = properties_list.id)
 		WHERE
-		properties_list.`object_group` IN (".$layers.")
-		AND `properties_list`.`id` NOT IN (
-			SELECT `locations_types`.`pl_num` FROM `locations_types` WHERE `locations_types`.`id` IN (
-				SELECT `locations_types`.`id` FROM `locations_types` WHERE `locations_types`.`object_group` = ".$layers."
+		properties_bindings.groups IN (".$layers.")
+		AND properties_list.id NOT IN (
+			SELECT locations_types.pl_num FROM locations_types WHERE locations_types.id IN (
+				SELECT locations_types.id FROM locations_types WHERE locations_types.object_group IN (".$layers.")
 			)
 		)
-		AND properties_list.searchable
+		AND `properties_bindings`.`searchable`
 		AND properties_list.active
 		ORDER BY
 		marker,
 		properties_list.label,
 		properties_list.selfname");
 		if($result->num_rows()){
-			foreach ($result->result() as $row){
-				if(!isset($output[$row->marker])){ $output[$row->marker] = array(); }
-				if(!isset($output[$row->marker][$row->label])){ $output[$row->marker][$row->label] = array(); }
+			foreach ($result->result() as $row) {
+				if (!isset($output[$row->marker])) { $output[$row->marker] = array(); }
+				if (!isset($output[$row->marker][$row->label])) { $output[$row->marker][$row->label] = array(); }
 				$output[$row->marker][$row->label][$row->id] = array(
 					'name'       => $row->selfname,
 					'fieldtype'  => $row->fieldtype,
-					'alg'        => "ud"
+					'alg'        => $row->alg
 				);
 			}
 		}
@@ -425,8 +426,8 @@ class Cachemodel extends CI_Model{
 		уже переписано под множественные слои и типы объектов
 		*/
 		//$this->output->enable_profiler(TRUE);
-		$output = array();
-		$table  = array();
+		$output      = array();
+		$table       = array();
 		$map_content = array();
 
 		$result = $this->db->query("SELECT

@@ -265,17 +265,18 @@ class Editormodel extends CI_Model{
 		//$this->load->helper('array');
 		$assigned = ($location_id) ? $this->get_assigned_properties($location_id) : array();
 		$output   = array();
-		$query    = $this->db->query('SELECT
+		$query    = $this->db->query('SELECT 
 		properties_list.id,
-		CONCAT(properties_list.`page`,properties_list.`row`,properties_list.element) AS marker,
+		CONCAT(properties_list.page, properties_list.`row`, properties_list.element) AS marker,
 		properties_list.label,
 		properties_list.selfname,
 		properties_list.fieldtype,
 		properties_list.parameters
 		FROM
-		properties_list
+		`properties_bindings`
+		RIGHT OUTER JOIN properties_list ON (`properties_bindings`.property_id = properties_list.id)
 		WHERE
-		properties_list.object_group = ?
+		`properties_bindings`.`groups` = ?
 		AND properties_list.active
 		AND properties_list.page = ?
 		ORDER BY
@@ -320,7 +321,7 @@ class Editormodel extends CI_Model{
 					break;
 					case 'textarea':
 						$string     = $data['name'].'<textarea ref="'.$object.'" id="param_'.$object.'" '.$data['parameters'].' rows="5" cols="20">'.(strlen($value) ? $value : '').'</textarea>';
-						array_push($element,$string);
+						array_push($element, $string);
 					break;
 					case 'select':
 						array_push($values, '<option value="'.$object.'"'.$selected.'>'.$data['name'].'</option>');

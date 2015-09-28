@@ -18,7 +18,7 @@ class Adminmodel extends CI_Model{
 		$out['name']      = $this->get_group_name($obj_group);
 		
 		if(!$obj_group) {
-			$output = $this->get_library_group_list($controller);
+			$output = $this->get_library_group_list($obj_group, $controller);
 		} else {
 			if(!$loc_type){
 				$output = $this->get_library_type_list($obj_group, $controller);
@@ -31,7 +31,7 @@ class Adminmodel extends CI_Model{
 	}
 
 	private function get_type_name($loc_type) {
-		$output = "Нет названия типа";
+		$output = "Тип не определён";
 		$result = $this->db->query("SELECT
 		`locations_types`.name AS `type_name`
 		FROM
@@ -60,7 +60,7 @@ class Adminmodel extends CI_Model{
 		return $output;
 	}
 
-	private function get_library_group_list($controller){
+	private function get_library_group_list($obj_group, $controller){
 		$output = array();
 		$result = $this->db->query('SELECT 
 		`objects_groups`.name,
@@ -144,13 +144,11 @@ class Adminmodel extends CI_Model{
 	}
 
 	public function get_composite_indexes($obj_group, $loc_type, $param = 1, $page = 1){
-		if ($obj_group) {
-			$values         = $this->adminmodel->show_semantics_values($obj_group, $loc_type, $param);
-			$values['list'] = $this->adminmodel->show_semantics($obj_group, $loc_type);
-		}
+		$values         = $this->adminmodel->show_semantics_values($obj_group, $loc_type, $param);
+		$values['list'] = $this->adminmodel->show_semantics($obj_group, $loc_type);
 		$output = array(
 			'content'  => $this->adminmodel->get_full_index($obj_group, $loc_type),
-			'content2' => ($obj_group) ? $this->load->view('admin/prop_control_table', $values, true) : $this->load->view("admin/notapplicable", array(), true),
+			'content2' => $this->load->view('admin/prop_control_table', $values, true),
 			'page'     => $page
 		);
 		return $this->load->view("admin/library2", $output, true);
@@ -159,34 +157,57 @@ class Adminmodel extends CI_Model{
 	#######################################################################
 	### управление списками параметров VERIFIED
 	#######################################################################
-	function show_semantics($object_group, $type_id) {
+	public function show_semantics($object_group = 0, $type_id = 0) {
 		$table  = array();
-		$result = $this->db->query("SELECT
-		IF(properties_list.page = 1, 0, 1) AS editable,
-		properties_list.id,
-		properties_list.`label`,
-		properties_list.selfname,
-		properties_list.property_group,
-		`properties_list`.`algoritm`,
-		properties_list.cat,
-		properties_list.linked,
-		properties_list.searchable,
-		properties_list.active
-		FROM
-		properties_list
-		".(($object_group) ? "WHERE (properties_list.id IN (SELECT properties_bindings.property_id FROM properties_bindings WHERE properties_bindings.groups = ?))" : "").
-		" ORDER BY
-		properties_list.page,
-		properties_list.`row`,
-		properties_list.element", array($object_group));
+		if ($object_group) {
+			$result = $this->db->query("SELECT
+			IF(properties_list.page = 1, 0, 1) AS editable,
+			properties_list.id,
+			properties_list.`label`,
+			properties_list.selfname,
+			properties_list.property_group,
+			`properties_list`.`algoritm`,
+			properties_list.cat,
+			properties_list.linked,
+			(SELECT `properties_bindings`.searchable FROM `properties_bindings` WHERE `properties_bindings`.property_id = properties_list.id AND `properties_bindings`.groups = ?) AS searchable,
+			properties_list.active
+			FROM
+			properties_list
+			".(($object_group) ? "WHERE (properties_list.id IN (SELECT properties_bindings.property_id FROM properties_bindings WHERE properties_bindings.groups = ?))" : "").
+			" ORDER BY
+			properties_list.page,
+			properties_list.`row`,
+			properties_list.element", array($object_group, $object_group));
+		} else {
+			$result = $this->db->query("SELECT
+			IF(properties_list.page = 1, 0, 1) AS editable,
+			properties_list.id,
+			properties_list.`label`,
+			properties_list.selfname,
+			properties_list.property_group,
+			`properties_list`.`algoritm`,
+			properties_list.cat,
+			properties_list.linked,
+			properties_list.active
+			FROM
+			properties_list
+			ORDER BY
+			properties_list.page,
+			properties_list.`row`,
+			properties_list.element");
+		}
 		if ($result->num_rows()) {
 			//array_push($table,'<ul class="span12 row-fluid" style="list-style-type: none; margin-left:0px;">');
 			foreach ($result->result_array() as $row){
-				//$ed_btn = ($row->editable) ? '<a href="/admin/semantics/'.$object_group.'/'.$row->id.'" class="btn btn-primary btn-mini">Редактировать</a>' : "";
 				$row['object_group'] = $object_group;
 				$row['infoclass']	 = ($row['editable'])	? ' title="Назначаемое свойство"' : ' class="warning" title="Главный признак типа/категории объекта"';
-				$row['pic1']		 = ($row['searchable'])	? 'find.png'			: 'lightbulb_off.png';
-				$row['title1']		 = ($row['searchable'])	? 'Доступно для поиска' : 'Поиск по параметру не производится';
+				if ($object_group) {
+					$row['pic1']	 = ($row['searchable'])	? 'find.png'			: 'lightbulb_off.png';
+					$row['title1']	 = ($row['searchable'])	? 'Доступно для поиска' : 'Поиск по параметру не производится';
+				} else {
+					$row['pic1']	 = "";
+					$row['title1']	 = "";
+				}
 				$row['pic2']		 = ($row['active'])		? 'lightbulb.png'		: 'lightbulb_off.png';
 				$row['title2']		 = ($row['active'])		? 'Параметр активен'	: 'Параметр отключен';
 				$row['type_id']		 = $type_id;
@@ -197,7 +218,7 @@ class Adminmodel extends CI_Model{
 		return $out;
 	}
 
-	function show_semantics_values($object_group = 1, $type = 0, $obj = 0) {
+	function show_semantics_values($object_group = 1, $type = 0, $property = 0) {
 		//$this->output->enable_profiler(TRUE);
 		$output = array(
 			'row'				=> '',
@@ -216,7 +237,8 @@ class Adminmodel extends CI_Model{
 			'divider'			=> '',
 			'multiplier'		=> '',
 			'og_name'			=> '',
-			'linked'			=> ''
+			'linked'			=> '',
+			'property'			=> 0
 		);
 
 		$result = $this->db->query("SELECT 
@@ -240,14 +262,14 @@ class Adminmodel extends CI_Model{
 		`objects_groups`
 		INNER JOIN properties_list ON (`objects_groups`.id = properties_list.object_group)
 		WHERE
-		(properties_list.id = ?)", array($obj));
+		(properties_list.id = ?)", array($property));
 		if ($result->num_rows()) {
 			$output = $result->row_array();
 		}
 		$result->free_result();
 
 		$output['object_group']			= $object_group;
-		$output['obj']					= $obj;
+		$output['property']				= $property;
 		$output['searchable']			= (($output['searchable']) ? 'checked="checked"' : '');
 		$output['active']				= (($output['active']) ? 'checked="checked"' : '');
 		$output['property_group_name']	= $output['property_group'];
@@ -255,7 +277,29 @@ class Adminmodel extends CI_Model{
 		$output['property_group']		= $this->pack_datalist($this->db->query("SELECT DISTINCT properties_list.property_group AS vals FROM properties_list ORDER BY vals"));
 		$output['cat']					= $this->pack_datalist($this->db->query("SELECT DISTINCT properties_list.cat AS vals FROM properties_list ORDER BY vals"));
 		$output['linked']				= $this->get_geosemantic_links($output['linked']);
+		$output['groups']				= $this->get_bound_groups($property);
 		return $output;
+	}
+	
+	private function get_bound_groups($property){
+		$output = array();
+		$result = $this->db->query("SELECT
+		objects_groups.id,
+		objects_groups.active,
+		objects_groups.name,
+		IF(objects_groups.id in (SELECT `properties_bindings`.groups FROM `properties_bindings` WHERE `properties_bindings`.`property_id` = ?), 1 , 0 ) AS bind
+		FROM
+		objects_groups", array($property));
+		if($result->num_rows()){
+			foreach($result->result() as $row) {
+				$checked   = ($row->bind)   ? ' checked="checked"' : "";
+				$active    = ($row->active) ? "" : ' disabled="disabled"';
+				$liactive  = ($row->active) ? "" : ' class="muted"';
+				$string    = '<li'.$liactive.'><label class="checkbox" for="g'.$row->id.'"><input type="checkbox" form="ogp_edit_form" name="group[]" id="g'.$row->id.'" value="'.$row->id.'"'.$checked.$active.'>'.$row->name.'</label></li>';
+				array_push($output, $string);
+			}
+		}
+		return '<div><ul class="groupBindings">'.implode($output, "").'</ul></div>';
 	}
 
 	private function pack_datalist($result) {
@@ -295,11 +339,9 @@ class Adminmodel extends CI_Model{
 	function save_semantics() {
 		//$this->output->enable_profiler(TRUE);
 		//return false;
-		$mode  =  $this->input->post('mode');
-		$group = ($this->input->post('object_group')) ? $this->input->post('object_group') : 1;
-		$sb    = ($this->input->post('searchable'))   ? 1 : 0;
-		$ac    = ($this->input->post('active'))       ? 1 : 0;
-
+		$mode     = $this->input->post('mode');
+		$group    = $this->input->post('object_group'); // для редиректа :)
+		$property = $this->input->post('property');
 		if($mode == "save"){
 			$this->db->query("UPDATE
 			`properties_list`
@@ -311,10 +353,8 @@ class Adminmodel extends CI_Model{
 			`properties_list`.page           = ?,
 			`properties_list`.parameters     = ?,
 			`properties_list`.property_group = ?,
-			`properties_list`.searchable     = ?,
 			`properties_list`.fieldtype      = ?,
 			`properties_list`.cat            = ?,
-			`properties_list`.active         = ?,
 			`properties_list`.`algoritm`     = ?,
 			`properties_list`.`linked`       = ?,
 			`properties_list`.`multiplier`   = ?,
@@ -328,15 +368,13 @@ class Adminmodel extends CI_Model{
 				$this->input->post('page'),
 				$this->input->post('parameters'),
 				$this->input->post('property_group'),
-				$sb,
 				$this->input->post('fieldtype'),
 				$this->input->post('cat'),
-				$ac,
 				$this->input->post('algoritm'),
 				$this->input->post('linked'),
 				$this->input->post('multiplier'),
 				$this->input->post('divider'),
-				$this->input->post('obj')
+				$property
 			));
 		}
 		if($mode == "new"){
@@ -349,11 +387,8 @@ class Adminmodel extends CI_Model{
 			`properties_list`.`page`,
 			`properties_list`.`parameters`,
 			`properties_list`.`property_group`,
-			`properties_list`.`searchable`,
 			`properties_list`.`fieldtype`,
 			`properties_list`.`cat`,
-			`properties_list`.`active`,
-			`properties_list`.`object_group`,
 			`properties_list`.`algoritm`,
 			`properties_list`.`linked`,
 			`properties_list`.`multiplier`,
@@ -367,44 +402,29 @@ class Adminmodel extends CI_Model{
 				$this->input->post('page'),
 				$this->input->post('parameters'),
 				$this->input->post('property_group'),
-				$sb,
 				$this->input->post('fieldtype'),
 				$this->input->post('cat'),
-				$ac,
-				$group,
 				$this->input->post('algoritm'),
 				$this->input->post('linked'),
 				$this->input->post('multiplier'),
 				$this->input->post('divider')
 			));
 		}
-		/*
-		кэшируем набор поисковых параметров
-		*/
-		$output = array();
-		$input  = array();
-		$result = $this->db->query("SELECT
-		`properties_list`.id,
-		`properties_list`.algoritm,
-		`properties_list`.fieldtype,
-		`properties_list`.label,
-		`properties_list`.selfname
-		FROM
-		`properties_list`
-		WHERE
-		`properties_list`.`object_group` = ?", array($group));
-		if($result->num_rows()){
-			foreach($result->result() as $row){
-				if(!isset($input[$row->label])){
-					$input[$row->label] = array();
-				}
-				$string = $row->id." = { al: '".$row->algoritm."', ft: '".$row->fieldtype."', sn: '".$row->selfname."'}";
-				array_push($input[$row->label], $string);
-			}
+		
+		$groups   = $this->input->post('group');
+		$ingroups = array();
+		foreach($groups as $val){
+			$string = '('.$property.', '.$val.', 1)';
+			array_push($ingroups, $string);
 		}
-		// сделать распаковку массива и запись в файл
+		$this->db->query("DELETE FROM `properties_bindings` WHERE `properties_bindings`.property_id = ?", array($property));
+		$this->db->query("INSERT INTO `properties_bindings` (
+			`properties_bindings`.property_id,
+			`properties_bindings`.groups,
+			`properties_bindings`.searchable
+		) VALUES ".implode($ingroups, ",\n"));
 
-		if($this->input->post('linked')){
+		if($this->input->post('linked')) {
 			$this->db->query("DELETE
 			FROM 
 			`properties_assigned`
@@ -412,7 +432,7 @@ class Adminmodel extends CI_Model{
 			`properties_assigned`.location_id = ?
 			AND `properties_assigned`.property_id = ?", array(
 				$this->input->post('linked'),
-				$this->input->post('obj')
+				$property
 			));
 			$this->db->query("INSERT INTO 
 			`properties_assigned` (
@@ -421,10 +441,10 @@ class Adminmodel extends CI_Model{
 				`properties_assigned`.value
 			) VALUES (?, ?, 1)", array(
 				$this->input->post('linked'),
-				$this->input->post('obj')
+				$property
 			));
 		}
-		redirect('admin/library/'.$group."/0/".$this->input->post('obj')."/2");
+		redirect('admin/library/'.$group."/0/".$property."/2");
 	}
 	#######################################################################
 	### объекты ГИС VERIFIED
@@ -614,201 +634,7 @@ class Adminmodel extends CI_Model{
 			$this->usefulmodel->insert_audit($text);
 		}
 	}
-	#######################################################################
-	### редактор страниц VERIFIED
-	#######################################################################
-	function find_initial_sheet($root = 1) {
-		$result=$this->db->query("SELECT 
-		sheets.id
-		FROM
-		sheets
-		WHERE
-		sheets.`root` = ?
-		ORDER BY `id`
-		LIMIT 1",array($root));
-		if($result->num_rows()){
-			$row = $result->row();
-			$out = $row->id;
-		}else{
-			$out = $root;
-		}
-		return $out;
-	}
-	
-	function _sheet_tree($root = 0, $sheet_id = 1) {
-		$tree="";
-		if(!$root){
-			$result=$this->db->query("SELECT 
-			`sheets`.`id`,
-			`sheets`.`parent`,
-			`sheets`.`pageorder`,
-			`sheets`.`header`,
-			`sheets`.`active`,
-			`sheets`.`root`
-			FROM
-			`sheets`
-			ORDER BY `sheets`.`parent`,
-			`sheets`.`pageorder`",array($root));
-		}else{
-			$result=$this->db->query("SELECT 
-			`sheets`.`id`,
-			`sheets`.`parent`,
-			`sheets`.`pageorder`,
-			`sheets`.`header`,
-			`sheets`.`active`,
-			`sheets`.`root`
-			FROM
-			`sheets`
-			WHERE
-			`sheets`.`root` = ?
-			ORDER BY `sheets`.`parent`,
-			`sheets`.`pageorder`",array($root));
-		}
 
-		if($result->num_rows() ){
-			foreach($result->result() as $row){
-				$style=array();
-				(!$row->active) ? array_push($style,'muted') : '';
-				($row->id == $sheet_id) ? array_push($style,"active") : '';
-				switch ($row->root){
-					case 2 :
-						$type="П";
-					break;
-					case 1 :
-						$type="Ст";
-					break;
-				}
-				$tree.=(!strlen($tree)) ? "\..--".$row->parent."--" : '';
-
-				$tree=str_replace("--".$row->parent."--",'<a href="/admin/sheets/edit/'.$row->id.'"><div class="menu_item" class="'.implode($style,";").'">'.$row->id.". ".$row->header.' ('.$type.')</div></a><div class="menu_item_container">--'.$row->id.'--</div>
-				--'.$row->parent.'--',$tree);
-			}
-		}
-		$tree=preg_replace("/(\-\-)(\d+)(\-\-)/","",$tree);
-		return $tree;
-	}
-
-	function sheet_edit($sheet_id){
-		$redirect = array('<option value="">Не перенаправляется</option>');
-		$act = array(
-			'id'         => 1,
-			'sheet_id'   => 1,
-			'sheet_text' => 'Текст',
-			'root'       => 0,
-			'owner'      => 0,
-			'header'     => 'Заголовок',
-			'redirect'   => '',
-			'date'       => '00.00.0000',
-			'ts'         => 0,
-			'active'     => 1,
-			'is_active'  => 1,
-			'parent'     => 0,
-			'pageorder'  => 0,
-			'comment'    => "Умолчательный комментарий",
-			'sheet_tree' => ''
-		);
-		$result=$this->db->query("SELECT 
-		`sheets`.`id`,
-		`sheets`.`text` as sheet_text,
-		`sheets`.`root`,
-		`sheets`.`owner`,
-		`sheets`.`header`,
-		`sheets`.`redirect`,
-		`sheets`.`date`,
-		`sheets`.`ts`,
-		`sheets`.`active`,
-		`sheets`.`parent`,
-		`sheets`.`pageorder`,
-		`sheets`.`comment`
-		FROM
-		`sheets`
-		WHERE `sheets`.`id` = ?
-		LIMIT 1",array($sheet_id));
-		if($result->num_rows()){
-			$act = $result->row_array();
-			$act['sheet_id'] = $sheet_id;
-			$act['sheet_tree'] = $this->adminmodel->_sheet_tree(0,$sheet_id);
-			$act['is_active'] = ($act['active']) ? 'checked="checked"' : "";
-		}
-		$result=$this->db->query("SELECT 
-		CONCAT('/map/simple/',`map_content`.id) as id,
-		`map_content`.name
-		FROM
-		`map_content`");
-		if($result->num_rows()){
-			foreach($result->result() as $row){
-				$selected = ($row->id == $act['redirect']) ? 'selected="selected"' : "";
-				$string = '<option value="'.$row->id.'" '.$selected.'>'.$row->name.'</option>';
-				array_push($redirect, $string);
-			}
-		}
-		$act['redirect'] = implode($redirect, "\n");
-		$out = $this->load->view('fragments/sheets_editor',$act,true);
-		return $out;
-	}
-
-	function sheet_save($sheet_id){
-		//$this->output->enable_profiler(TRUE);
-		$is_active = ($this->input->post('is_active')) ? 1 : 0;
-		if($this->input->post('save_new')){
-			$result=$this->db->query("SELECT 
-			MAX(`sheets`.pageorder) + 10 AS pageorder
-			FROM
-			`sheets`
-			WHERE `sheets`.`parent` = ?",array($sheet_id));
-			if($result->num_rows()){
-				$row = $result->row();
-				$pageorder = $row->pageorder;
-			}else{
-				$pageorder = 10;
-			}
-			$result=$this->db->query("INSERT INTO `sheets`(
-			`sheets`.`text`,
-			`sheets`.`root`,
-			`sheets`.`date`,
-			`sheets`.`header`,
-			`sheets`.`pageorder`,
-			`sheets`.active,
-			`sheets`.parent,
-			`sheets`.redirect,
-			`sheets`.comment
-			) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )", array(
-				$this->input->post('sheet_text',     TRUE),
-				$this->input->post('sheet_root',     TRUE),
-				date("Y-m-d"),
-				$this->input->post('sheet_header',   TRUE),
-				$pageorder,
-				$is_active,
-				$sheet_id,
-				$this->input->post('sheet_redirect', TRUE),
-				$this->input->post('sheet_comment',  TRUE)
-			));
-		}else{
-			$result=$this->db->query("UPDATE `sheets` SET
-			`sheets`.`ts`        = NOW(),
-			`sheets`.`text`      = ?,
-			`sheets`.`header`    = ?,
-			`sheets`.`pageorder` = ?,
-			`sheets`.`active`    = ?,
-			`sheets`.`parent`    = ?,
-			`sheets`.`redirect`  = ?,
-			`sheets`.`comment`   = ?,
-			`sheets`.`root`      = ?
-			WHERE
-			`sheets`.`id`        = ?", array(
-				$this->input->post('sheet_text',     TRUE),
-				$this->input->post('sheet_header',   TRUE),
-				$this->input->post('pageorder',      TRUE),
-				$is_active,
-				$this->input->post('sheet_parent',   TRUE),
-				$this->input->post('sheet_redirect', TRUE),
-				$this->input->post('sheet_comment',  TRUE),
-				$this->input->post('sheet_root',     TRUE),
-				$sheet_id
-			));
-		}
-		//return "sheet_save";
-	}
 #
 ######################### BEGIN usermanager section ############################
 #

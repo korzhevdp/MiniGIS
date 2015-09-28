@@ -123,7 +123,7 @@ class Usefulmodel extends CI_Model{
 			`audit`.`text`,
 			`audit`.`object`
 		) VALUES( ?, ?, ? )", array(
-			$this->session->userdata('user_id'), 
+			$this->session->userdata('user_name'), 
 			$text, 
 			($this->session->userdata("c_l")) ? $this->session->userdata("c_l") : 0
 		));

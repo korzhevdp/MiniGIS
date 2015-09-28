@@ -30,7 +30,7 @@ class Frontendmodel extends CI_Model{
 	public function get_cached_content($location_id){ // CI_C_Gis проверить работу - каждый раз готовит кэш заново.
 		//$this->output->enable_profiler(TRUE);
 		$output = "";
-		$cachefile = "/var/www/html/inmypocket/application/views/cache/locations/location_".$location_id.".src";
+		$cachefile = "/var/www/html/minigis/application/views/cache/locations/location_".$location_id.".src";
 		if(file_exists($cachefile)){
 			$output = file_get_contents($cachefile);
 		}else{
