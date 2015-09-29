@@ -53,35 +53,33 @@ class Admin extends CI_Controller{
 	public function maps(){
 		$this->usefulmodel->check_admin_status();
 		$this->load->model('cachemodel');
+		$this->load->model('mcmodel');
 		$mapset = ($this->input->post('map_view')) ? $this->input->post('map_view') : 0;
 		if($this->input->post('save')){
-			$this->adminmodel->mc_save();
+			$this->mcmodel->mc_save();
 			$this->cachemodel->menu_build(1, 0, 'file');
 			$this->cachemodel->cache_selector_content('file');
 		}
 		if($this->input->post('new')){
-			$mapsetid = $this->adminmodel->mc_new();
+			$mapsetid = $this->mcmodel->mc_new();
 			$this->cachemodel->menu_build(1, 0, 'file');
 			$this->cachemodel->cache_selector_content('file');
 		}
 		$output = array(
 			'menu'    => $this->load->view('admin/menu', array(), true)
 						.$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true),
-			'content'	=> $this->load->view('admin/map_content', $this->adminmodel->mc_show($mapset), true),
+			'content'	=> $this->load->view('admin/map_content', $this->mcmodel->mc_show($mapset), true),
 		);
 		$this->load->view('admin/view', $output);
 	}
 
-	public function maps_save(){
-		/**/
-	}
-
 	public function gis($obj = 0){
+		$this->load->model('gismodel');
 		$this->usefulmodel->check_admin_status();
 		$output = array(
 			'menu'    => $this->load->view('admin/menu', array(), true)
 						.$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true),
-			'content' => $this->adminmodel->gis_objects_show($obj)
+			'content' => $this->gismodel->gis_objects_show($obj)
 		);
 		$this->load->view('admin/view', $output);
 	}
@@ -89,8 +87,9 @@ class Admin extends CI_Controller{
 	public function gis_save(){
 		//$this->output->enable_profiler(TRUE);
 		$this->usefulmodel->check_admin_status();
+		$this->load->model('gismodel');
 		$this->load->model('cachemodel');
-		$this->adminmodel->gis_save();
+		$this->gismodel->gis_save();
 		$this->cachemodel->menu_build(1, 0, 'file');
 		$this->cachemodel->cache_selector_content('file');
 		$this->cachemodel->build_object_lists();
@@ -132,17 +131,19 @@ class Admin extends CI_Controller{
 	####################################################
 	public function groupmanager($id=0){
 		$this->usefulmodel->check_admin_status();
+		$this->load->model('gismodel');
 		$output = array(
 			'menu'         => $this->load->view('admin/menu', array(), true)
 						     .$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true),
-			'content'      => $this->adminmodel->groups_show($id)
+			'content'      => $this->gismodel->groups_show($id)
 		);
 		$this->load->view('admin/view', $output);
 	}
 
 	public function group_save(){
 		$this->usefulmodel->check_admin_status();
-		$id = $this->adminmodel->group_save();
+		$this->load->model('gismodel');
+		$id = $this->gismodel->group_save();
 		redirect('admin/groupmanager/'.$id);
 	}
 	####################################################
@@ -167,24 +168,25 @@ class Admin extends CI_Controller{
 	}
 
 	public function translations($mode = "groups"){
+		$this->usefulmodel->check_admin_status();
 		$this->config->load('translations_g', FALSE);
 		$this->config->load('translations_c', FALSE);
 		$this->config->load('translations_p', FALSE);
 		$this->config->load('translations_l', FALSE);
 		$this->config->load('translations_m', FALSE);
 		$this->config->load('translations_a', FALSE);
-		$this->usefulmodel->check_admin_status();
+		$this->load->model('transmodel');
 		$output = array(
 			'menu'     => $this->load->view('admin/menu', array(), true)
 						 .$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true),
-			'content'  => $this->adminmodel->translations($mode)
+			'content'  => $this->transmodel->translations($mode)
 		);
 		$this->load->view('admin/view', $output);
 	}
 
 	public function trans_save(){
-
-		$this->adminmodel->trans_save();
+		$this->load->model('transmodel');
+		$this->transmodel->trans_save();
 		$this->load->model('cachemodel');
 		$this->config->load('translations_g');
 		$this->config->load('translations_c');

@@ -18,7 +18,7 @@ class Editormodel extends CI_Model{
 					'content'			=> $this->load->view('editor/summary', $data, true),
 					'panel'				=> $this->load->view('editor/btncontrol1', $data, true),
 					'baspointstypes'	=> $this->get_bas_points_types(),
-					'menu'				=> $this->load->view('admin/menu', '', true)
+					'menu'				=> $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), TRUE) .$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu()
 				);
 			}
 			$this->session->set_userdata('c_l', $id);

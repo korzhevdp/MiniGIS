@@ -5,161 +5,22 @@
 	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/jquery.js"></script>
 	<script type="text/javascript" src="<?=$this->config->item('api');?>/bootstrap/js/bootstrap.js"></script>
 	<link href="<?=$this->config->item('api');?>/bootstrap/css/bootstrap.css" rel="stylesheet">
-	<link href="<?=$this->config->item('api');?>/jqueryui/css/jqueryui.css" rel="stylesheet">
+	<link href="<?=$this->config->item('api');?>/css/editor.css" rel="stylesheet">
 	<!-- API 2.0 -->
 	<script type="text/javascript" src="http://api-maps.yandex.ru/2.0-stable/?coordorder=longlat&amp;load=package.full&amp;lang=ru-RU"></script>
 	<!-- 	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/map_calc.js" type="text/javascript"></script> -->
 	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/map_styles2.js"></script>
 	<!-- EOT API 2.0 -->
-
-	<style type="text/css">
-		div.input-append,
-		div.input-prepend{
-			margin-bottom: 3px;
-		}
-		#mainPage .add-on{
-			font-size:12px;
-			width: 150px;
-			margin: 0px;
-		}
-		#mainPage input[type=text]{
-			width: 350px;
-			font-size:12px;
-			height:28px;
-			padding: 0px 6px;
-		}
-		#mainPage select{
-			width: 364px;
-			font-size:12px;
-			height:30px;
-			padding: 0px 6px;
-		}
-		input[type=checkbox]{
-			margin-top:9px;
-			width:36px;
-		}
-		span.m_divider{
-			border-left:2px dotted #c6c6c6;
-			margin-left:4px;
-			margin-right:4px;
-			margin-top:4px;"
-		}
-		#lib-btn{
-			margin-left:3px;
-			margin-top:3px;
-		}
-		.brand img{
-			width:24px;
-			height:24px;
-			margin-top:-6px;
-			border:none;
-		}
-		#headerTable{
-			border:none;
-			width:100%;
-			height:80%;
-		}
-		body{
-			padding:0px;
-			margin:0px;
-		}
-		#saveBtn{
-			margin-right:4px;
-			float:right;
-		}
-		#YMapsID{
-			width:100%;
-			height:650px;
-			margin:0px;
-			border:1px solid #c6c6c6;
-		}
-		.right-controls{
-			width:270px;
-		}
-		#mainPage,
-		#propPage {
-			height:315px;
-			overflow:auto;
-			padding-left:5px;
-			padding-right:5px;
-		}
-		#propPage{
-			display:none;
-		}
-		.pageButtons{
-			padding: 0px 5px;
-			margin:0px;
-			height:25px;
-		}
-		.displayMain, .displayPage{
-			height:30px;
-			width:20px;
-		}
-		#updDataBtn{
-			float: right;
-			margin-right:10px;
-			margin-left:20px;
-		}
-		#closeBalloonBtn{
-			float:right;
-		}
-		.balloonHeader{
-			margin-bottom:10px;
-			margin-left:10px;
-		}
-		#propPage label{
-			font-size:12px;
-			line-height:16px;
-			margin-bottom:2px;
-			cursor:pointer;
-			width:49%;
-			display:block;
-			float:left;
-		}
-		#propPage label input[type=checkbox]{
-			margin-top: -4px;
-		}
-		legend{
-			margin:2px;
-			line-height:28px;
-			font-size:14px;
-			font-weight:bold;
-		}
-		textarea{
-			width:520px;
-		}
-		.typefetcher{
-			cursor:pointer;
-			margin-left:4px;
-		}
-		div.console{
-			position:absolute;
-			top:150px;
-			left:50px;
-			width:300px;
-			height:700px;
-			background-color:#ffffff;
-			z-index: 100000;
-			display: none;
-		}
-		.langMark {
-			width:32px;
-			height:32px;
-			border:0px;
-			margin-top:8px;
-			cursor:pointer;
-		}
-	</style>
 </head>
 
-<body style="">
+<body>
 <table id="headerTable">
 	<tr>
 		<td colspan=2 class="navbar navbar-inverse">
 			<div class="navbar-inner">
 				<div class="container">
-					<a class="brand" href="/">ПРОЕКТ&nbsp;&nbsp;<small>Minigis.NET <img src="<?=$this->config->item('api');?>/images/minigis24.png" alt="MiniGIS" title="MiniGis Project"></a>
-					<?=$this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), TRUE).$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu();?>
+					<?=$this->config->item('brand');?>
+					<?=$menu;?>
 				</div>
 			</div>
 		</td>
@@ -227,9 +88,7 @@
 
 <script type="text/javascript">
 <!--
-	//$("#YMapsID").width($(window).width() - 210 + 'px').height($(window).height() - 80 + 'px');
 	$("#YMapsID").width($(window).width() - 4 + 'px').height($(window).height() - 83 + 'px');
-	$("#library").width($(window).width() - 250 + 'px').height($(window).height() - 81 + 'px').css("margin-left","25px");
 	$('.modal').modal({show: 0})
 //-->
 </script>

@@ -224,6 +224,7 @@ class Cachemodel extends CI_Model{
 			}
 		}
 	}
+
 	//кэширование меню
 	// verified --->
 	public function menu_build($docroot = 1, $gisroot = 0, $mode = "file"){
@@ -268,18 +269,7 @@ class Cachemodel extends CI_Model{
 		marker,
 		properties_list.label,
 		properties_list.selfname");
-		if($result->num_rows()){
-			foreach ($result->result() as $row){
-				if(!isset($output[$row->marker])){ $output[$row->marker] = array(); }
-				if(!isset($output[$row->marker][$row->label])){ $output[$row->marker][$row->label] = array(); }
-				$output[$row->marker][$row->label][$row->id] = array(
-					'name'       => $row->selfname,
-					'fieldtype'  => $row->fieldtype,
-					'alg'        => "ud"
-				);
-			}
-		}
-		return $output;
+		return $this->pack_properties($result);
 	}
 
 	private function cache_selector_types($types){
@@ -307,18 +297,7 @@ class Cachemodel extends CI_Model{
 		marker,
 		properties_list.label,
 		properties_list.selfname');
-		if($result->num_rows()){
-			foreach ($result->result() as $row){
-				if(!isset($output[$row->marker])){ $output[$row->marker] = array(); }
-				if(!isset($output[$row->marker][$row->label])){ $output[$row->marker][$row->label] = array(); }
-				$output[$row->marker][$row->label][$row->id] = array(
-					'name'       => $row->selfname,
-					'fieldtype'  => $row->fieldtype,
-					'alg'        => $row->alg
-				);
-			}
-		}
-		return $output;
+		return $this->pack_properties($result);
 	}
 
 	private function cache_selector_properties($layers){
@@ -346,6 +325,11 @@ class Cachemodel extends CI_Model{
 		marker,
 		properties_list.label,
 		properties_list.selfname");
+		return $this->pack_properties($result);
+	}
+
+	private function pack_properties($result){
+		$output = array();
 		if($result->num_rows()){
 			foreach ($result->result() as $row) {
 				if (!isset($output[$row->marker])) { $output[$row->marker] = array(); }
@@ -473,14 +457,9 @@ class Cachemodel extends CI_Model{
 
 	//кэширование навигатора
 	public function cache_selector_content($mode = "file") {
-		/*
-		уже переписано под множественные слои и типы объектов
-		*/
-		//$this->output->enable_profiler(TRUE);
 		$output      = array();
 		$table       = array();
 		$map_content = array();
-
 		$result = $this->db->query("SELECT
 		map_content.id,
 		map_content.a_layers,
@@ -492,7 +471,6 @@ class Cachemodel extends CI_Model{
 				$map_content[$row->id] = array($row->a_layers, $row->a_types);
 			}
 		}
-
 		foreach($map_content as $map => $val){
 			$output     = array();
 			$refgroups  = array();
@@ -510,21 +488,15 @@ class Cachemodel extends CI_Model{
 			}
 			if(strlen($val[0]) && $val[0] != 0){
 				$output = $this->cache_selector_layers($val[0]);
-				//print "run layers";
 			}
 			// затем типы
 			if(strlen($val[1]) && $val[1] != 0){
 				$output = array_merge($output, $this->cache_selector_types($val[1]));
-				//print "run types";
 			}
 			// затем свойства
 			if($val[0] == "0" && strlen($val[1]) && $val[1] != 0){
 				$output = array_merge($output, $this->cache_selector_properties(implode($refgroups, ",")));
-				//print "run types";
 			}
-
-			//print_r($output);
-			// генерация
 			$this->generate_selector($output, $map, $mode);
 			$this->generate_switches($output, $map, $mode);
 		}

@@ -17,6 +17,7 @@
 		"de" => 'Deutsch',
 		"es" => 'Español'
 	);
+	$config['brand'] = '<a class="brand" href="/">ПРОЕКТ&nbsp;&nbsp;<small>Minigis.NET <img src="'.$config['api'].'/images/minigis24.png" alt="MiniGIS" title="MiniGis Project"></a>';
 	$config['admin_can_edit_user_locations'] = true;
 ############
 ############ параметры вызовов модулей

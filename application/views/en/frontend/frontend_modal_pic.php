@@ -1,25 +1,25 @@
-<div class="modal hide fade" id="modal_pics" style="width:640px;">
-	<div class="modal-header" style="cursor:move;background-color: #d6d6d6">
+<div id="locmodal1" class="modal">
+	<div class="modal-header">
 		<button type="button" class="close" data-dismiss="modal"><i class="icon-remove"></i></button>
-		<h4>Image of the object</h4>
+		<h4>Изображения объекта</h4>
 	</div>
-	<div class="modal-body" style="height:500px;overflow:hidden;">
-	<div id="car_0" class="carousel slide" >
-		<!-- Carousel items -->
-		<div class="carousel-inner" id="pic_collection"></div>
-		<!-- Carousel nav -->
-	</div>
+
+	<div class="modal-body" style="height:600px;width:600px;">
+		<div id="car_0" class="carousel slide">
+			<!-- Carousel items -->
+			<div class="carousel-inner" id="pic_collection"></div>
+			<!-- Carousel nav -->
+		</div>
 	</div>
 	<div class="modal-footer">
-		<form method="post" action="/upload/do_upload/frontend" enctype="multipart/form-data" class="form-inline row-fluid">
-
-			<input type="file" placeholder="����..." class="span8" size="46" name="userfile" id="userfile" />
-			<input type="text" name="comment" placeholder="Caption for the picture..." class="span12" id="upload_cmnt" maxlength="200" title="The photo caption. Can be edited in the Photos." />
-			<button type="submit" class="btn btn-primary span12" style="margin-left:0px;margin-top:10px;">Upload</button>
+		<form method="post" action="/upload/do_upload/frontend" enctype="multipart/form-data">
+			<input type="file" class="btn btn-small" name="userfile" id="userfile">
+			<input type="text" name="comment" placeholder="Подпись к картинке..." id="upload_cmnt" maxlength="200" title="Подпись к фотографии. Может быть отредактирована в разделе Фотографии" />
+			<button type="submit" class="btn btn-primary btn-block" style="margin-left:0px;margin-top:10px;">Загрузить</button>
 			
 			<input type="hidden" name="upload_user" value="frontend_user" />
-			<input type="hidden" name="upload_location" id="upload_location" value="" />
+			<input type="hidden" name="upload_location" id="upload_location" value="">
 		</form>
 	</div>
-
 </div>
+

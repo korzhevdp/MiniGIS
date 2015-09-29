@@ -4,9 +4,6 @@ class Docmodel extends CI_Model{
 		parent::__construct();
 	}
 
-	#######################################################################
-	### редактор страниц VERIFIED
-	#######################################################################
 	public function find_initial_sheet($root = 1) {
 		$out = $root;
 		$result = $this->db->query("SELECT 
@@ -24,7 +21,7 @@ class Docmodel extends CI_Model{
 		return $out;
 	}
 	
-	private function sheet_tree($root = 0, $sheet_id = 1) {
+	private function sheet_tree($root = 1, $sheet_id = 1) {
 		$tree = "";
 		$result = $this->db->query("SELECT
 		`sheets`.`id`,
@@ -58,7 +55,37 @@ class Docmodel extends CI_Model{
 		return $tree;
 	}
 
-	public function sheet_edit($sheet_id){
+	private function get_redirects($redirect_id) {
+		$redirect = array();
+		$result   = $this->db->query("SELECT
+		`map_content`.id,
+		`map_content`.name
+		FROM
+		`map_content`");
+		if($result->num_rows()){
+			foreach($result->result() as $row){
+				$selected = ('/map/simple/'.$row->id == $redirect_id) ? ' selected="selected"' : "";
+				$string   = '<option value="/map/simple/'.$row->id.'"'.$selected.'>'.$row->name.'</option>';
+				array_push($redirect, $string);
+			}
+		}
+		return implode($redirect, "\n");
+	}
+
+	private function get_pageorder($sheet_id) {
+		$pageorder = 10;
+		$result = $this->db->query("SELECT 
+		MAX(`sheets`.pageorder) + 10 AS pageorder
+		FROM `sheets` 
+		WHERE `sheets`.`parent` = ?", array($sheet_id));
+		if($result->num_rows()){
+			$row = $result->row();
+			$pageorder = $row->pageorder;
+		}
+		return $pageorder;
+	}
+
+	public function sheet_edit($sheet_id, $root = 1){
 		$redirect = array('<option value="">Не перенаправляется</option>');
 		$act = array(
 			'id'         => 1,
@@ -97,45 +124,15 @@ class Docmodel extends CI_Model{
 		if($result->num_rows()){
 			$act = $result->row_array();
 			$act['sheet_id']   = $sheet_id;
-			$act['sheet_tree'] = $this->sheet_tree(0, $sheet_id);
+			$act['sheet_tree'] = $this->sheet_tree($root, $sheet_id);
 			$act['is_active']  = ($act['active']) ? 'checked="checked"' : "";
 		}
-		$act['redirect'] = $this->get_redirects();
-		return $this->load->view('fragments/sheets_editor', $act, true);
+		$act['redirect'] = $this->get_redirects($act['redirect']);
+		return $this->load->view('doc/doc_editor', $act, true);
 	}
 	
-	private function get_redirects() {
-		$redirect = array();
-		$result   = $this->db->query("SELECT
-		`map_content`.id,
-		`map_content`.name
-		FROM
-		`map_content`");
-		if($result->num_rows()){
-			foreach($result->result() as $row){
-				$selected = ($row->id == $act['redirect']) ? ' selected="selected"' : "";
-				$string   = '<option value="/map/simple/'.$row->id.'"'.$selected.'>'.$row->name.'</option>';
-				array_push($redirect, $string);
-			}
-		}
-		return implode($redirect, "\n");
-	}
-
-	private function get_pageorder($sheet_id) {
-		$pageorder = 10;
-		$result = $this->db->query("SELECT 
-		MAX(`sheets`.pageorder) + 10 AS pageorder
-		FROM `sheets` 
-		WHERE `sheets`.`parent` = ?", array($sheet_id));
-		if($result->num_rows()){
-			$row = $result->row();
-			$pageorder = $row->pageorder;
-		}
-		return $pageorder;
-	}
-
 	public function sheet_save($sheet_id){
-		$pageorder = $this->get_pageorder($sheet_id)
+		$pageorder = $this->get_pageorder($sheet_id);
 		if ($this->input->post('save_new')) {
 			$this->db->query("INSERT INTO `sheets`(
 				`sheets`.`text`,
@@ -156,8 +153,8 @@ class Docmodel extends CI_Model{
 				$sheet_id,
 				$this->input->post('sheet_redirect', TRUE),
 				$this->input->post('sheet_comment',  TRUE)
-			));
-		}else{
+			);
+		} else {
 			$this->db->query("UPDATE `sheets` SET
 				`sheets`.`ts`        = NOW(),
 				`sheets`.`text`      = ?,
@@ -178,7 +175,7 @@ class Docmodel extends CI_Model{
 				$this->input->post('sheet_comment',  TRUE),
 				$this->input->post('sheet_root',     TRUE),
 				$sheet_id
-			));
+			);
 		}
 		$this->load->model('cachemodel');
 		$this->cachemodel->menu_build(1, 0, 'file');
@@ -186,4 +183,4 @@ class Docmodel extends CI_Model{
 
 }
 /* End of file docmodel.php */
-/* Location: ./system/application/controllers/docmodel.php */
+/* Location: ./system/application/models/docmodel.php */
