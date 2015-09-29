@@ -1,5 +1,3 @@
-<?=$text1;?>
-<?=$special_offer;?>
 <div style="margin-left:20px;">
 	<h4>MiniGIS</h4>
 	<p>is the essential framework designed for data preparation, processing and visualization when using web-side map services.</p>

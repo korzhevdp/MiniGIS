@@ -22,7 +22,7 @@ class Page extends CI_Controller {
 			'header'     => $this->load->view($this->session->userdata('lang').'/frontend/page_header',	array(), TRUE),
 			'footer'     => $this->load->view($this->session->userdata('lang').'/frontend/page_footer',	array(), TRUE),
 			'links_heap' => $this->load->view('cache/links/links_heap',	array(), TRUE),
-			'content'    => $this->frontendmodel->aggregation_page_build()
+			'content'    => $this->load->view($this->session->userdata('lang')."/frontend/main_page_content", array(), true)
 		);
 		$this->load->view($this->session->userdata('lang').'/frontend/frontend_nomap2', $act);
 	}

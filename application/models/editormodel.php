@@ -390,9 +390,9 @@ class Editormodel extends CI_Model{
 		}
 		return implode($output, "\n");
 	}
+	/*
+		private function get_context(){
 
-	private function get_context(){
-		/*
 		возвращает js-объект с информацией о всех объектах, связанных в рамках карты-отображения с текущим
 		по итогам обработки этих данных составляется описание связей в пределах карты отображения.
 
@@ -419,7 +419,7 @@ class Editormodel extends CI_Model{
 				FROM `map_content`
 				WHERE `map_content`.`a_types` AND `map_content`.`b_types`
 		  )
-		*/
+
 		
 		//список типов объектов на выходе
 		$output_types = array();
@@ -489,6 +489,7 @@ class Editormodel extends CI_Model{
 		}
 		print "{\n\t".implode($output, ",\n\t")."\n}";
 	}
+	*/
 }
 /* End of file editormodel.php */
 /* Location: ./system/application/models/editormodel.php */

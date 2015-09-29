@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <head>
-<title>Manager Geopoints: <?=$title;?></title>
+<title>Manager of geopoints <?=$title;?></title>
 <meta name='yandex-verification' content='74872298f6a53977' />
 	<meta name="keywords" content="<?=$keywords;?>">
 	<!-- API 2.0 -->

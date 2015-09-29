@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Geopoints' Manager: <?=$title;?></title>
+	<title>Manager of geopoints <?=$title;?></title>
 	<meta name="keywords" content="<?=$keywords;?>">
 	<meta name='yandex-verification' content='74872298f6a53977' />
 	<meta name='loginza-verification' content='ecdaef934bf45473c2c6402eed886170' />

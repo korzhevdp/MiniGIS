@@ -24,11 +24,80 @@ class Cachemodel extends CI_Model{
 		return $output;
 	}
 
+	private function get_category_icon($category){
+		$out   = "";
+		$icons = array(
+			'business' => '<img src="'.$this->config->item('api').'/images/icons/briefcase.png" width="16" height="16" border="0" alt="">',
+			'health'   => '<img src="'.$this->config->item('api').'/images/icons/health.png" width="16" height="16" border="0" alt="">',
+			'services' => '<img src="'.$this->config->item('api').'/images/icons/service-bell.png" width="16" height="16" border="0" alt="">',
+			'other'    => '<img src="'.$this->config->item('api').'/images/icons/information.png" width="16" height="16" border="0" alt="">',
+			'sport'    => '<img src="'.$this->config->item('api').'/images/icons/sports.png" width="16" height="16" border="0" alt="">',
+			'sights'   => '<img src="'.$this->config->item('api').'/images/icons/photo.png" width="16" height="16" border="0" alt="">'
+		);
+		if (isset($icons[$category])) {
+			$out = $icons[$category];
+		}
+		return $out;
+	}
+
+	private function get_location_properties($location){
+		$input  = array();
+		$output = array();
+		$result = $this->db->query("SELECT DISTINCT
+		properties_assigned.property_id,
+		properties_assigned.location_id,
+		properties_assigned.value,
+		properties_list.selfname,
+		properties_list.property_group,
+		properties_list.fieldtype,
+		properties_list.multiplier,
+		properties_list.divider,
+		properties_list.coef,
+		properties_list.algoritm,
+		properties_list.label
+		FROM
+		properties_assigned
+		INNER JOIN properties_list ON (properties_assigned.property_id = properties_list.id)
+		WHERE
+		properties_assigned.location_id = ?
+		GROUP BY properties_assigned.property_id
+		ORDER BY properties_list.label, properties_list.selfname", array($location));
+		if($result->num_rows()){
+			foreach($result->result() as $row){
+				if (!isset($input[$row->label])){
+					$input[$row->label] = array();
+				}
+				if ($row->fieldtype === "checkbox") {
+					$value = '<span class="line">'.$row->selfname.'</span>';
+				}
+				if ($row->fieldtype === "textarea") {
+					$value = '<p class="line">'.str_replace("\n", "</p><p>", $row->value).'</p>';
+				}
+				if ($row->fieldtype === "text") {
+					$value = $row->value;
+					if ($row->algoritm === "me" || $row->algoritm === "le") {
+						if ($row->coef != 1) {
+							$value = $value * $row->multiplier / $row-> divider;
+						}
+					}
+					$value = '<p class="line">'.$value.' '.$row->selfname.'</p>';
+				}
+				if ($row->fieldtype == "select") {
+					$value = '<p class="line">'.$row->selfname.'</p>';
+				}
+				array_push($input[$row->label], $value);
+			}
+		}
+		foreach ($input as $key =>$val) {
+			array_push($output, '<h4>'.$key.'</h4>'.implode($val, "<br>\n"));
+		}
+		return implode($output, "\n");
+	}
+
 	// кэширование объекта
-	public function cache_location($location_id = 0, $with_output = 0, $mode = 'file'){
+	public function cache_location($location = 0, $with_output = 0, $mode = 'file'){
 		$act      = array();
-		$input    = array();
-		$output   = array();
+
 		// наполняем $act данными объекта из основного хранилища
 		$result = $this->db->query("SELECT
 		`locations`.`address`,
@@ -45,40 +114,22 @@ class Cachemodel extends CI_Model{
 		FROM
 		`locations`
 		INNER JOIN `locations_types` ON (`locations`.`type` = `locations_types`.`id`)
-		WHERE locations.id = ?", array($location_id));
+		WHERE locations.id = ?", array($location));
 		if($result->num_rows()){
 			$act = $result->row_array();
-		}
-		$act = array_merge($act, $this->get_statmap($act['pr_type'], $act['coord_y']));
-		
-		$result = $this->db->query("SELECT 
-		properties_assigned.property_id,
-		properties_assigned.location_id,
-		properties_assigned.value,
-		properties_list.selfname,
-		properties_list.property_group,
-		properties_list.fieldtype,
-		properties_list.multiplier,
-		properties_list.divider,
-		properties_list.coef,
-		properties_list.algoritm,
-		properties_list.label
-		FROM
-		properties_assigned
-		INNER JOIN properties_list ON (properties_assigned.property_id = properties_list.id)
-		WHERE
-		(properties_assigned.location_id = ?)", array($location_id));
-		if($result->num_rows()){
-			foreach($result->result() as $row){
-				array_push($output, "<h4>".$row->label.'</h4><span class="line">'.$row->selfname.' - '.$row->value.'</span>');
+			if(in_array($act['pr_type'], array(2,3))) {
+				$act['lat'] = $act['coord_array'];
+				$act['lon'] = $act['coord_y'];
 			}
 		}
-		$act['content'] = implode($output, "\n<br>");
+		$act = array_merge($act, $this->get_statmap($act['pr_type'], $act['coord_y']));
+		$act['content'] = $this->get_location_properties($location);
+
 		
 		$cache = $this->load->view('ru/frontend/std_view', $act, true);
 
 		if($mode === 'file') {
-			write_file('application/views/cache/locations/location_'.$location_id.".src", $cache, "w");
+			write_file('application/views/cache/locations/location_'.$location.".src", $cache, "w");
 		}else{
 			print $cache."<hr>";
 		}
@@ -132,7 +183,7 @@ class Cachemodel extends CI_Model{
 		$this->config->load('translations_a', FALSE);
 		$langs    = $this->config->item('lang');
 		$articles = $this->config->item('articles');
-		$result = $this->db->query("SELECT
+		$result   = $this->db->query("SELECT
 		sheets.redirect,
 		sheets.parent,
 		sheets.id,

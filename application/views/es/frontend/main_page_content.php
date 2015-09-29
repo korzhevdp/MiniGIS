@@ -1,5 +1,3 @@
-<?=$text1;?>
-<?=$special_offer;?>
 <div style="margin-left:20px;">
 	<h4>MiniGIS</h4>
 <p>un Marco de trabajo para la preparación y la visualización de la información con el uso de los servicios de mapas.</p>

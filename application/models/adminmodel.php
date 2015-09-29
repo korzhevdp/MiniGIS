@@ -4,31 +4,8 @@ class Adminmodel extends CI_Model{
 		parent::__construct();
 		//$this->output->enable_profiler(TRUE);
 	}
+	/* Library set */
 
-	function get_full_index($obj_group = 0, $loc_type = 0, $page = 1){
-		$controller = ($this->session->userdata('admin')) ? "admin" : "user";
-		$output = array();
-		$out    = array(
-			'loc_type'	 => $loc_type,
-			'obj_group'	 => $obj_group,
-			'controller' => $controller
-		);
-
-		$out['type_name'] = $this->get_type_name($loc_type);
-		$out['name']      = $this->get_group_name($obj_group);
-		
-		if(!$obj_group) {
-			$output = $this->get_library_group_list($obj_group, $controller);
-		} else {
-			if(!$loc_type){
-				$output = $this->get_library_type_list($obj_group, $controller);
-			} else {
-				$output = $this->get_library_locations_list_by_type($loc_type);
-			}
-		}
-		$out['library'] = implode($output, "\n");
-		return $this->load->view("admin/library", $out, true);
-	}
 
 	private function get_type_name($loc_type) {
 		$output = "Тип не определён";
@@ -153,6 +130,31 @@ class Adminmodel extends CI_Model{
 		);
 		return $this->load->view("admin/library2", $output, true);
 	}
+	
+	public function get_full_index($obj_group = 0, $loc_type = 0, $page = 1){
+		$controller = ($this->session->userdata('admin')) ? "admin" : "user";
+		$output = array();
+		$out    = array(
+			'loc_type'	 => $loc_type,
+			'obj_group'	 => $obj_group,
+			'controller' => $controller
+		);
+
+		$out['type_name'] = $this->get_type_name($loc_type);
+		$out['name']      = $this->get_group_name($obj_group);
+		
+		if(!$obj_group) {
+			$output = $this->get_library_group_list($obj_group, $controller);
+		} else {
+			if(!$loc_type){
+				$output = $this->get_library_type_list($obj_group, $controller);
+			} else {
+				$output = $this->get_library_locations_list_by_type($loc_type);
+			}
+		}
+		$out['library'] = implode($output, "\n");
+		return $this->load->view("admin/library", $out, true);
+	}
 
 	#######################################################################
 	### управление списками параметров VERIFIED
@@ -218,7 +220,7 @@ class Adminmodel extends CI_Model{
 		return $out;
 	}
 
-	function show_semantics_values($object_group = 1, $type = 0, $property = 0) {
+	public function show_semantics_values($object_group = 1, $type = 0, $property = 0) {
 		//$this->output->enable_profiler(TRUE);
 		$output = array(
 			'row'				=> '',
@@ -336,7 +338,7 @@ class Adminmodel extends CI_Model{
 		return implode($output, "\n");
 	}
 
-	function save_semantics() {
+	public function save_semantics() {
 		//$this->output->enable_profiler(TRUE);
 		//return false;
 		$mode     = $this->input->post('mode');

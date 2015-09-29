@@ -1,5 +1,3 @@
-<?=$text1;?>
-<?=$special_offer;?>
 <div style="margin-left:20px;">
 	<h4>MiniGIS</h4>
 <p>ein Framework für die Erstellung und Visualisierung von Informationen mit Hilfe der Mapping-Dienste.</p>
