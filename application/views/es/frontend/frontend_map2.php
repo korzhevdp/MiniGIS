@@ -112,6 +112,7 @@
 		zoom   : <?=$this->config->item('map_zoom');?>,
 		center : [<?=$map_center;?>],
 		type   : <?=$this->config->item('map_type');?>,
+		lang   : '<?=$this->session->userdata("lang");?>',
 		mapset : <?=$mapset;?>,
 		otype  : <?=$otype;?>
 	},

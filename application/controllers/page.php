@@ -19,7 +19,7 @@ class Page extends CI_Controller {
 			'keywords'   => $this->config->item('maps_keywords'),
 			'title'      => $this->config->item('site_title_start'),
 			'menu'       => $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), TRUE).$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu(),
-			'header'     => $this->load->view($this->session->userdata('lang').'/frontend/page_header',	array(), TRUE),
+			'header'     => '', //$this->load->view($this->session->userdata('lang').'/frontend/page_header',	array(), TRUE),
 			'footer'     => $this->load->view($this->session->userdata('lang').'/frontend/page_footer',	array(), TRUE),
 			'links_heap' => $this->load->view('cache/links/links_heap',	array(), TRUE),
 			'content'    => $this->load->view($this->session->userdata('lang')."/frontend/main_page_content", array(), true)

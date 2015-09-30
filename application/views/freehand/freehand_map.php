@@ -282,8 +282,8 @@
 </script>
 <!-- API 2.0 -->
 <script src="http://api-maps.yandex.ru/2.0/?coordorder=longlat&amp;load=package.full&amp;mode=debug&amp;lang=ru-RU" type="text/javascript"></script>
-<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/map_styles2.js"></script>
 <script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/freehand.js"></script>
+<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/map_styles2.js"></script>
 <!-- EOT API 2.0 -->
 <script src="//loginza.ru/js/widget.js" type="text/javascript"></script>
 <!-- <script type="text/javascript" src="<?=$this->config->item('api');?>/ckeditor/ckeditor.js"></script> -->
