@@ -124,7 +124,7 @@ class Frontendmodel extends CI_Model{
 			'location_id' => $location_id,
 			'captcha'     => $this->usefulmodel->captcha_make()
 		);
-		return $this->load->view($this->session->userdata('lang').'/frontend/comments', $act, true);
+		return $this->load->view('doc/comments', $act, true);
 	}
 }
 /* End of file frontendmodel.php */

@@ -80,7 +80,7 @@ class Cachemodel extends CI_Model{
 							$value = $value * $row->multiplier / $row-> divider;
 						}
 					}
-					$value = '<p class="line">'.$value.' '.$row->selfname.'</p>';
+					$value = '<span class="line">'.$row->selfname.' '.$value.'</span><br>';
 				}
 				if ($row->fieldtype == "select") {
 					$value = '<p class="line">'.$row->selfname.'</p>';
@@ -89,7 +89,7 @@ class Cachemodel extends CI_Model{
 			}
 		}
 		foreach ($input as $key =>$val) {
-			array_push($output, '<h4>'.$key.'</h4>'.implode($val, "<br>\n"));
+			array_push($output, '<h4>'.$key.'</h4>'.implode($val, ""));
 		}
 		return implode($output, "\n");
 	}
@@ -258,7 +258,8 @@ class Cachemodel extends CI_Model{
 		locations_types.name AS selfname,
 		'checkbox' AS fieldtype,
 		locations_types.pl_num AS id,
-		`properties_list`.label
+		`properties_list`.label,
+		'u' AS alg
 		FROM
 		`properties_list`
 		INNER JOIN locations_types ON (`properties_list`.id = locations_types.pl_num)

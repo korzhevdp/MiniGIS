@@ -60,7 +60,7 @@ class Page extends CI_Controller {
 			'title'    => $this->config->item('site_title_start')." ГИС",
 			'keywords' => $this->config->item('maps_keywords').','.$props['name'],
 			'content'  => $this->frontendmodel->get_cached_content($location_id),
-			'header'   => $this->load->view($this->session->userdata('lang').'/frontend/page_header',	array(), TRUE),
+			'header'   => '',//$this->load->view($this->session->userdata('lang').'/frontend/page_header',	array(), TRUE),
 			'menu'     => $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), TRUE).$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu(),
 			'footer'   => $this->load->view($this->session->userdata('lang').'/frontend/page_footer',	array(), TRUE)
 		);

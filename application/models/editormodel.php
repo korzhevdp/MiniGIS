@@ -4,7 +4,7 @@ class Editormodel extends CI_Model{
 		parent::__construct();
 	}
 	
-	public function starteditor($mode = "edit", $id = 0){
+	public function starteditor($mode = "edit", $id = 0) {
 		//$this->output->enable_profiler(TRUE);
 		if ($mode == "edit") {
 			if ($id) {
@@ -14,9 +14,9 @@ class Editormodel extends CI_Model{
 				}
 				$data = $this->get_summary("location", $id);
 				$output = array(
-					//'pr_type'			=> $data['pr_type'],
+					'pr_type'			=> $data['pr_type'],
 					'content'			=> $this->load->view('editor/summary', $data, true),
-					'panel'				=> $this->load->view('editor/btncontrol1', $data, true),
+					'panel'				=> ($data['pr_type'] != 1) ? $this->load->view('editor/altcontrols', $data, true) : $this->load->view('editor/altcontrols', $data, true),
 					'baspointstypes'	=> $this->get_bas_points_types(),
 					'menu'				=> $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), TRUE) .$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu()
 				);
@@ -26,9 +26,9 @@ class Editormodel extends CI_Model{
 		if ($mode == "add") {
 			$data = $this->get_summary("type", $id);
 			$output = array(
-				//'pr_type'			=> $data['pr_type'];
+				'pr_type'			=> $data['pr_type'],
 				'content'			=> $this->load->view('editor/summary', $data, true),
-				'panel'				=> $this->load->view('editor/btncontrol1', $data, true),
+				'panel'				=> $this->load->view('editor/controls', $data, true),
 				'baspointstypes'	=> $this->get_bas_points_types(),
 				'menu'				=> $this->load->view('admin/menu', array(), true)
 			);
@@ -36,7 +36,7 @@ class Editormodel extends CI_Model{
 		return $output;
 	}
 	
-	private function get_summary($type, $id){
+	private function get_summary($type, $id) {
 		$output = array(
 			'id' => 0,
 			'location_name'		=> 'Новое имя',
@@ -116,8 +116,9 @@ class Editormodel extends CI_Model{
 		}
 		$output['typelist'] = implode($typelist, "\n");
 
-		$pagelist = array();
-		$result = $this->db->query("SELECT 
+		$pagelist     = array();
+		$pagelist_alt = array();
+		$result       = $this->db->query("SELECT 
 		MAX(`properties_list`.page) as `maxpage`
 		FROM
 		`properties_list`
@@ -126,21 +127,27 @@ class Editormodel extends CI_Model{
 			$row  = $result->row();
 			$page = 1;
 			while($page <= $row->maxpage){
-				$button = ($page === 1)
-					? '<button type="button" class="btn btn-info btn-small displayMain" title="Перейти к началу">'.$page.'</button>'
-					: '<button type="button" class="btn btn-info btn-small displayPage" title="Перейти к странице '.$page.'" ref="'.implode(array($output['object_group'], $output['id'], $page), "/").'">'.$page.'</button>';
+				if ($page === 1) {
+					$button = '<button type="button" class="btn btn-info btn-small displayMain" title="Перейти к началу">'.$page.'</button>';
+					$navtab = '<li class="active displayMain"><a href="#YMapsID" data-toggle="tab">Карта</a></li>';
+				} else {
+					$button = '<button type="button" class="btn btn-info btn-small displayPage" title="Перейти к странице '.$page.'" ref="'.implode(array($output['object_group'], $output['id'], $page), "/").'">'.$page.'</button>';
+					$navtab = '<li class="displayPage" ref="'.implode(array($output['object_group'], $output['id'], $page), "/").'"><a href="#propPage" data-toggle="tab" >Страница '.$page.'</a></li>';
+				}
 				array_push($pagelist, $button);
+				array_push($pagelist_alt, $navtab);
 				$page++;
 			}
 		}
-		$output['pagelist'] = implode($pagelist, "&nbsp;");
-		$output['liblink']  = implode(array($output['object_group'], $output['type']), "/");
+		$output['pagelist']     = implode($pagelist, "&nbsp;");
+		$output['pagelist_alt'] = implode($pagelist_alt, "&nbsp;");
+		$output['liblink']      = implode(array($output['object_group'], $output['type']), "/");
 		//print_r($output);
 		//exit;
 		return $output;
 	}
 
-	public function get_bas_points_types(){
+	public function get_bas_points_types() {
 		$output = array();
 		$result = $this->db->query("SELECT 
 		locations_types.id,
@@ -179,7 +186,7 @@ class Editormodel extends CI_Model{
 		return implode($output,"\n");
 	}
 
-	public function get_object_list_by_type(){
+	public function get_object_list_by_type() {
 		$output = array();
 		$result = $this->db->query("SELECT
 		`locations`.id,
@@ -196,7 +203,7 @@ class Editormodel extends CI_Model{
 		return implode($output, "\n");
 	}
 	
-	public function get_objects_by_type(){
+	public function get_objects_by_type() {
 		//$this->output->enable_profiler(TRUE);
 		$output = array();
 		$run    = 0;
@@ -237,7 +244,7 @@ class Editormodel extends CI_Model{
 		return "data = { ".implode($output, ",")." }";
 	}
 
-	function get_assigned_properties($location_id){
+	function get_assigned_properties($location_id) {
 		$assigned = array();
 		if($location_id){
 			$result = $this->db->query("SELECT
@@ -260,7 +267,7 @@ class Editormodel extends CI_Model{
 		return $assigned;
 	}
 
-	function show_form_content($object_group = 1, $location_id = 0, $page = 1, $columns = 2){
+	function show_form_content($object_group = 1, $location_id = 0, $page = 1, $columns = 2) {
 		//print $location_id;
 		//$this->load->helper('array');
 		$assigned = ($location_id) ? $this->get_assigned_properties($location_id) : array();
@@ -297,7 +304,7 @@ class Editormodel extends CI_Model{
 		return implode($table,"\n");
 	}
 
-	private function generate_form_content($input, $assigned){
+	private function generate_form_content($input, $assigned) {
 		$output = array();
 		foreach ($input as $label => $controls) {
 			$element		= array();
@@ -342,7 +349,7 @@ class Editormodel extends CI_Model{
 					break;
 				}
 			}
-			array_push($output, '<fieldset style="width:99%">
+			array_push($output, '<fieldset>
 			<legend>
 				'.$label.
 			'</legend>'.implode($element, "\n").
@@ -351,18 +358,18 @@ class Editormodel extends CI_Model{
 		return $output;
 	}
 
-	private function geoeditor($object_group, $mode = 1){
+	private function geoeditor($object_group, $mode = 1) {
 		$data = array();
 		$output = array(
 			'objects'        => $this->get_unbound_objects($object_group, $mode),
 			'content'        => $this->load->view('editor/geosemantics', $data, true),
-			'panel'          => $this->load->view('editor/btncontrol1', $data, true),
+			'panel'          => $this->load->view('editor/controls', $data, true),
 			'baspointstypes' => $this->get_bas_points_types()
 		);
 		return $output;
 	}
 
-	private function get_unbound_objects($object_group, $mode = 1){
+	private function get_unbound_objects($object_group, $mode = 1) {
 		//$this->output->enable_profiler(TRUE);
 		$output = array();
 		$mode   = ($mode == 2) ? "NOT" : "";

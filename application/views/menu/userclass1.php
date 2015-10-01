@@ -1,4 +1,6 @@
 <ul class="nav pull-right">
+	<li class="mapsw" id="toYandex"><a href="#">Yandex</a></li>
+	<li class="mapsw" id="toGoogle"><a href="#">Google</a></li>
 	<li><img src="http://api.korzhevdp.com/images/flag_<?=$this->session->userdata('lang');?>.png" class="langMark" alt=""></li>
 	<li class="divider-vertical"></li>
 	<li class="dropdown">

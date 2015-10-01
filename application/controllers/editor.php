@@ -14,7 +14,11 @@ class Editor extends CI_Controller{
 
 	public function edit($location = 0){
 		$output = $this->editormodel->starteditor("edit", $location);
-		$this->load->view('editor/view', $output);
+		//if ($output['pr_type'] == 1) {
+			$this->load->view('editor/altview', $output);
+		//} else {
+		//	$this->load->view('editor/view', $output);
+		//}
 	}
 
 	public function add($type = 0){
@@ -22,7 +26,11 @@ class Editor extends CI_Controller{
 			redirect("editor/edit/".$this->session->userdata("c_l"));
 		}
 		$output = $this->editormodel->starteditor("add", $type);
-		$this->load->view('editor/view', $output);
+		//if ($output['pr_type'] == 1) {
+			$this->load->view('editor/altview', $output);
+		//} else {
+		//	$this->load->view('editor/view', $output);
+		//}
 	}
 
 	public function checkdatafullness(){

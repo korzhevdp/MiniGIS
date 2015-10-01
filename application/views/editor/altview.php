@@ -13,41 +13,59 @@
 	<!-- EOT API 2.0 -->
 </head>
 
-<body>
-<table id="headerTable">
-	<tr>
-		<td colspan=2 class="navbar navbar-inverse">
-			<div class="navbar-inner">
-				<div class="container">
-					<a class="brand" href="/">ПРОЕКТ&nbsp;&nbsp;<small>Minigis.NET <img src="<?=$this->config->item('api');?>/images/minigis24.png" alt="MiniGIS" title="MiniGis Project"></a>
-					<?=$menu;?>
-				</div>
-			</div>
-		</td>
-	</tr>
-	<tr>
-		<td>
-			<a href="/admin/library/<?=$liblink?>" id="lib-btn" class="btn btn-primary btn-small pull-left">В библиотеку</a>
-			<span class="m_divider" >&nbsp;</span>
-			<?=$panel;?>
-		</td>
-		<td class="right-controls">
-			<span class="m_divider" >&nbsp;</span>
-			<span class="btn-group">
-				<button class="btn btn-small btn-info" id="pointsLoad" title="Загрузить опорные точки из имеющихся в библиотеке объектов">Опорные точки</button>
-				<button class="btn btn-small dropdown-toggle btn-info" data-toggle="dropdown"><span class="caret"></span></button>
+<body class="altEditor">
+
+<table class="editorTable">
+<tr>
+	<td class="leftColumn" style="height:50px;">
+		<a href="/admin/library/<?=$liblink?>" id="lib-btn" class="btn btn-primary btn-block">В библиотеку</a>
+	</td>
+	<td class="rightColumn">
+		<h4 class="altEditorHeader"><?=$location_name;?>&nbsp;&nbsp;&nbsp;&nbsp;<small><?=$description;?></small>
+			<span class="btn-group pull-right">
+				<button class="btn btn-info" id="pointsLoad" title="Загрузить опорные точки из имеющихся в библиотеке объектов">Опорные точки</button>
+				<button class="btn dropdown-toggle btn-info" data-toggle="dropdown"><span class="caret"></span></button>
 				<ul class="dropdown-menu">
 					<li><a href="#" id="pointsClear">Очистить опорные точки</a></li>
 				</ul>
 			</span>
-			<span class="m_divider" >&nbsp;</span>
-			<button type="button" class="btn btn-primary btn-small" id="saveBtn" title="Сохранить данные объекта">Сохранить</button>
-		</td>
-	</tr>
-	<tr>
-		<td colspan=2 style="vertical-align:top;"><?=$content;?></td>
-	</tr>
+		</h4>
+		<ul class="nav nav-tabs">
+			<?=$pagelist_alt;?>
+		</ul>
+	</td>
+</tr>
+<tr>
+	<td class="leftColumn">
+		<div class="input-prepend">
+			<span class="add-on" style="margin:0px; width:70px;">Название</span><input type="text" form="tForm" id="l_name" name="object[name]" value="<?=$location_name;?>">
+		</div>
+		<div class="input-prepend">
+			<span class="add-on" style="margin:0px; width:70px;">Адрес</span><input type="text" form="tForm" id="l_addr" class="l_addr" name="object[addr]" value="<?=$address;?>">
+		</div>
+		<div class="input-prepend">
+			<span class="add-on" style="margin:0px; width:70px;">Стиль</span><select form="tForm" id="l_attr" name="object[attr]" class="styles"></select>
+		</div>
+		<div class="input-prepend">
+			<span class="add-on" style="margin:0px; width:70px;">Контакты</span><input type="text" form="tForm" id="l_cont" name="object[contact]" value="<?=$contact_info;?>">
+		</div>
+
+		<hr>
+		<?=$panel;?>
+		<hr>
+
+		<button type="button" class="btn btn-primary btn-block" id="saveBtn" title="Сохранить данные объекта">Сохранить</button>
+	</td>
+	<td class="rightColumn tab-content">
+		<div class="tab-pane active" id="YMapsID"></div>
+		<div class="tab-pane propPage" id="propPage"></div>
+	</td>
+
+
+	</td>
+</tr>
 </table>
+<?=$content;?>
 
 <div id="loadPoints" class="modal hide fade" style="width:700px;">
 	<div class="modal-header">
@@ -86,9 +104,10 @@
 
 <script type="text/javascript">
 <!--
-	$("#YMapsID").width($(window).width() - 4 + 'px').height($(window).height() - 83 + 'px');
-	$('.modal').modal({show: 0})
+	$('.modal').modal({ show: 0 })
 //-->
 </script>
+<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/maps2.js"></script>
+
 </body>
 </html>
