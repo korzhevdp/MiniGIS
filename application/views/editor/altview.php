@@ -29,6 +29,10 @@
 					<li><a href="#" id="pointsClear">Очистить опорные точки</a></li>
 				</ul>
 			</span>
+			<span class="btn-group pull-right" data-toggle="buttons-radio">
+				<span class="btn btn-info mapsw" id="toYandex">Yandex</span>
+				<span class="btn btn-info mapsw" id="toGoogle">Google</span>
+			</span>
 		</h4>
 		<ul class="nav nav-tabs">
 			<?=$pagelist_alt;?>
@@ -47,11 +51,12 @@
 			<span class="add-on" style="margin:0px; width:70px;">Стиль</span><select form="tForm" id="l_attr" name="object[attr]" class="styles"></select>
 		</div>
 		<div class="input-prepend">
-			<span class="add-on" style="margin:0px; width:70px;">Контакты</span><input type="text" form="tForm" id="l_cont" name="object[contact]" value="<?=$contact_info;?>">
+			<span class="add-on" style="margin:0px; width:70px;">Телефон</span><input type="text" form="tForm" id="l_cont" name="object[contact]" value="<?=$contact_info;?>">
 		</div>
 
 		<hr>
 		<?=$panel;?>
+		<label class="checkbox" title="Объект доступен для поиска" for="l_act"><input type="checkbox" class="l_act" style="margin-top:4px;" id="l_act">Опубликовано</label>
 		<hr>
 
 		<button type="button" class="btn btn-primary btn-block" id="saveBtn" title="Сохранить данные объекта">Сохранить</button>

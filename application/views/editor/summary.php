@@ -18,7 +18,7 @@ var prop = {
 	coords_array : '',
 	coords_aux   : '',
 	comments     : <?=$comments?>
-
-}
+},
+mp = { lang: '<?=$this->session->userdata("lang");?>'}
 //-->
 </script>

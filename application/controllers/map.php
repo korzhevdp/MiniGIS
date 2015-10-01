@@ -109,7 +109,7 @@ class Map extends CI_Controller {
 		locations.id,
 		IF(locations_types.pl_num = 0, 'объект', locations_types.name) AS typename,
 		locations.location_name,
-		IF(LENGTH(locations.contact_info), locations.contact_info, 'контактная информация отсутствует') AS contact_info,
+		IF(LENGTH(locations.contact_info), locations.contact_info, 'не предоставлены') AS contact_info,
 		IF(LENGTH(locations.address), locations.address, ?) AS address,
 		locations.coord_y,
 		locations_types.pr_type,

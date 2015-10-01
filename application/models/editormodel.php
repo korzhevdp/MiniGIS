@@ -16,7 +16,7 @@ class Editormodel extends CI_Model{
 				$output = array(
 					'pr_type'			=> $data['pr_type'],
 					'content'			=> $this->load->view('editor/summary', $data, true),
-					'panel'				=> ($data['pr_type'] != 1) ? $this->load->view('editor/altcontrols', $data, true) : $this->load->view('editor/altcontrols', $data, true),
+					'panel'				=> $this->load->view('editor/altcontrols', $data, true),
 					'baspointstypes'	=> $this->get_bas_points_types(),
 					'menu'				=> $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), TRUE) .$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu()
 				);
@@ -28,7 +28,7 @@ class Editormodel extends CI_Model{
 			$output = array(
 				'pr_type'			=> $data['pr_type'],
 				'content'			=> $this->load->view('editor/summary', $data, true),
-				'panel'				=> $this->load->view('editor/controls', $data, true),
+				'panel'				=> $this->load->view('editor/altcontrols', $data, true),
 				'baspointstypes'	=> $this->get_bas_points_types(),
 				'menu'				=> $this->load->view('admin/menu', array(), true)
 			);
