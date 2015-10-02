@@ -4,26 +4,9 @@ class Mcmodel extends CI_Model{
 		parent::__construct();
 	}
 
-	###################### start of map content section ##########################
-	function mc_show($mapset = 0){
-		//$this->output->enable_profiler(TRUE);
-		$mapcontent   = array(
-			'a_layers' => '',
-			'a_types'  => '',
-			'b_layers' => '',
-			'b_types'  => '',
-			'disabled_layers' => array()
-		);
-		$options   = array('<option value = "0">Выберите представление карты</option>');
-		$setname   = "";
-		$a_types   = array();
-		$b_types   = array();
-		$cf_layers   = array();
-		$cb_layers   = array();
-		$cf_types   = array();
-		$cb_types   = array();
-		$groups    = array();
-		########### выборка списка  слоёв
+	private function get_maps_list($mapset){
+		$options = array('<option value = "0">Выберите представление карты</option>');
+		$setname = "";
 		$result = $this->db->query("SELECT
 		`map_content`.name,
 		`map_content`.id
@@ -41,27 +24,42 @@ class Mcmodel extends CI_Model{
 				array_push($options, $string);
 			}
 		}
-		########### выборка свойств слоёв
-		if ($mapset) {
-			$result = $this->db->query("SELECT
-			`map_content`.a_layers,
-			`map_content`.b_layers,
-			`map_content`.a_types,
-			`map_content`.b_types
-			FROM
-			`map_content`
-			WHERE
-			`map_content`.id = ?
-			ORDER BY 
-			`map_content`.name
-			LIMIT 1", ($mapset));
-			if($result->num_rows()){
-				$mapcontent = $result->row_array(0);
-				$mapcontent['disabled_layers'] = array();
-			}
+		return array('setname' => $setname, 'options' => implode($options, "\n"));
+	}
+	
+	private function get_map_contents($mapset){
+		$mapcontent   = array(
+			'a_layers' => '',
+			'a_types'  => '',
+			'b_layers' => '',
+			'b_types'  => '',
+			'disabled_layers' => array()
+		);
+		$result = $this->db->query("SELECT
+		`map_content`.a_layers,
+		`map_content`.b_layers,
+		`map_content`.a_types,
+		`map_content`.b_types
+		FROM
+		`map_content`
+		WHERE
+		`map_content`.id = ?
+		ORDER BY 
+		`map_content`.name
+		LIMIT 1", ($mapset));
+		if($result->num_rows()){
+			$mapcontent = $result->row_array(0);
+			$mapcontent['disabled_layers'] = array();
 		}
-		###########
-		############# формирование таблиц слоёв (активный/фоновый)
+		return $mapcontent;
+	}
+
+	private function map_layers_get(){
+		$output = array(
+			'foreground' => array(),
+			'background' => array(),
+			'disabled'   => array()
+		);
 		$result = $this->db->query("SELECT
 		`objects_groups`.id,
 		`objects_groups`.name,
@@ -72,18 +70,24 @@ class Mcmodel extends CI_Model{
 		if($result->num_rows()){
 			foreach($result->result() as $row){
 				# активный слой
-				array_push($cf_layers,'<li><label class="checkbox" for="a_layer'.$row->id.'"><input type="checkbox" class="a_layers" name="a_layer[]" value="'.$row->id.'" ref="'.$row->id.'" id="a_layer'.$row->id.'">'.$row->name.'</label></li>');
+				array_push($output['foreground'], '<li><label class="checkbox" for="a_layer'.$row->id.'"><input type="checkbox" class="a_layers" name="a_layer[]" value="'.$row->id.'" ref="'.$row->id.'" id="a_layer'.$row->id.'">'.$row->name.'</label></li>');
 				# фоновый слой
-				array_push($cb_layers,'<li><label class="checkbox" for="b_layer'.$row->id.'"><input type="checkbox" class="b_layers" name="b_layer[]" value="'.$row->id.'" ref="'.$row->id.'" id="b_layer'.$row->id.'">'.$row->name.'</label></li>');
+				array_push($output['background'], '<li><label class="checkbox" for="b_layer'.$row->id.'"><input type="checkbox" class="b_layers" name="b_layer[]" value="'.$row->id.'" ref="'.$row->id.'" id="b_layer'.$row->id.'">'.$row->name.'</label></li>');
 				if (!$row->active) {
-					array_push($mapcontent['disabled_layers'], $row->id);
+					array_push($output['disabled'], $row->id);
 				}
 			}
-			array_push($cf_layers, '<li><label class="checkbox" for="a_layer0"><input type="checkbox" id="a_layer0" ref="0" value="0"><b>Показывать объекты по типам</b></label></li>');
+			array_push($output['foreground'], '<li><label class="checkbox" for="a_layer0"><input type="checkbox" id="a_layer0" ref="0" value="0"><b>Показывать объекты по типам</b></label></li>');
 		}
-		#
-		############# формирование таблиц типов (активный/фоновый слой)
-		#
+		return $output;
+	}
+
+	private function map_types_get(){
+		$output = array(
+			'foreground' => array(),
+			'background' => array(),
+			'groups'	 => array()
+		);
 		$result = $this->db->query("SELECT 
 		`locations_types`.id,
 		`locations_types`.`name`,
@@ -101,52 +105,70 @@ class Mcmodel extends CI_Model{
 			foreach($result->result() as $row){
 				//disabled если: 1. Выбран активным слоем
 				# активный слой
-				if (!isset($a_types[$row->gid])) {
-					$a_types[$row->gid] = array();
+				if (!isset($output['foreground'][$row->gid])) {
+					$output['foreground'][$row->gid] = array();
 				}
-				array_push($a_types[$row->gid],'<label class="checkbox"><input type="checkbox" class="a_types" name="a_type[]" value="'.$row->id.'" id="atype'.$row->id.'" ref="'.$row->id.'">'.$row->name.'</label>');
+				if (!isset($output['background'][$row->gid])) {
+					$output['background'][$row->gid] = array();
+				}
+				array_push($output['foreground'][$row->gid], '<label class="checkbox"><input type="checkbox" class="a_types" name="a_type[]" value="'.$row->id.'" id="atype'.$row->id.'" ref="'.$row->id.'">'.$row->name.'</label>');
 				# фоновый слой
-				if (!isset($b_types[$row->gid])) {
-					$b_types[$row->gid] = array();
-				}
-				array_push($b_types[$row->gid],'<label class="checkbox"><input type="checkbox" class="b_types" name="b_type[]" value="'.$row->id.'" id="btype'.$row->id.'" ref="'.$row->id.'">'.$row->name.'</label>');
-				$groups[$row->gid] = $row->group;
 
-			}
-			# окончательная сортировка и оформление списков
-			$cf_types = array();
-			$cb_types = array();
-			foreach($a_types as $gid => $table){
-				array_push($cf_types,'<li class="object_list atab" id="atab'.$gid.'"><h5>'.$groups[$gid].'</h5>');
-				array_push($cf_types, implode($table,"\n"));
-				if (!sizeof($table)) {
-					array_push($cf_types, 'Не было создано ни одного объекта');
-				};
-				array_push($cf_types,'</li>');
-			}
-			foreach($b_types as $gid => $table){
-				array_push($cb_types,'<li class="object_list btab" id="btab'.$gid.'"><h5>'.$groups[$gid].'</h5>');
-				array_push($cb_types, implode($table,"\n"));
-				if (!sizeof($table)) {
-					array_push($cb_types, 'Не было создано ни одного объекта');
-				}
-				array_push($cb_types,'</li>');
+				array_push($output['background'][$row->gid], '<label class="checkbox"><input type="checkbox" class="b_types" name="b_type[]" value="'.$row->id.'" id="btype'.$row->id.'" ref="'.$row->id.'">'.$row->name.'</label>');
+				$output['groups'][$row->gid] = $row->group;
 			}
 		}
-		#форма выбора слоя началась
+		return $output;
+	}
+
+	private function generate_fore_types($source, $groups) {
+		$output = array();
+		foreach($source as $gid => $table) {
+			array_push($output, '<li class="object_list atab" id="atab'.$gid.'"><h5>'.$groups[$gid].'</h5>');
+			array_push($output, implode($table,"\n"));
+			if (!sizeof($table)) {
+				array_push($output, 'Не было создано ни одного объекта');
+			};
+			array_push($output, '</li>');
+		}
+		return implode($output, "");
+	}
+
+	private function generate_back_types($source, $groups) {
+		$output = array();
+		foreach($source as $gid => $table){
+			array_push($output,'<li class="object_list btab" id="btab'.$gid.'"><h5>'.$groups[$gid].'</h5>');
+			array_push($output, implode($table,"\n"));
+			if (!sizeof($table)) {
+				array_push($output, 'Не было создано ни одного объекта');
+			}
+			array_push($output,'</li>');
+		}
+		return implode($output, "");
+	}
+
+	###################### start of map content section ##########################
+	function mc_show($mapset = 0){
+		//$this->output->enable_profiler(TRUE);
+		$setname   = "";
+		$groups    = array();
+		$mapcontent = $this->get_map_contents($mapset);
+		$layers = $this->map_layers_get();
+		$types = $this->map_types_get();
+		$list = $this->get_maps_list($mapset);
 		return array(
 			'mapset'    => $mapset,
-			'mapname'   => $setname,
+			'mapname'   => $list['setname'],
+			'options'   => $list['options'],
 			'a_layers'  => $mapcontent['a_layers'],
 			'a_types'   => $mapcontent['a_types'],
 			'b_layers'  => $mapcontent['b_layers'],
 			'b_types'   => $mapcontent['b_types'],
-			'disabled_layers' => implode($mapcontent['disabled_layers'], ", "),
-			'options'   => implode($options,   "\n"),
-			'ca_layers' => implode($cf_layers, "\n"),
-			'cb_layers' => implode($cb_layers, "\n"),
-			'ca_types'  => implode($cf_types,  "\n"),
-			'cb_types'  => implode($cb_types,  "\n")
+			'disabled_layers' => implode($layers['disabled'], ", "),
+			'ca_layers' => implode($layers['foreground'], "\n"),
+			'cb_layers' => implode($layers['background'], "\n"),
+			'ca_types'  => $this->generate_fore_types($types['foreground'], $types['groups']),
+			'cb_types'  => $this->generate_back_types($types['background'], $types['groups'])
 		);
 	}
 

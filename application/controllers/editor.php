@@ -349,6 +349,9 @@ class Editor extends CI_Controller{
 		print $this->editormodel->show_form_content($this->input->post("group"), $this->input->post("loc"), $this->input->post("page"));
 	}
 
+	public function get_shedule(){
+		$this->editormodel->get_shedule($this->input->post("location"));
+	}
 	public function get_context(){
 		$this->editormodel->get_context();
 	}
