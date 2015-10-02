@@ -149,7 +149,6 @@ class Mcmodel extends CI_Model{
 
 	###################### start of map content section ##########################
 	function mc_show($mapset = 0){
-		//$this->output->enable_profiler(TRUE);
 		$setname   = "";
 		$groups    = array();
 		$mapcontent = $this->get_map_contents($mapset);
