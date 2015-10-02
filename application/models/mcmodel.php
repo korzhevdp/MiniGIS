@@ -173,10 +173,10 @@ class Mcmodel extends CI_Model{
 	}
 
 	function mc_new(){
-		$a_layers = ($this->input->post('a_layer') !== FALSE && is_array($this->input->post('a_layer'))) ? implode($this->input->post('a_layer'), ",") : "0";
-		$a_types  = ($this->input->post('a_type')  !== FALSE && is_array($this->input->post('a_type')))  ? implode($this->input->post('a_type'), ",")  : "0";
-		$b_layers = ($this->input->post('b_layer') !== FALSE && is_array($this->input->post('a_layer'))) ? implode($this->input->post('b_layer'), ",") : "0";
-		$b_types  = ($this->input->post('b_type')  !== FALSE && is_array($this->input->post('b_type')))  ? implode($this->input->post('b_type'), ",")  : "0";
+		$a_layers = (is_array($this->input->post('a_layer'))) ? implode($this->input->post('a_layer'), ",") : "0";
+		$a_types  = (is_array($this->input->post('a_type')))  ? implode($this->input->post('a_type'), ",")  : "0";
+		$b_layers = (is_array($this->input->post('a_layer'))) ? implode($this->input->post('b_layer'), ",") : "0";
+		$b_types  = (is_array($this->input->post('b_type')))  ? implode($this->input->post('b_type'), ",")  : "0";
 
 		$this->db->query("INSERT INTO
 		`map_content`(
@@ -193,17 +193,17 @@ class Mcmodel extends CI_Model{
 			$b_layers,
 			$this->input->post('mapset_name')
 		));
-		$id = $this->db->insert_id();
-		$text = "Администратором ".$this->session->userdata("user_name")." создана карта #".$id." - al: ".$a_layers.", at: ".$a_types.", bl: ".$b_layers.", bt: ".$b_types." с именем: ".$this->input->post('mapset_name');
+		$map_id = $this->db->insert_id();
+		$text = "Администратором ".$this->session->userdata("user_name")." создана карта #".$map_id." - al: ".$a_layers.", at: ".$a_types.", bl: ".$b_layers.", bt: ".$b_types." с именем: ".$this->input->post('mapset_name');
 		$this->usefulmodel->insert_audit($text);
-		return $id;
+		return $map_id;
 	}
 
 	function mc_save(){
-		$a_layers = ($this->input->post('a_layer') !== FALSE && is_array($this->input->post('a_layer'))) ? implode($this->input->post('a_layer'), ",") : "0";
-		$a_types  = ($this->input->post('a_type')  !== FALSE && is_array($this->input->post('a_type')))  ? implode($this->input->post('a_type'), ",")  : "0";
-		$b_layers = ($this->input->post('b_layer') !== FALSE && is_array($this->input->post('a_layer'))) ? implode($this->input->post('b_layer'), ",") : "0";
-		$b_types  = ($this->input->post('b_type')  !== FALSE && is_array($this->input->post('b_type')))  ? implode($this->input->post('b_type'), ",")  : "0";
+		$a_layers = (is_array($this->input->post('a_layer'))) ? implode($this->input->post('a_layer'), ",") : "0";
+		$a_types  = (is_array($this->input->post('a_type')))  ? implode($this->input->post('a_type'), ",")  : "0";
+		$b_layers = (is_array($this->input->post('a_layer'))) ? implode($this->input->post('b_layer'), ",") : "0";
+		$b_types  = (is_array($this->input->post('b_type')))  ? implode($this->input->post('b_type'), ",")  : "0";
 		$this->db->query("UPDATE
 		`map_content`
 		SET
