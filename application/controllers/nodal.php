@@ -1,11 +1,37 @@
 <?php
-class Ajaxutils extends CI_Controller{
+class Nodal extends CI_Controller{
 	function __construct(){
 		parent::__construct();
 	}
 
 /* UTILS */
-	function gpe($type=0, $rand=0){
+	function dependencycalc() { //запрос из map_calc.js / locations_container.php
+		$ids    = implode($this->input->post("ids"), ", ");
+		//print $ids;
+		$out    = array();
+		$result = $this->db->query("SELECT DISTINCT 
+		properties_list.id,
+		locations.coord_y,
+		locations.coord_array,
+		locations.location_name
+		FROM
+		properties_list
+		RIGHT OUTER JOIN properties_assigned ON (properties_list.id = properties_assigned.property_id)
+		RIGHT OUTER JOIN locations ON (properties_assigned.location_id = locations.id)
+		LEFT OUTER JOIN locations_types ON (locations.`type` = locations_types.id)
+		WHERE
+		(locations_types.pr_type = 3) AND 
+		(properties_list.linked) AND 
+		(properties_list.id IN (".$ids."))");
+		if ($result->num_rows()) {
+			foreach($result->result() as $row) {
+				array_push($out, $row->id." : { ym : '".$row->coord_y."', um : ".(strlen($row->coord_array) ? $row->coord_array : "''" )." }");
+			}
+		}
+		print "data = {\n".implode($out, ",\n")."\n}";
+	}
+
+	function gpe($type = 0, $rand = 0){
 		$out    = array();
 		$result = $this->db->query("SELECT
 		`locations`.coord_y as coord,
@@ -31,7 +57,7 @@ class Ajaxutils extends CI_Controller{
 		print "bo = { ".implode($out, ",\n")."\n}";
 	}
 
-	function getimagelist( $lid = 0) {
+	function getimagelist($lid = 0) {
 		$lid = $this->input->post("picref");
 		$out = array();
 		$result=$this->db->query("SELECT 
@@ -60,37 +86,6 @@ class Ajaxutils extends CI_Controller{
 		//array_unshift($out,'<div class="item active"><h2>Фотографии объекта ('.(sizeof($out)).')</h2></div>');
 		//header('Content-type: text/html; charset=windows-1251');
 		print implode($out, "\n");
-	}
-
-	function dependencycalc($lid, $input) { //запрос из map_calc.js / locations_container.php
-		$locs = implode(explode("_",$input), ",");
-		$out = array("var set = [");
-		$result = $this->db->query("SELECT 
-		`locations_types`.pr_type,
-		`locations`.coord_y,
-		`locations`.id
-		FROM
-		`locations`
-		INNER JOIN `locations_types` ON (`locations`.`type` = `locations_types`.id)
-		WHERE
-		`locations`.`id` = ?
-		UNION
-		SELECT 
-		locations_types.pr_type,
-		locations.coord_y,
-		properties_list.id
-		FROM
-		locations
-		INNER JOIN locations_types ON (locations.`type` = locations_types.id)
-		INNER JOIN `properties_list` ON (locations.id = `properties_list`.linked)
-		WHERE
-		(`properties_list`.`id` IN (".$locs."))",array($lid));
-		if($result->num_rows()){
-			foreach($result->result() as $row){
-				array_push($out, "[".$row->id.", ".$row->pr_type.", '".$row->coord_y."'],");
-			}
-		}
-		print implode($out,"\n")."\n]";
 	}
 
 	public function get_objects_by_type(){

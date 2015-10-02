@@ -36,6 +36,7 @@
 		</h4>
 		<ul class="nav nav-tabs">
 			<?=$pagelist_alt;?>
+			<li class="shedule"><a href="#shedule" data-toggle="tab">Расписание</a></li>
 		</ul>
 	</td>
 </tr>
@@ -60,13 +61,12 @@
 		<hr>
 
 		<button type="button" class="btn btn-primary btn-block" id="saveBtn" title="Сохранить данные объекта">Сохранить</button>
+		<!-- <button type="button" class="btn btn-block" id="map_calc" title="Запрос расчёта локации">Расчёт зависимостей</button> -->
 	</td>
 	<td class="rightColumn tab-content">
-		<div class="tab-pane active" id="YMapsID"></div>
+		<div class="tab-pane active"   id="YMapsID"></div>
 		<div class="tab-pane propPage" id="propPage"></div>
-	</td>
-
-
+		<div class="tab-pane shedule"  id="shedule">ааааааа</div>
 	</td>
 </tr>
 </table>
@@ -113,6 +113,7 @@
 //-->
 </script>
 <script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/maps2.js"></script>
+<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/map_calc.js"></script>
 
 </body>
 </html>

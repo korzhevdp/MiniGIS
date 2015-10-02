@@ -278,7 +278,8 @@ class Editormodel extends CI_Model{
 		properties_list.label,
 		properties_list.selfname,
 		properties_list.fieldtype,
-		properties_list.parameters
+		properties_list.parameters,
+		properties_list.linked
 		FROM
 		`properties_bindings`
 		RIGHT OUTER JOIN properties_list ON (`properties_bindings`.property_id = properties_list.id)
@@ -295,7 +296,8 @@ class Editormodel extends CI_Model{
 				$output[$row->label][$row->id] = array(
 					'name'       => $row->selfname,
 					'fieldtype'  => $row->fieldtype,
-					'parameters' => $row->parameters
+					'parameters' => $row->parameters,
+					'linked'     => $row->linked
 				);
 			}
 		}
@@ -312,6 +314,7 @@ class Editormodel extends CI_Model{
 			$values			= array();// исключительно для случая, если элемент типа select
 			$options		= array();
 			$backcounter	= sizeof($controls);
+			$linked			= 0;
 			foreach ($controls as $object => $data) {
 				$value    = "";
 				$checked  = "";
@@ -320,6 +323,9 @@ class Editormodel extends CI_Model{
 					$value    = $assigned[$object];
 					$checked  = ' checked="checked"';
 					$selected = ' selected="selected"';
+				}
+				if($data['linked'] != 0){
+					$linked = $data['linked'];
 				}
 				switch ($data['fieldtype']){
 					case 'text':
@@ -349,9 +355,10 @@ class Editormodel extends CI_Model{
 					break;
 				}
 			}
+			$checkLinks = ($linked) ? '<button type="button" class="btn btn-small map_calc pull-right" title="Запрос расчёта локации">Расчёт зависимостей</button>' : "";
 			array_push($output, '<fieldset>
 			<legend>
-				'.$label.
+				'.$label.$checkLinks.
 			'</legend>'.implode($element, "\n").
 			'</fieldset>');
 		}
