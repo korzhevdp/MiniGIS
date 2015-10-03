@@ -675,14 +675,48 @@ class Freehand extends CI_Controller {
 			$string = $hash." : { d: '".$val['desc']."', n: '".$val['name']."', a: '".$val['attr']."', p: ".$val['type'].", c: '".$val['geometry']."', b: '".$val['address']."', l: '".$val['link']."' }";
 			array_push($output, $string);
 		}
-		$c = $data['center'];
-		print  "mp = { id: '".$data['id']."', maptype: '".$data['maptype']."', c0: ".$c[0].", c1: ".$c[1].", zoom: ".$data['zoom'].", uhash: '".$data['id']."', ehash: '".$data['eid']."', indb: ".$data['indb']." };"."\nusermap = { ".implode($output,",\n")."\n};";
+		$center = $data['center'];
+		print  "mp = { id: '".$data['id']."', maptype: '".$data['maptype']."', c0: ".$center[0].", c1: ".$center[1].", zoom: ".$data['zoom'].", uhash: '".$data['id']."', ehash: '".$data['eid']."', indb: ".$data['indb']." };"."\nusermap = { ".implode($output,",\n")."\n};";
 		//print_r($this->session->userdata("objects"));
 	}
 
-	public function transfer(){
-		$format = ($this->input->post("format")) ? $this->input->post("format") : "plainobject";
-		$hash   = $this->input->post("hash");
+	private function return_transfer_line($line, $src, $format) {
+		$coords = explode(",", $src['coord']);
+		if (sizeof($coords) < 3){
+			$coords = array(0, 0, 0, 0);
+		}
+		$adds  = array(
+			'plainjs' => array(
+				'props' => "<br>&nbsp;&nbsp;&nbsp;&nbsp;{ b: '".$src['address']."', d: '".$src['description']."', n: '".$src['name']."', l: '".$src['link']."' },<br>",
+				'opts'  => "&nbsp;&nbsp;&nbsp;&nbsp;ymaps.option.presetStorage.get('".$src['attributes']."')<br>"
+			),
+			'plainobject' => array(
+				'props' => '{ b: "'.$src['address'].'", d: "'.$src['description'].'", n: "'.$src['name'].'", l: \''.$src['link'].'\' },',
+				'opts'  => '{ attr: "'.$src['attributes'].'" }'
+			)
+		);
+		$lines  = array(
+			'1' => array(
+				'plainjs'		=> $line.': new ymaps.Placemark(<br>&nbsp;&nbsp;&nbsp;&nbsp;{type: "Point", coordinates: ['.$src['coord'].']},'.$adds[$format]['props'].$adds[$format]['opts']." )",
+				'plainobject'	=> $line.': [{ type: "Point", coord: ['.$src['coord'].'] },'.$adds[$format]['props'].$adds[$format]['opts']."]"
+			),
+			'2' => array(
+				'plainjs'		=> $line.': new ymaps.Polyline(<br>&nbsp;&nbsp;&nbsp;&nbsp;new ymaps.geometry.LineString.fromEncodedCoordinates("'.$src['coord'].'"), '.$adds[$format]['props'].$adds[$format]['opts']." )",
+				'plainobject'	=> $line.': [{ type: "LineString", coord: "'.$src['coord'].'" },'.$adds[$format]['props'].$adds[$format]['opts']."]"
+			),
+			'3' => array(
+				'plainjs'		=> $line.': new ymaps.Polygon(<br>&nbsp;&nbsp;&nbsp;&nbsp; new ymaps.geometry.LineString.fromEncodedCoordinates("'.$src['coord'].'"), '.$adds[$format]['props'].$adds[$format]['opts']." )",
+				'plainobject'	=> $line.': [{ type: "Polygon", coord: "'.$src['coord'].'" },'.$adds[$format]['props'].$adds[$format]['opts']."]"
+			),
+			'4' => array(
+				'plainjs'		=> $line.': new ymaps.Circle(<br>&nbsp;&nbsp;&nbsp;&nbsp;new ymaps.geometry.Circle(['.$coords[0].', '.$coords[1].'], '.$coords[2].'), '.$adds[$format]['props'].$adds[$format]['opts']." )",
+				'plainobject'	=> $line.': [{ type: "Circle", coord: ['.$coords[0].', '.$coords[1].', '.$coords[2].'] },'.$adds[$format]['props'].$adds[$format]['opts']."]"
+			)
+		);
+		return $lines[$src['type']][$format];
+	}
+
+	private function get_transfer_map_data($hash) {
 		$result = $this->db->query("SELECT 
 		`usermaps`.center_lon as `maplon`,
 		`usermaps`.center_lat as `maplat`,
@@ -696,12 +730,20 @@ class Freehand extends CI_Controller {
 		WHERE
 		`usermaps`.`hash_a` = ?", array($hash));
 		if($result->num_rows()){
-			$objects = $result->row_array();
+			return $result->row_array();
 		}else{
+			return false;
+		}
+	}
+
+	public function transfer(){
+		$format  = ($this->input->post("format")) ? $this->input->post("format") : "plainobject";
+		$hash    = $this->input->post("hash");
+		$objects = $this->get_transfer_map_data($hash);
+		if (!$objects) {
 			print "Сопоставленная карта не обнаружена";
 			return false;
 		}
-
 		$result = $this->db->query("SELECT 
 		userobjects.name,
 		userobjects.description,
@@ -716,88 +758,18 @@ class Freehand extends CI_Controller {
 		`userobjects`.`map_id` = ?
 		ORDER BY userobjects.timestamp", array($objects['hash_a']));
 		$output = array();
-		$mo     = array();
 		if($result->num_rows()){
-			foreach ($result->result() as $row){
-				$p = sizeof($output);
-				$addr = str_replace("'", "\"", $row->address);
-				$desc = str_replace("'", "\"", $row->description);
-				$name = str_replace("'", "\"", $row->name);
-				$attr = str_replace("'", "\"", $row->attributes);
-				$link = str_replace("'", "\"", $row->link);
-				switch($format){
-					case 'plainjs':
-						$props = '<br>&nbsp;&nbsp;&nbsp;&nbsp;{ b: "'.$addr.'", d: "'.$desc.'", n: "'.$name.'", l: \''.$link.'\' },<br>';
-						$opts  = '&nbsp;&nbsp;&nbsp;&nbsp;ymaps.option.presetStorage.get(\''.$attr.'\')<br>';
-					break;
-					case 'plainobject':
-						$props = '{ b: "'.$addr.'", d: "'.$desc.'", n: "'.$name.'", l: \''.$link.'\' },';
-						$opts  = '{ attr: "'.$attr.'" }';
-					break;
-				}
-				//$props = '<br>&nbsp;&nbsp;&nbsp;&nbsp;{ b: "'.$addr.'", d: "'.$desc.'", n: "'.$name.'", l: \''.$link.'\' },<br>';
-				//$opts  = '&nbsp;&nbsp;&nbsp;&nbsp;ymaps.option.presetStorage.get(\''.$attr.'\')<br>';
-				switch($row->type){
-					case 1:
-						switch($format){
-							case 'plainjs':
-								$string = $p.': new ymaps.Placemark(<br>&nbsp;&nbsp;&nbsp;&nbsp;{type: "Point", coordinates: ['.$row->coord.']},'.$props.$opts." )";
-							break;
-							case 'plainobject':
-								$string = $p.': [{ type: "Point", coord: ['.$row->coord.'] },'.$props.$opts."]";
-							break;
-						}
-					break;
-					case 2:
-						switch($format){
-							case 'plainjs':
-								$string = $p.': new ymaps.Polyline(<br>&nbsp;&nbsp;&nbsp;&nbsp;new ymaps.geometry.LineString.fromEncodedCoordinates("'.$row->coord.'"),'.$props.$opts." )";
-							break;
-							case 'plainobject':
-								$string = $p.': [{ type: "LineString", coord: "'.$row->coord.'" },'.$props.$opts."]";
-							break;
-						}
-					break;
-					case 3:
-						switch($format){
-							case 'plainjs':
-								$string = $p.': new ymaps.Polygon(<br>&nbsp;&nbsp;&nbsp;&nbsp;new ymaps.geometry.LineString.fromEncodedCoordinates("'.$row->coord.'"),'.$props.$opts." )";
-							break;
-							case 'plainobject':
-								$string = $p.': [{ type: "Polygon", coord: "'.$row->coord.'" },'.$props.$opts."]";
-							break;
-						}
-					break;
-					case 4:
-						$coords = explode(",", $row->coord);
-						switch($format){
-							case 'plainjs':
-								$string = $p.': new ymaps.Circle(<br>&nbsp;&nbsp;&nbsp;&nbsp;new ymaps.geometry.Circle(['.$coords[0].', '.$coords[1].'],'.$coords[2].'),'.$props.$opts." )";
-							break;
-							case 'plainobject':
-								$string = $p.': [{ type: "Circle", coord: ['.$coords[0].', '.$coords[1].', '.$coords[2].'] },'.$props.$opts."]";
-							break;
-						}
-					break;
-				}
+			foreach ($result->result_array() as $row){
+				$row = preg_replace("/'/", "\"", $row);
+				$string = $this->return_transfer_line(sizeof($output), $row, $format);
 				array_push($output, $string);
 			}
 		}else{
-			print "No Objects";
+			print "No Objects Found";
 		}
-
-		switch($format){
-			case 'plainjs':
-				$delimiter = ",\n<br>";
-			break;
-			case 'plainobject':
-				$delimiter = ",\n<br>";
-			break;
-		}
-
-		$objects['mapobjects'] = implode($output, $delimiter);
-		$script = $this->load->view('freehand/transfer', $objects, TRUE);
-		print $script;
+		//$delimiter = ($format === 'plainjs') ? ",\n<br>" : ",\n<br>";
+		$objects['mapobjects'] = implode($output, ",\n<br>");
+		print $this->load->view('freehand/transfer', $objects, TRUE);
 	}
 }
 
