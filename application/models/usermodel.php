@@ -250,46 +250,9 @@ class Usermodel extends CI_Model{
 #
 ######################### start of comments section ############################
 #
-	function comments_show($user_id=0){
-		if(!$user_id){
-			return "";
-		}
-		$comments=Array();
-		$result=$this->db->query("SELECT 
-		comments.auth_name,
-		comments.contact_info,
-		comments.`text`,
-		DATE_FORMAT(comments.`date`, '%d.%c.%Y %H:%i:%s') AS `date`,
-		INET_NTOA(comments.ip) AS ip,
-		comments.uid,
-		comments.hash as `id`,
-		comments.status,
-		CONCAT_WS(' ',locations_types.name,locations.location_name) AS location_name
-		FROM
-		comments
-		INNER JOIN locations ON (comments.location_id = locations.id)
-		LEFT OUTER JOIN locations_types ON (locations.`type` = locations_types.id)
-		WHERE
-		(locations.owner = ?) AND
-		comments.status <> 'D'
-		order by
-		location_name ASC,
-		date DESC",array($user_id));
-		
-		if($result->num_rows()){
-			foreach($result->result_array() as $row){
-				$row['control']=$this->load->view('fragments/comment_control',$row,true);
-				if($row['status']=="A"){
-					array_push($comments,$this->load->view('admin/comment_layout',$row,true));
-				}
-				if($row['status']=="N"){
-					array_push($comments,$this->load->view('admin/comment_layout',$row,true));
-				}
-			}
-		}
-		$act['comments'] = implode($comments,"<BR>\n");
-		return $this->load->view('admin/comments',$act,true);
-	}
+
+
+
 }
 
 /* End of file adminmodel.php */

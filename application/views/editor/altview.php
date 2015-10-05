@@ -21,7 +21,7 @@
 		<a href="/admin/library/<?=$liblink?>" id="lib-btn" class="btn btn-primary btn-block">В библиотеку</a>
 	</td>
 	<td class="rightColumn">
-		<h4 class="altEditorHeader"><?=$location_name;?>&nbsp;&nbsp;&nbsp;&nbsp;<small><?=$description;?></small>
+		<h4 class="altEditorHeader"><span id="header_location_name"><?=$location_name;?></span>&nbsp;&nbsp;&nbsp;&nbsp;<small id="description"><?=$description;?></small>
 			<span class="btn-group pull-right">
 				<button class="btn btn-info" id="pointsLoad" title="Загрузить опорные точки из имеющихся в библиотеке объектов">Опорные точки</button>
 				<button class="btn dropdown-toggle btn-info" data-toggle="dropdown"><span class="caret"></span></button>
@@ -58,6 +58,8 @@
 		<hr>
 		<?=$panel;?>
 		<label class="checkbox" title="Объект доступен для поиска" for="l_act"><input type="checkbox" class="l_act" style="margin-top:4px;" id="l_act">Опубликовано</label>
+		<label class="checkbox" title="Включить возможность комментирования" for="l_comm"><input type="checkbox" class="l_comm" style="margin-top:4px;" id="l_comm">Комментарии</label>
+		<hr>
 		<hr>
 
 		<button type="button" class="btn btn-primary btn-block" id="saveBtn" title="Сохранить данные объекта">Сохранить</button>

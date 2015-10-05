@@ -1,4 +1,4 @@
-<h4>Семантика объектов&nbsp;&nbsp;&nbsp;&nbsp;<small><?=$selfname;?> &mdash; <?=$og_name;?></small></h4>
+<h4>Семантика объектов&nbsp;&nbsp;&nbsp;&nbsp;<small>группа: <b><?=$og_name;?></b> - cвойство: <b><?=$selfname;?></b></small></h4>
 <div class="semanticsManager">
 	<form method=post id="ogp_edit_form" action="/admin/save_semantics">
 		<ul class="nav nav-tabs" style="clear:both;">

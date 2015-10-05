@@ -180,6 +180,103 @@ class Docmodel extends CI_Model{
 		$this->load->model('cachemodel');
 		$this->cachemodel->menu_build(1, 0, 'file');
 	}
+	// comments
+	function comments_show($user_id=0){
+		if(!$user_id){
+			return "";
+		}
+		$comments=Array();
+		$result=$this->db->query("SELECT 
+		comments.auth_name,
+		comments.contact_info,
+		comments.`text`,
+		DATE_FORMAT(comments.`date`, '%d.%c.%Y %H:%i:%s') AS `date`,
+		INET_NTOA(comments.ip) AS ip,
+		comments.uid,
+		comments.hash as `id`,
+		comments.status,
+		CONCAT_WS(' ',locations_types.name,locations.location_name) AS location_name
+		FROM
+		comments
+		INNER JOIN locations ON (comments.location_id = locations.id)
+		LEFT OUTER JOIN locations_types ON (locations.`type` = locations_types.id)
+		WHERE
+		(locations.owner = ?) AND
+		comments.status <> 'D'
+		order by
+		location_name ASC,
+		date DESC", array($user_id));
+		
+		if($result->num_rows()){
+			foreach($result->result_array() as $row){
+				$row['control']=$this->load->view('fragments/comment_control',$row,true);
+				if($row['status'] === "A"){
+					array_push($comments,$this->load->view('admin/comment_layout',$row,true));
+				}
+				if($row['status'] === "N"){
+					array_push($comments,$this->load->view('admin/comment_layout',$row,true));
+				}
+			}
+		}
+		$act['comments'] = implode($comments,"<BR>\n");
+		return $this->load->view('admin/comments',$act,true);
+	}
+
+	function addcomment($location_id){
+		$this->load->helper('url');
+		if($this->session->userdata('cpt') !== md5(strtolower($this->input->post('cpt')))){
+			redirect("/page/gis/".$location_id);
+		}
+		$name  = substr(strip_tags($this->input->post('name',     TRUE)), 0, 250);
+		$about = substr(strip_tags($this->input->post('about',    TRUE)), 0, 250);
+		$text  = substr(strip_tags($this->input->post('send_text',TRUE)), 0, 1000);
+		$ct    = 0;
+		if(!strlen($name)){
+			$name="Неизвестный";
+			$ct++;
+		}
+		if(!strlen($about)){
+			$about=$this->input->ip_address();
+			$ct++;
+		}
+		if(!strlen($text)){
+			$text="От переполняющих душу чувств восторженно молчит.";
+			$ct++;
+		}
+		if($ct == 3){
+			redirect("/page/show/".$location_id);
+		}
+		$result=$this->db->query("INSERT INTO 
+			comments(
+			comments.auth_name,
+			comments.contact_info,
+			comments.text,
+			comments.ip,
+			comments.date,
+			comments.status,
+			comments.uid,
+			comments.location_id,
+			comments.`hash`
+		)VALUES(
+			?,
+			?,
+			?,
+			INET_ATON(?),
+			NOW(),
+			'N',
+			?,
+			?,
+			?)",array(
+			$name,
+			$about,
+			$text,
+			$this->input->ip_address(),
+			substr($this->input->post('random'), 0, 32),
+			$location_id,
+			md5(date("U").rand(0,500))
+		));
+		redirect("/page/gis/".$location_id);
+	}
 
 }
 /* End of file docmodel.php */

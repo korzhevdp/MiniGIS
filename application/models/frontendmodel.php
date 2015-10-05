@@ -26,7 +26,7 @@ class Frontendmodel extends CI_Model{
 		}
 	}
 
-	public function get_cached_content($location_id){ // CI_C_Gis проверить работу - каждый раз готовит кэш заново.
+	public function get_cached_content($location_id){
 		//$this->output->enable_profiler(TRUE);
 		$output = "";
 		$cachefile = "/var/www/html/minigis/application/views/cache/locations/location_".$location_id.".src";
@@ -120,7 +120,7 @@ class Frontendmodel extends CI_Model{
 			}
 		}
 		$act = array(
-			'comments'    => (sizeof($comments)) ? implode($comments,"<BR>\n") : "<h1><small>Пока здесь тихо</small></h1>",
+			'comments'    => (sizeof($comments)) ? implode($comments,"<br>\n") : "<h1><small>Пока здесь тихо</small></h1>",
 			'location_id' => $location_id,
 			'captcha'     => $this->usefulmodel->captcha_make()
 		);

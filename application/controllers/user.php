@@ -23,6 +23,21 @@ class User extends CI_Controller{
 		$this->library($obj_group, $loc_type);
 	}
 
+	public function paydata(){
+		$this->load->model('paymodel');
+		$output = array(
+			'menu'    => $this->usefulmodel->show_admin_menu(),
+			'content' => $this->paymodel->get_locations_pay_summary()
+		);
+		$this->load->view('admin/view', $output);
+	}
+
+	public function set_payment(){
+		$this->usefulmodel->check_admin_status();
+		$this->load->model('paymodel');
+		$this->paymodel->set_payment();
+	}
+
 	function library($obj_group = 0, $loc_type = 0){
 		$output = array(
 			'menu'    => $this->usefulmodel->show_admin_menu(),
@@ -101,6 +116,8 @@ class User extends CI_Controller{
 		$this->load->view('admin/view', $output);
 	}
 
+
+
 ##########################################################################################
 	function photomanager($location_id=0, $image_id=0){
 		// 37 = длина md5 хэша + длина "_.jpg";
@@ -131,9 +148,10 @@ class User extends CI_Controller{
 	}
 
 	function commentmanager() {
+		$this->load->model('docmodel');
 		$output = array(
 			'menu'    => $this->usefulmodel->show_admin_menu(),
-			'content' => $this->usermodel->comments_show($this->session->userdata("user_id"))
+			'content' => $this->docmodel->comments_show($this->session->userdata("user_id"))
 		);
 		$this->load->view('admin/view', $output);
 	}

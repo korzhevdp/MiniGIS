@@ -95,8 +95,13 @@ class Map extends CI_Controller {
 	private function pack_results($result){
 		$out = array();
 		foreach($result->result() as $row){
+			$attr = $row->attr;
+			if($row->paid){
+				$attr = explode("#", $row->attr);
+				$attr = "paid#".$attr[1];
+			}
 			$image  = (strlen($row->img)) ? $row->img : "nophoto.gif";
-			$string = "\t".$row->id.": { img: '".$image."', description: '".$row->address."', type: '".$row->typename."', name: '".$row->location_name."', attr: '".$row->attr."', coord: '".$row->coord_y."', pr: ".$row->pr_type.", contact: '".$row->contact_info."', link: '".$row->link."' }";
+			$string = "\t".$row->id.": { img: '".$image."', description: '".$row->address."', type: '".$row->typename."', name: '".$row->location_name."', attr: '".$attr."', coord: '".$row->coord_y."', pr: ".$row->pr_type.", contact: '".$row->contact_info."', link: '".$row->link."', p: ".$row->paid." }";
 			array_push($out, $string);
 		}
 		return $out;
@@ -115,12 +120,14 @@ class Map extends CI_Controller {
 		locations_types.pr_type,
 		CONCAT('/page/gis/', locations.id) AS link,
 		objects_groups.array,
-		IF(LENGTH(`locations`.`style_override`) > 1, `locations`.`style_override`, IF(LENGTH(locations_types.attributes), locations_types.attributes, 'twirl#houseIcon')) AS attr
+		IF(LENGTH(`locations`.`style_override`) > 1, `locations`.`style_override`, IF(LENGTH(locations_types.attributes), locations_types.attributes, 'twirl#houseIcon')) AS attr,
+		IF(ISNULL(payments.paid) OR `payments`.`paid` = 0, 0, 1) AS `paid`
 		FROM
 		locations_types
-		INNER JOIN locations ON (locations_types.id = locations.`type`)
-		INNER JOIN objects_groups ON (locations_types.object_group = objects_groups.id)
-		INNER JOIN users_admins ON (locations.owner = users_admins.uid)
+		RIGHT OUTER JOIN locations ON (locations_types.id = locations.`type`)
+		LEFT OUTER JOIN objects_groups ON (locations_types.object_group = objects_groups.id)
+		LEFT OUTER JOIN users_admins ON (locations.owner = users_admins.uid)
+		LEFT OUTER JOIN payments ON (locations.id = payments.location_id)
 		WHERE
 		locations_types.object_group IN (".$layers_array.")
 		AND locations.active
@@ -150,17 +157,19 @@ class Map extends CI_Controller {
 		objects_groups.array,
 		locations_types.pr_type,
 		IF(LENGTH(`locations`.`style_override`) > 1, `locations`.`style_override`, IF(LENGTH(locations_types.attributes), locations_types.attributes, 'default#houseIcon')) AS attr
+		IF(ISNULL(payments.paid) OR `payments`.`paid` = 0, 0, 1) AS `paid`
 		FROM
 		locations_types
-		INNER JOIN locations ON (locations_types.id = locations.`type`)
-		INNER JOIN objects_groups ON (locations_types.object_group = objects_groups.id)
-		INNER JOIN users_admins ON (locations.owner = users_admins.uid)
+		RIGHT OUTER JOIN locations ON (locations_types.id = locations.`type`)
+		LEFT OUTER JOIN objects_groups ON (locations_types.object_group = objects_groups.id)
+		LEFT OUTER JOIN users_admins ON (locations.owner = users_admins.uid)
+		LEFT OUTER JOIN payments ON (locations.id = payments.location_id)
 		WHERE
 		locations.`type` IN (".$types_array.")
 		AND locations.active
 		AND users_admins.active
 		AND LENGTH(locations.coord_y) > 3
-		ORDER BY locations.id ASC", array( $this->config->item('maps_def_loc')) );
+		ORDER BY users_admins.rating DESC, locations.name ASC", array( $this->config->item('maps_def_loc')) );
 		$out = array();
 		if($result->num_rows()){
 			$out = $this->pack_results($result);
@@ -184,11 +193,13 @@ class Map extends CI_Controller {
 		locations_types.pr_type,
 		CONCAT('/page/gis/', locations.id) AS link,
 		IF(LENGTH(`locations`.`style_override`) > 1, `locations`.`style_override`, IF(LENGTH(locations_types.attributes), locations_types.attributes, 'default#houseIcon')) AS attr
+		IF(ISNULL(payments.paid) OR `payments`.`paid` = 0, 0, 1) AS `paid`
 		FROM
 		locations_types
-		INNER JOIN locations ON (locations_types.id = locations.`type`)
-		INNER JOIN objects_groups ON (locations_types.object_group = objects_groups.id)
-		INNER JOIN users_admins ON (locations.owner = users_admins.uid)
+		RIGHT OUTER JOIN locations ON (locations_types.id = locations.`type`)
+		LEFT OUTER JOIN objects_groups ON (locations_types.object_group = objects_groups.id)
+		LEFT OUTER JOIN users_admins ON (locations.owner = users_admins.uid)
+		LEFT OUTER JOIN payments ON (locations.id = payments.location_id)
 		WHERE
 		(".implode($conditions, " OR ").") 
 		AND locations.active 

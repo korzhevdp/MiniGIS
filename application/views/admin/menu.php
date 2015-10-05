@@ -11,6 +11,9 @@
 	<li <?=($_SERVER["REQUEST_URI"]=="/user/profile") ? 'class="active"': "";?>>
 		<a href="/user/profile" title="Редактор собственного профиля UM/AM"><i class="icon-user"></i>&nbsp;Профиль</a>
 	</li>
+	<li <?=($_SERVER["REQUEST_URI"]=="/user/paydata") ? 'class="active"': "";?>>
+		<a href="/user/paydata" title="Состояние платёжного баланса"><i class="icon-user"></i>&nbsp;Платежи</a>
+	</li>
 	<li class="divider"></li>
 	<li class="nav-header">Информация</li>
 	<li <?=($_SERVER["REQUEST_URI"]=="/user/help") ? 'class="active"': "";?>>

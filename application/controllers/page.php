@@ -67,60 +67,9 @@ class Page extends CI_Controller {
 		$this->load->view($this->session->userdata('lang').'/frontend/frontend_nomap2', $act);
 	}
 
-	function addcomment($location_id){
-		$this->load->helper('url');
-		if(!$this->session->userdata('cpt') == md5(strtolower($this->input->post('cpt')))){
-			redirect("/page/gis/".$location_id);
-		}
-		$name  = substr(strip_tags($this->input->post('name',     TRUE)), 0, 250);
-		$about = substr(strip_tags($this->input->post('about',    TRUE)), 0, 250);
-		$text  = substr(strip_tags($this->input->post('send_text',TRUE)), 0, 1000);
-		$ct    = 0;
-		if(!strlen($name)){
-			$name="Неизвестный";
-			$ct++;
-		}
-		if(!strlen($about)){
-			$about=$this->input->ip_address();
-			$ct++;
-		}
-		if(!strlen($text)){
-			$text="От переполняющих душу чувств восторженно молчит.";
-			$ct++;
-		}
-		if($ct == 3){
-			redirect("/page/show/".$location_id);
-		}
-		$result=$this->db->query("INSERT INTO 
-			comments(
-			comments.auth_name,
-			comments.contact_info,
-			comments.text,
-			comments.ip,
-			comments.date,
-			comments.status,
-			comments.uid,
-			comments.location_id,
-			comments.`hash`
-		)VALUES(
-			?,
-			?,
-			?,
-			INET_ATON(?),
-			NOW(),
-			'N',
-			?,
-			?,
-			?)",array(
-			$name,
-			$about,
-			$text,
-			$this->input->ip_address(),
-			substr($this->input->post('random'), 0, 32),
-			$location_id,
-			md5(date("U").rand(0,500))
-		));
-		redirect("/page/gis/".$location_id);
+	public function addcomment(){
+		$this->load->model('docmodel');
+		$this->docmodel->addcomment();
 	}
 
 	function docs($docid = 1){

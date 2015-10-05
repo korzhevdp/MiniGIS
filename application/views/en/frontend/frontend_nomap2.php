@@ -45,6 +45,7 @@
 	<!-- content -->
 		<?=$content;?>
 	<!-- content -->
+		<?=$comment;?>
 
 	<!-- Modal -->
 	<?=$this->load->view($this->session->userdata('lang')."/frontend/modals");?>
