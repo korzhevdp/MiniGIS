@@ -127,6 +127,57 @@ class Reconcile extends CI_Controller{
 		$this->load->model('cachemodel');
 		$this->cachemodel->cache_location($loc_id, 0, 'browser');
 	}
+	/*
+	генерирует "длинный" список стилей объектов из форматного файла style_src.txt
+	универсальный для leaflet и ymaps
+	и пишет его в файл JS-стиля
+	*/
+
+	private function generate_by_type($val, $sizes){
+		//print $sizes[0]."<br>";
+		$data = explode("\t", $val);
+		if(sizeof($data) === 4) {
+			$imgsize = $sizes[1];
+			$offsets = $sizes[2];
+			$catname = $sizes[3]."#".str_replace(chr(10), "", str_replace(chr(13), "", $data[3]));
+			return "userstyles['".$catname."'] = {\n\ticonUrl         : '/gisicons/".$sizes[0]."/".$data[0]."',\n\ticonImageHref   : '/gisicons/".$sizes[0]."/".$data[0]."',\n\ticonSize        : ".$imgsize.",\n\ticonImageSize   : ".$imgsize.",\n\ticonImageOffset : ".$offsets.",\n\ttitle           : '".$data[2]."',\n\ttype            : 1\n};";
+		}
+		if(sizeof($data) === 5) {
+			$imgsize = $data[1];
+			$offsets = $data[4];
+			$catname = str_replace("'", "", $data[2]);
+			$data[0] = str_replace("'", "", trim($data[0]));
+			$data[0] = str_replace("[api_domain + /images/", "", trim($data[0]));
+			return "userstyles['".$catname."'] = {\n\ticonUrl         : '/gisicons/".trim($data[0])."',\n\ticonImageHref   : '/gisicons/".trim($data[0])."',\n\ticonSize        : ".trim($imgsize).",\n\ticonImageSize   : ".trim($imgsize).",\n\ticonImageOffset : ".trim($offsets).",\n\ttitle           : '".str_replace("'", "", trim($data[3]))."',\n\ttype            : 1\n};";
+		}
+	}
+
+	public function generate_js_styles(){
+		$this->load->helper("file");
+		if(!$file = read_file("scripts/styles_src.txt")) {
+			print "no file exists";
+			return false;
+		}
+		$sizes = array(
+			32 => array( 32, '[26, 32]', "[-13, -32]", "free" ),
+			48 => array( 48, '[39, 48]', "[-19, -48]", "paid" )
+		);
+		$output = array();
+		$file = explode("\n", $file);
+		foreach ($file as $val) {
+			array_push($output, $this->generate_by_type($val, $sizes[32]));
+			array_push($output, $this->generate_by_type($val, $sizes[48]));
+		}
+		array_push($output, "function styleAddToStorage(src) {
+			var a;
+			for (a in src) {
+				if (src.hasOwnProperty(a)) {
+					ymaps.option.presetStorage.add(a, src[a]);
+				}
+			}
+		}");
+		write_file('scripts/styles2.js', "var userstyles = {};\n".implode($output, "\n"));
+	}
 
 }
 /* End of file reconcile.php */

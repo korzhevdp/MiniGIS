@@ -115,7 +115,7 @@ class Frontendmodel extends CI_Model{
 				($this->session->userdata('common_user') == $row['uid']) ? $row['status'] = "A" : "";
 				$row['control'] = "";
 				if ($row['status'] === "A") {
-					array_push($comments, $this->load->view('fragments/comment_layout', $row, true));
+					array_push($comments, $this->load->view('doc/comment_layout', $row, true));
 				}
 			}
 		}

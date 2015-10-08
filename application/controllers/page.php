@@ -11,17 +11,19 @@ class Page extends CI_Controller {
 		if(!$this->session->userdata('lang')){
 			$this->session->set_userdata('lang', 'en');
 		}
+		///$this->output->enable_profiler(TRUE);
 	}
 
 	function index(){
 		$act = array(
 			'userid'     => $this->session->userdata('common_user'),
+			'comment'    => '',
 			'keywords'   => $this->config->item('maps_keywords'),
 			'title'      => $this->config->item('site_title_start'),
-			'menu'       => $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), TRUE).$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu(),
-			'header'     => '', //$this->load->view($this->session->userdata('lang').'/frontend/page_header',	array(), TRUE),
-			'footer'     => $this->load->view($this->session->userdata('lang').'/frontend/page_footer',	array(), TRUE),
-			'links_heap' => $this->load->view('cache/links/links_heap',	array(), TRUE),
+			'menu'       => $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true).$this->usefulmodel->admin_menu(),
+			'header'     => '', //$this->load->view($this->session->userdata('lang').'/frontend/page_header', array(), true),
+			'footer'     => $this->load->view($this->session->userdata('lang').'/frontend/page_footer', array(), true),
+			'links_heap' => $this->load->view('cache/links/links_heap', array(), true),
 			'content'    => $this->load->view($this->session->userdata('lang')."/frontend/main_page_content", array(), true)
 		);
 		$this->load->view($this->session->userdata('lang').'/frontend/frontend_nomap2', $act);
@@ -72,6 +74,14 @@ class Page extends CI_Controller {
 		$this->docmodel->addcomment();
 	}
 
+	public function testcaptcha(){
+		if ( (string) $this->session->userdata("cpt") === (string) md5(strtolower($this->input->post("captcha")))) {
+			print "OK";
+		} else {
+			print "Fail";
+		}
+	}
+
 	function docs($docid = 1){
 		$act = array(
 			'footer'		=> "",
@@ -85,6 +95,75 @@ class Page extends CI_Controller {
 		);
 		$this->load->view($this->session->userdata('lang').'/frontend/frontend_nomap2', $act);
 	}
+
+	public function comment_control(){
+		$result = $this->db->query("SELECT
+		`locations`.owner
+		FROM
+		`locations`
+		INNER JOIN `comments` ON (`locations`.id = `comments`.location_id)
+		WHERE `comments`.`hash` = ?
+		LIMIT 1", array($this->input->post('hash')));
+		
+		if ($result->num_rows()) {
+			$row = $result->row(0);
+		}
+		if(
+			   ((string) $row->owner === (string) $this->session->userdata("user_id")) 
+			|| ($this->session->userdata('user_id') && $this->config->item('admin_can_edit_user_locations'))
+		) {
+			$result = $this->db->query("UPDATE
+			`comments`
+			SET
+			`status` = IF(comments.status = 'N', 'A', 'N')
+			Where
+			comments.hash = ?", array($this->input->post('hash')));
+			if($this->db->affected_rows()){
+				$result = $this->db->query("SELECT 
+				`comments`.`status`
+				FROM
+				`comments`
+				WHERE `comments`.`hash` = ?", array($this->input->post('hash')));
+				if ($result->num_rows()) {
+					$row = $result->row(0);
+					print $row->status;
+				}
+			}
+		} else {
+			print "alert('An owner was forged!')";
+		}
+	}
+
+	public function comment_delete(){
+		$result = $this->db->query("SELECT
+		`locations`.owner
+		FROM
+		`locations`
+		INNER JOIN `comments` ON (`locations`.id = `comments`.location_id)
+		WHERE `comments`.`hash` = ?
+		LIMIT 1", array($this->input->post('hash')));
+		
+		if ($result->num_rows()) {
+			$row = $result->row(0);
+		}
+		if(
+			   ((string) $row->owner === (string) $this->session->userdata("user_id")) 
+			|| ($this->session->userdata('user_id') && $this->config->item('admin_can_edit_user_locations'))
+		) {
+			$result = $this->db->query("UPDATE
+			`comments`
+			SET
+			`status` = 'D'
+			WHERE
+			comments.hash = ?", array($this->input->post('hash')));
+			if($this->db->affected_rows()){
+				print "D";
+			}
+		} else {
+			print "alert('An owner was forged!')";
+		}
+	}
+
 }
 
 /* End of file page.php */

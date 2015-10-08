@@ -2,15 +2,9 @@
 <html lang="en">
 <head>
 	<title>Административная консоль - редактор объектов</title>
-	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/jquery.js"></script>
-	<script type="text/javascript" src="<?=$this->config->item('api');?>/bootstrap/js/bootstrap.js"></script>
-	<link href="<?=$this->config->item('api');?>/bootstrap/css/bootstrap.css" rel="stylesheet">
+	<?=$this->load->view("shared/shared_js_css");?>
 	<link href="<?=$this->config->item('api');?>/css/editor.css" rel="stylesheet">
-	<!-- API 2.0 -->
-	<script type="text/javascript" src="http://api-maps.yandex.ru/2.0-stable/?coordorder=longlat&amp;load=package.full&amp;lang=ru-RU"></script>
-	<!-- 	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/map_calc.js" type="text/javascript"></script> -->
-	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/map_styles2.js"></script>
-	<!-- EOT API 2.0 -->
+	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/yandex_styles.js"></script>
 </head>
 
 <body class="altEditor">

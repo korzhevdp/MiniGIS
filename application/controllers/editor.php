@@ -324,6 +324,9 @@ class Editor extends CI_Controller{
 				return false;
 			}
 		}
+		$this->load->model('cachemodel');
+		$this->cachemodel->cache_location($location_id);
+		$this->usefulmodel->insert_audit("Объект: #".$location_id." - успешно сохранён и кэширован");
 		print "data = { ttl : ".$location_id." }";
 	}
 

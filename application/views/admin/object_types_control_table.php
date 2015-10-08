@@ -1,4 +1,6 @@
-<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/map_styles2.js"></script>
+<!-- <script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/map_styles2.js"></script> -->
+<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/styles2.js"></script>
+<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/yandex_styles.js"></script>
 <h4>Справочник типов объектов&nbsp;&nbsp;&nbsp;&nbsp;<small> и их свойства</small></h4>
 <form method=post id="gis_edit_form" action="/admin/gis_save">
 	<div class="input-prepend">
@@ -61,8 +63,9 @@
 	$("#attributes").prepend('<option value="">Выберите тип</option>');
 	for (a in userstyles) {
 		if (userstyles.hasOwnProperty(a)) {
-			if (pr_type !== undefined && userstyles[a].type === pr_type) {
-				string   = '<option value="' + a + '">' + userstyles[a].name + '</option>';
+			if (pr_type !== undefined && userstyles[a].type === pr_type && a.split("#")[0] !== 'paid') {
+				icon = (userstyles[a].iconUrl === undefined) ? "" : 'style="background-image:url(' + userstyles[a].iconUrl + ');background-repeat:no-repeat;background-size: 24px auto;text-indent:22px;"';
+				string   = '<option ' + icon + ' value="' + a + '">' + userstyles[a].title + '</option>';
 				$("#attributes").append(string);
 			}
 		}

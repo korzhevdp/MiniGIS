@@ -181,50 +181,52 @@ class Docmodel extends CI_Model{
 		$this->cachemodel->menu_build(1, 0, 'file');
 	}
 	// comments
-	function comments_show($user_id=0){
-		if(!$user_id){
-			return "";
+	function comments_show($user_id = 0) {
+		$data  = array();
+		$where = array();
+		if (!$this->session->userdata("admin") || !$this->config->item("admin_can_edit_user_locations")) {
+			array_push($where, " AND (locations.owner = ?)");
+			array_push($data, $this->session->userdata("user_id"));
 		}
-		$comments=Array();
-		$result=$this->db->query("SELECT 
+		$comments = array();
+		$result   = $this->db->query("SELECT
 		comments.auth_name,
 		comments.contact_info,
 		comments.`text`,
 		DATE_FORMAT(comments.`date`, '%d.%c.%Y %H:%i:%s') AS `date`,
 		INET_NTOA(comments.ip) AS ip,
 		comments.uid,
-		comments.hash as `id`,
+		comments.hash AS `id`,
 		comments.status,
-		CONCAT_WS(' ',locations_types.name,locations.location_name) AS location_name
+		CONCAT_WS(' ', locations_types.name, locations.location_name) AS location_name
 		FROM
 		comments
 		INNER JOIN locations ON (comments.location_id = locations.id)
 		LEFT OUTER JOIN locations_types ON (locations.`type` = locations_types.id)
 		WHERE
-		(locations.owner = ?) AND
 		comments.status <> 'D'
-		order by
-		location_name ASC,
-		date DESC", array($user_id));
-		
-		if($result->num_rows()){
-			foreach($result->result_array() as $row){
-				$row['control']=$this->load->view('fragments/comment_control',$row,true);
-				if($row['status'] === "A"){
-					array_push($comments,$this->load->view('admin/comment_layout',$row,true));
-				}
-				if($row['status'] === "N"){
-					array_push($comments,$this->load->view('admin/comment_layout',$row,true));
-				}
+		".implode($where, "\n")."
+		ORDER BY
+		location_name ASC, date DESC", $data);
+		if ($result->num_rows()) {
+			foreach($result->result_array() as $row) {
+				$row['current'] = ($row['status'] === "A") ? "icon-eye-open" : "icon-eye-close";
+				$row['title']   = ($row['status'] === "A") ? "Скрыть комментарий" : "Опубликовать комментарий";
+				$row['control'] = $this->load->view('doc/comment_control', $row, true);
+				array_push($comments, $this->load->view('doc/comment_layout', $row, true));
 			}
 		}
-		$act['comments'] = implode($comments,"<BR>\n");
-		return $this->load->view('admin/comments',$act,true);
+		$act = array(
+			'comments' => implode($comments, "\n")
+		);
+		return $this->load->view('admin/comments', $act, true);
 	}
 
-	function addcomment($location_id){
+	function addcomment(){
+		$this->output->enable_profiler(TRUE);
+		$location_id = $this->input->post('location_id');
 		$this->load->helper('url');
-		if($this->session->userdata('cpt') !== md5(strtolower($this->input->post('cpt')))){
+		if ( (string) $this->session->userdata('cpt') !== (string) md5(strtolower($this->input->post('cpt')))){
 			redirect("/page/gis/".$location_id);
 		}
 		$name  = substr(strip_tags($this->input->post('name',     TRUE)), 0, 250);

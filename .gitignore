@@ -12,6 +12,8 @@ application/logs/*
 !application/logs/.htaccess
 
 system/*
+gisicons/*
+scripts/*
 
 application/views/cache/*
 application/trashbin/*

@@ -37,6 +37,9 @@ class Paymodel extends CI_Model{
 		if($this->input->post("paid")){
 			array_push($where, "AND `payments`.`paid`");
 		}
+		if($this->input->post("comments")){
+			array_push($where, "AND `locations`.`comments`");
+		}
 		$result = $this->db->query("SELECT 
 		`locations`.`location_name`,
 		`payments`.`paid`,
@@ -44,6 +47,7 @@ class Paymodel extends CI_Model{
 		`locations`.`address`,
 		`locations`.`active`,
 		`locations`.`id`,
+		`locations`.`comments`,
 		`locations_types`.`name` as typename,
 		IF(ISNULL(`payments`.`end`), '', DATE_FORMAT(`payments`.`end`, '%d.%m.%Y')) AS end,
 		`users_admins`.nick
@@ -58,10 +62,12 @@ class Paymodel extends CI_Model{
 		order by typename, `locations`.`location_name`", $data);
 		if($result->num_rows()){
 			foreach($result->result() as $row){
-				$paid   = ($row->paid) ? 'success' : '';
-				$active = ($row->active) ? '' : 'error muted';
+				$paid     = ($row->paid)     ? 'success' : '';
+				$active   = ($row->active)   ? '' : 'error muted';
+				$comments = ($row->comments) ? ' checked="checked"' : "";
+				$datefield = ($this->session->userdata('admin')) ? '<input type="text" class="datepicker" placeholder="Оплат нет" id="d'.$row->id.'" value="'.$row->end.'">' : $row->end ;
 				$location_name = (strlen($row->location_name)) ? $row->location_name : "Нет названия";
-				$string = '<tr class="'.$paid.$active.'"><td><a href="/editor/edit/'.$row->id.'">'.$location_name.'</a></td><td>'.$row->typename.'</td><td>'.$row->address.'</td><td>'.$row->nick.'</td><td>'.$row->contact_info.'</td><td><input type="text" class="datepicker" placeholder="Оплат нет" id="d'.$row->id.'" value="'.$row->end.'"></td><td><button type="button" class="savePaidStatus" ref="'.$row->id.'">Сохранить</button></td></tr>';
+				$string = '<tr class="'.$paid.$active.'"><td><a href="/editor/edit/'.$row->id.'">'.$location_name.'</a></td><td>'.$row->typename.'</td><td>'.$row->address.'</td><td>'.$row->nick.'</td><td>'.$row->contact_info.'</td><td><input type="checkbox" id="c'.$row->id.'" name=""'.$comments.'></td><td>'.$datefield.'</td><td><button type="button" class="savePaidStatus" ref="'.$row->id.'">Сохранить</button></td></tr>';
 				array_push($output, $string);
 			}
 		}
@@ -103,6 +109,22 @@ class Paymodel extends CI_Model{
 		));
 	}
 
+	private function set_comments_status() {
+
+		$status = 0;
+		if($this->input->post('comments')){
+			$status = 1;
+		}
+		$this->db->query("UPDATE
+		`locations`
+		SET
+		`locations`.`comments` = ?
+		WHERE `locations`.`id` = ?", array(
+			$status,
+			$this->input->post('location')
+		));
+	}
+
 //UPDATE `payments` SET `payments`.paid = if(now() BETWEEN `payments`.`start` AND `payments`.`end`, 1, 0)
 
 	private function set_new_period() {
@@ -127,10 +149,16 @@ class Paymodel extends CI_Model{
 			print "Not enough data";
 			return false;
 		}
-		if ( $this->check_paid_period() ) {
-			$this->elongate_period();
-		} else {
-			$this->set_new_period();
+		//администратор может управлять пользовательскими комментариями?
+		if ($this->usefulmodel->check_owner($this->input->post('location'))) {
+			$this->set_comments_status();
+		}
+		if($this->session->userdata('admin')){
+			if ( $this->check_paid_period() ) {
+				$this->elongate_period();
+			} else {
+				$this->set_new_period();
+			}
 		}
 	}
 }

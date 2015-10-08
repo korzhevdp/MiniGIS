@@ -123,7 +123,7 @@ class User extends CI_Controller{
 		// 37 = длина md5 хэша + длина "_.jpg";
 		if( $this->input->post('frm_img_order') 
 			&& strlen($this->input->post('frm_img_order')) > 37
-			&& $this->usefulmodel->_check_owner($location_id)
+			&& $this->usefulmodel->check_owner($location_id)
 		){
 			$this->usermodel->photoeditor_order_save();
 		}

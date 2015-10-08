@@ -6,6 +6,7 @@
 	<th>Адрес</th>
 	<th class="author">Автор</th>
 	<th>Контакты</th>
+	<th title="Комментарии включены"><i class="icon-comment"></i></th>
 	<th class="paidtill">Оплачено до</th>
 	<th class="last">Save</th>
 </tr>
@@ -21,7 +22,8 @@
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
-		<td><label class="checkbox"><input type="checkbox" name="paid" title="Только оплаченные"<?=$checked;?>>Оплаченные</label></td>
+		<td><input type="checkbox" name="comments" title="Только с включенными комментариями"<?=$checked;?>></td>
+		<td><label><input type="checkbox" name="paid" title="Только оплаченные"<?=$checked;?>></label></td>
 		<td><button type="submit">Показать</button></td>
 	</form>
 </tr>
@@ -34,13 +36,15 @@ $(function() {
 	$( ".datepicker" ).datepicker();
 });
 $(".savePaidStatus").click(function(){
-	var ref  = $(this).attr('ref')
-		date = $('#d' + ref).val();
+	var ref  = $(this).attr('ref'),
+		date = $('#d' + ref).val(),
+		comm = $('#d' + ref).prop('checked');
 	$.ajax({
 		url: "/user/set_payment",
 		data: {
 			location : ref,
-			paidtill : date
+			paidtill : date,
+			comments : comm
 		},
 		type: "POST",
 		dataType: 'script',

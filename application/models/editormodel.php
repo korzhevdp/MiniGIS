@@ -14,6 +14,7 @@ class Editormodel extends CI_Model{
 				}
 				$data = $this->get_summary("location", $id);
 				$output = array(
+					'keywords'			=> '',
 					'pr_type'			=> $data['pr_type'],
 					'content'			=> $this->load->view('editor/summary', $data, true),
 					'panel'				=> $this->load->view('editor/altcontrols', $data, true),
@@ -26,6 +27,7 @@ class Editormodel extends CI_Model{
 		if ($mode == "add") {
 			$data = $this->get_summary("type", $id);
 			$output = array(
+				'keywords'			=> '',
 				'pr_type'			=> $data['pr_type'],
 				'content'			=> $this->load->view('editor/summary', $data, true),
 				'panel'				=> $this->load->view('editor/altcontrols', $data, true),

@@ -201,7 +201,7 @@ class Mcmodel extends CI_Model{
 	function mc_save(){
 		$a_layers = (is_array($this->input->post('a_layer'))) ? implode($this->input->post('a_layer'), ",") : "0";
 		$a_types  = (is_array($this->input->post('a_type')))  ? implode($this->input->post('a_type'), ",")  : "0";
-		$b_layers = (is_array($this->input->post('a_layer'))) ? implode($this->input->post('b_layer'), ",") : "0";
+		$b_layers = (is_array($this->input->post('b_layer'))) ? implode($this->input->post('b_layer'), ",") : "0";
 		$b_types  = (is_array($this->input->post('b_type')))  ? implode($this->input->post('b_type'), ",")  : "0";
 		$this->db->query("UPDATE
 		`map_content`

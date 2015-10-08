@@ -1,7 +1,8 @@
 <div class="commentForm">
 <h4>Комментарии</h4>
 <?=$comments;?>
-<hr>
+</div>
+<div class="commentForm">
 <h5 title="к полной премодерации высказываний собравшихся">Добавить правды</h5>
 <form method=post id="c_form" action="/page/addcomment/<?=$location_id;?>" class="form-inline" style="font-size:10px;">
 	<div class="input-prepend control-group">
@@ -27,12 +28,12 @@
 </div>
 <script type="text/javascript">
 <!--
-$("#form_submit").click(function () {
+$("#form_submit").unbind().click(function () {
 	$('#send_text').val($('#send_text').val().substr(0, 1000));
 	$('#about').val($('#about').val().substr(0, 250));
 	$('#name').val($('#name').val().substr(0, 200));
 	$.ajax({
-		url: "/dop/testcaptcha",
+		url: "/page/testcaptcha",
 		data : {
 			captcha : $('#cpt').val()
 		},
@@ -42,7 +43,7 @@ $("#form_submit").click(function () {
 			if(data === "OK"){
 				$('#c_form').submit();
 			}else{
-				$("#cpt").val("Неверный код!");
+				$("#cpt").attr("placeholder", "Неверный код!").val();
 			}
 		},
 		error: function (data, stat, err) {
