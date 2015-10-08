@@ -15,14 +15,8 @@ class Admin extends CI_Controller{
 		}
 	}
 
-	public function index($obj_group = 0, $loc_type = 0, $param = 1, $page = 1) {
-		$this->usefulmodel->check_admin_status();
-		$output = array(
-			'menu'    => $this->load->view('admin/menu', array(), true)
-						.$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true),
-			'content' => $this->adminmodel->get_composite_indexes($obj_group, $loc_type, $param, $page)
-		);
-		$this->load->view('admin/view', $output);
+	public function index() {
+		$this->library();
 	}
 
 	public function library($obj_group = 0, $loc_type = 0, $param = 1, $page = 1) {
