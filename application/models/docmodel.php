@@ -185,7 +185,7 @@ class Docmodel extends CI_Model{
 		$data  = array();
 		$where = array();
 		if (!$this->session->userdata("admin") || !$this->config->item("admin_can_edit_user_locations")) {
-			array_push($where, " AND (locations.owner = ?)");
+			array_push($where, "AND (locations.owner = ?)");
 			array_push($data, $this->session->userdata("user_id"));
 		}
 		$comments = array();
@@ -223,33 +223,31 @@ class Docmodel extends CI_Model{
 	}
 
 	function addcomment(){
-		$this->output->enable_profiler(TRUE);
-		$location_id = $this->input->post('location_id');
+		$location_id = $this->input->post('location_id', true);
 		$this->load->helper('url');
 		if ( (string) $this->session->userdata('cpt') !== (string) md5(strtolower($this->input->post('cpt')))){
 			redirect("/page/gis/".$location_id);
 		}
-		$name  = substr(strip_tags($this->input->post('name',     TRUE)), 0, 250);
-		$about = substr(strip_tags($this->input->post('about',    TRUE)), 0, 250);
-		$text  = substr(strip_tags($this->input->post('send_text',TRUE)), 0, 1000);
-		$ct    = 0;
+		$name    = substr(strip_tags($this->input->post('name',     true)), 0, 250);
+		$about   = substr(strip_tags($this->input->post('about',    true)), 0, 250);
+		$text    = substr(strip_tags($this->input->post('send_text',true)), 0, 1000);
+		$counter = 0;
 		if(!strlen($name)){
-			$name="Неизвестный";
-			$ct++;
+			$name = "Неизвестный";
+			$counter++;
 		}
 		if(!strlen($about)){
-			$about=$this->input->ip_address();
-			$ct++;
+			$about = $this->input->ip_address();
+			$counter++;
 		}
 		if(!strlen($text)){
-			$text="От переполняющих душу чувств восторженно молчит.";
-			$ct++;
+			$text = "От переполняющих душу чувств восторженно молчит.";
+			$counter++;
 		}
-		if($ct == 3){
+		if($counter === 3){
 			redirect("/page/show/".$location_id);
 		}
-		$result=$this->db->query("INSERT INTO 
-			comments(
+		$result = $this->db->query("INSERT INTO comments (
 			comments.auth_name,
 			comments.contact_info,
 			comments.text,
@@ -259,16 +257,7 @@ class Docmodel extends CI_Model{
 			comments.uid,
 			comments.location_id,
 			comments.`hash`
-		)VALUES(
-			?,
-			?,
-			?,
-			INET_ATON(?),
-			NOW(),
-			'N',
-			?,
-			?,
-			?)",array(
+		) VALUES ( ?, ?, ?, INET_ATON(?), NOW(), 'N', ?, ?, ?)", array(
 			$name,
 			$about,
 			$text,
