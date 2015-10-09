@@ -1,11 +1,11 @@
 <?php
-class Paymodel extends CI_Model{
-	function __construct(){
+class Paymodel extends CI_Model {
+	function __construct() {
 		parent::__construct();
 		//$this->output->enable_profiler(TRUE);
 	}
 	
-	private function get_types(){
+	private function get_types() {
 		$output = array();
 		$result = $this->db->query("SELECT 
 		`locations_types`.name,
@@ -22,24 +22,41 @@ class Paymodel extends CI_Model{
 		return implode($output, "\n");
 	}
 
+	private function make_pay_location_string($row) {
+		final $paid     = ($row->paid)     ? 'success' : '';
+		final $active   = ($row->active)   ? '' : 'error muted';
+		final $comments = ($row->comments) ? ' checked="checked"' : "";
+		final $datefield = ($this->session->userdata('admin')) ? '<input type="text" class="datepicker" placeholder="Оплат нет" id="d'.$row->id.'" value="'.$row->end.'">' : $row->end ;
+		final $location_name = (strlen($row->location_name)) ? $row->location_name : "Нет названия";
+		final $string = '<tr class="'.$paid.$active.'"><td><a href="/editor/edit/'.$row->id.'">'.$location_name.'</a></td><td>'.$row->typename.'</td><td>'.$row->address.'</td><td>'.$row->nick.'</td><td>'.$row->contact_info.'</td><td><input type="checkbox" id="c'.$row->id.'"'.$comments.'></td><td>'.$datefield.'</td><td><button type="button" class="savePaidStatus" ref="'.$row->id.'">Сохранить</button></td></tr>';
+		return $string;
+	}
+
+	private function fill_search_arrays() {
+		$output = array(
+			'where' => array(),
+			'data'  => array()
+		);
+		if ($this->input->post("byType")) {
+			array_push($output['where'], "AND `locations`.`type` = ?");
+			array_push($output['data'],  $this->input->post("byType"));
+		}
+		if ( ! $this->session->userdata('admin') && !($this->config->item('admin_can_edit_user_locations'))) {
+			array_push($output['where'], "AND `locations`.`owner` = ?");
+			array_push($output['data'],  $this->session->userdata('user_id'));
+		}
+		if ($this->input->post("paid")) {
+			array_push($output['where'], "AND `payments`.`paid`");
+		}
+		if ($this->input->post("comments")) {
+			array_push($output['where'], "AND `locations`.`comments`");
+		}
+		return $output;
+	}
+
 	public function get_locations_pay_summary() {
 		$output = array();
-		$where  = array();
-		$data   = array();
-		if($this->input->post("byType")){
-			array_push($where, "AND `locations`.`type` = ?");
-			array_push($data, $this->input->post("byType"));
-		}
-		if( ! $this->session->userdata('admin') && !($this->config->item('admin_can_edit_user_locations'))) {
-			array_push($where, "AND `locations`.`owner` = ?");
-			array_push($data,  $this->session->userdata('user_id'));
-		}
-		if($this->input->post("paid")){
-			array_push($where, "AND `payments`.`paid`");
-		}
-		if($this->input->post("comments")){
-			array_push($where, "AND `locations`.`comments`");
-		}
+		$data   = $this->fill_search_arrays();
 		$result = $this->db->query("SELECT 
 		`locations`.`location_name`,
 		`payments`.`paid`,
@@ -58,17 +75,11 @@ class Paymodel extends CI_Model{
 		LEFT OUTER JOIN `users_admins` ON (locations.owner = `users_admins`.uid)
 		WHERE
 		(`payments`.`paid` = 1 OR ISNULL(`payments`.`paid`))
-		".implode($where, "\n")."
-		order by typename, `locations`.`location_name`", $data);
+		".implode($data['where'], "\n")."
+		ORDER BY typename, `locations`.`location_name`", $data['data']);
 		if($result->num_rows()){
 			foreach($result->result() as $row){
-				$paid     = ($row->paid)     ? 'success' : '';
-				$active   = ($row->active)   ? '' : 'error muted';
-				$comments = ($row->comments) ? ' checked="checked"' : "";
-				$datefield = ($this->session->userdata('admin')) ? '<input type="text" class="datepicker" placeholder="Оплат нет" id="d'.$row->id.'" value="'.$row->end.'">' : $row->end ;
-				$location_name = (strlen($row->location_name)) ? $row->location_name : "Нет названия";
-				$string = '<tr class="'.$paid.$active.'"><td><a href="/editor/edit/'.$row->id.'">'.$location_name.'</a></td><td>'.$row->typename.'</td><td>'.$row->address.'</td><td>'.$row->nick.'</td><td>'.$row->contact_info.'</td><td><input type="checkbox" id="c'.$row->id.'" name=""'.$comments.'></td><td>'.$datefield.'</td><td><button type="button" class="savePaidStatus" ref="'.$row->id.'">Сохранить</button></td></tr>';
-				array_push($output, $string);
+				array_push($this->make_pay_location_string($row), $string);
 			}
 		}
 		$paydata = array(
@@ -110,22 +121,17 @@ class Paymodel extends CI_Model{
 	}
 
 	private function set_comments_status() {
-
-		$status = 0;
-		if($this->input->post('comments')){
-			$status = 1;
-		}
 		$this->db->query("UPDATE
 		`locations`
 		SET
 		`locations`.`comments` = ?
 		WHERE `locations`.`id` = ?", array(
-			$status,
+			($this->input->post('comments')) ? 1 : 0,
 			$this->input->post('location')
 		));
 	}
 
-//UPDATE `payments` SET `payments`.paid = if(now() BETWEEN `payments`.`start` AND `payments`.`end`, 1, 0)
+	//UPDATE `payments` SET `payments`.paid = if(now() BETWEEN `payments`.`start` AND `payments`.`end`, 1, 0)
 
 	private function set_new_period() {
 		$this->db->query("INSERT INTO

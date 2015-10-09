@@ -15,6 +15,7 @@ class Editormodel extends CI_Model{
 				$data = $this->get_summary("location", $id);
 				$output = array(
 					'keywords'			=> '',
+					'shedule'			=> $this->get_shedule($id),
 					'pr_type'			=> $data['pr_type'],
 					'content'			=> $this->load->view('editor/summary', $data, true),
 					'panel'				=> $this->load->view('editor/altcontrols', $data, true),
@@ -28,6 +29,7 @@ class Editormodel extends CI_Model{
 			$data = $this->get_summary("type", $id);
 			$output = array(
 				'keywords'			=> '',
+				'shedule'			=> $this->get_shedule($id),
 				'pr_type'			=> $data['pr_type'],
 				'content'			=> $this->load->view('editor/summary', $data, true),
 				'panel'				=> $this->load->view('editor/altcontrols', $data, true),
@@ -38,6 +40,10 @@ class Editormodel extends CI_Model{
 		return $output;
 	}
 	
+	private function get_shedule($id){
+		return $this->load->view("editor/shedule", array(), true);
+	}
+
 	private function get_summary($type, $id) {
 		$output = array(
 			'id' => 0,

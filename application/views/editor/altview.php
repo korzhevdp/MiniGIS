@@ -62,7 +62,7 @@
 	<td class="rightColumn tab-content">
 		<div class="tab-pane active"   id="YMapsID"></div>
 		<div class="tab-pane propPage" id="propPage"></div>
-		<div class="tab-pane shedule"  id="shedule">ааааааа</div>
+		<div class="tab-pane shedule"  id="shedule"><?=$shedule;?></div>
 	</td>
 </tr>
 </table>
