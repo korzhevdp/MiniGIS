@@ -441,7 +441,8 @@ class Freehand extends CI_Controller {
 		return $output;
 	}
 
-	function loadscript($hash = "YzkxNzVjYTI0MGZk"){
+	private function get_script_map_data($hash){
+		//$this->output->enable_profiler(TRUE);
 		$result = $this->db->query("SELECT 
 		`usermaps`.center_lon as `maplon`,
 		`usermaps`.center_lat as `maplat`,
@@ -453,17 +454,46 @@ class Freehand extends CI_Controller {
 		FROM
 		`usermaps`
 		WHERE
-		`usermaps`.`hash_a` = ?",array($hash));
+		`usermaps`.`hash_a` = ?", array($hash));
 		if($result->num_rows()){
 			$objects = $result->row_array();
 			$objects['maptype'] = (!in_array($objects['maptype'], array("yandex#satellite", "yandex#map"))) ? "yandex#satellite" : $objects['maptype'];
-
+			return $objects;
 		}else{
+			return false;
+		}
+	}
+	
+	private function write_incremented_map_counter() {
+		$file = "./mpct.txt";
+		$sum = implode(file($file), '');
+		$open = fopen($file, "w");
+		fputs($open, ++$sum);
+		fclose($open);
+	}
+
+	private function return_script_string_by_type($row, $type) {
+		$coords = explode(",", $row['coord']);
+		if (sizeof($coords) !== 3) {
+			$coords = array(0, 0, 0);
+		}
+		$types = array(
+			1 => 'object = new ymaps.Placemark({type: "Point", coordinates: ['.$row['coord'].']}, ',
+			2 => 'object = new ymaps.Polyline(new ymaps.geometry.LineString.fromEncodedCoordinates("'.$row['coord'].'"), ',
+			3 => 'object = new ymaps.Polygon(new ymaps.geometry.Polygon.fromEncodedCoordinates("'.$row['coord'].'"), ',
+			4 => 'object = new ymaps.Circle(new ymaps.geometry.Circle(['.$coords[0].', '.$coords[1].'],'.$coords[2].'), '
+		);
+		return $types[$type];
+	}
+
+	function loadscript($hash = "YzkxNzVjYTI0MGZk") {
+		$objects = $this->get_script_map_data($hash);
+		if (!$objects) {
 			print 'Карта не была обработана и не может быть выдана в виде HTML<br><br>
 			Вернитесь в <a href="/freehand">РЕДАКТОР КАРТ</a>, выберите в меню <strong>Карта</strong> -> <strong>Обработать</strong> и попробуйте ещё раз';
 			return false;
 		}
-
+		$output = array();
 		$result = $this->db->query("SELECT 
 		userobjects.name,
 		userobjects.description,
@@ -476,47 +506,18 @@ class Freehand extends CI_Controller {
 		userobjects
 		WHERE
 		`userobjects`.`map_id` = ?", array($objects['hash_a']));
-		$output = array();
-		$mo     = array();
+	
 		if($result->num_rows()){
-			foreach ($result->result() as $row){
-				$addr = str_replace("'", '"', $row->address);
-				$desc = str_replace("'", '"', $row->description);
-				$name = str_replace("'", '"', $row->name);
-				$attr = str_replace("'", '"', $row->attributes);
-				$link = str_replace("'", '"', $row->link);
-				$constant = "{address: '".$addr."', description: '".$desc."', name: '".$name."', link: '".$link."' }, ymaps.option.presetStorage.get('".$attr."'));ms.add(object);";
-				switch($row->type){
-					case 1:
-						$string='object = new ymaps.Placemark({type: "Point", coordinates: ['.$row->coord.']}, '.$constant;
-					break;
-					case 2:
-						$string='object = new ymaps.Polyline(new ymaps.geometry.LineString.fromEncodedCoordinates("'.$row->coord.'"), '.$constant;
-					break;
-					case 3:
-						$string='object = new ymaps.Polygon(new ymaps.geometry.Polygon.fromEncodedCoordinates("'.$row->coord.'"), '.$constant;
-					break;
-					case 4:
-						$coords = explode(",", $row->coord);
-						$string='object = new ymaps.Circle(new ymaps.geometry.Circle(['.$coords[0].', '.$coords[1].'],'.$coords[2].'), '.$constant;
-					break;
-				}
-				array_push($output, $string);
+			foreach ($result->result_array() as $row){
+				$row = preg_replace("/'/", '"', $row);
+				$constant = "{address: '".$row['address']."', description: '".$row['description']."', name: '".$row['name']."', link: '".$row['link']."' }, ymaps.option.presetStorage.get('".$row['attributes']."'));ms.add(object);";
+				array_push($output, $this->return_script_string_by_type($row, $row['type']).$constant);
 			}
 		}
-
-		$file = "./mpct.txt";
-		$sum = implode(file($file), '');
-		$open = fopen($file, "w");
-		fputs($open, ++$sum);
-		fclose($open);
-
+		$this->write_incremented_map_counter();
 		$objects['mapobjects'] = implode($output, "\n");
-
-
-		$script = $this->load->view('freehand/script', $objects, TRUE);
 		$this->load->helper('download');
-		force_download("Minigis.NET - ".$objects['hash_a'].".html", $script); 
+		force_download("Minigis.NET - ".$objects['hash_a'].".html", $this->load->view('freehand/script', $objects, TRUE)); 
 	}
 
 	function createframe($hash = "YzkxNzVjYTI0MGZk"){
@@ -591,14 +592,8 @@ class Freehand extends CI_Controller {
 	}
 	
 	function loadframe($hash = "NWY2MjVlMzAwOWMz"){
-		$file = "./mpct.txt";
-		$sum = implode(file($file),'');
-		$open = fopen($file,"w");
-		fputs($open,++$sum);
-		fclose($open);
+		$this->write_incremented_map_counter();
 		$this->load->helper("file");
-		//$this->load->helper("download");
-		//force_download('mapframe_'.$hash.'.html', read_file('freehandcache/'.$hash));
 		print read_file('freehandcache/'.$hash);
 	}
 
