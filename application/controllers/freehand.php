@@ -347,10 +347,7 @@ class Freehand extends CI_Controller {
 			}
 		}
 		$this->session->set_userdata('map', $map);
-
-		$this->load->library('user_agent');
 		$this->db->query("DELETE FROM userobjects WHERE userobjects.map_id = ?", array($map['id']));
-		
 		$insert_query_list = array();
 		$data = $this->session->userdata('objects');
 		foreach ($data as $key=>$val) {
@@ -365,8 +362,8 @@ class Freehand extends CI_Controller {
 				'".$this->db->escape_str($val['link'])."',
 				'".$this->db->escape_str($map['id'])."',
 				'".$superhash."',
-				INET_ATON('".((isset($_SERVER["HTTP_X_REAL_IP"]) ? $_SERVER["HTTP_X_REAL_IP"] : 0))."'),
-				'".$this->agent->agent_string()."'
+				INET_ATON('".$this->input->ip_address()."'),
+				'".$this->input->user_agent()."'
 			)";
 			array_push($insert_query_list, $string);
 		}
@@ -385,18 +382,10 @@ class Freehand extends CI_Controller {
 				userobjects.uagent
 			) VALUES ". implode($insert_query_list, ",\n"));
 		}
-		//print implode($insert_query_list, ",\n");
 		$this->createframe($map['id']);
-		//print $hasha;
 		$output = $this->getumap($map['id']);
 		print "usermap = { ".implode($output,",\n")." }; mp = { ehash: '".$map['eid']."', uhash: '".$map['id']."' }";
-		//print $this->db->last_query();
-		//print "Список объектов ".implode(explode("-",$list),","); 
-		//print_r($map);
-		//print_r($data);
-		//print implode($output, "\n");
-		//print_r($this->session->userdata("objects"));
-		//print_r($superhash);
+
 	}
 
 	function getumap($hash = "NmIzZjczYWRlOTg5"){
@@ -441,8 +430,7 @@ class Freehand extends CI_Controller {
 		return $output;
 	}
 
-	private function get_script_map_data($hash){
-		//$this->output->enable_profiler(TRUE);
+	private function get_map_data($hash){
 		$result = $this->db->query("SELECT 
 		`usermaps`.center_lon as `maplon`,
 		`usermaps`.center_lat as `maplat`,
@@ -454,7 +442,8 @@ class Freehand extends CI_Controller {
 		FROM
 		`usermaps`
 		WHERE
-		`usermaps`.`hash_a` = ?", array($hash));
+		`usermaps`.`hash_a` = ?
+		OR `usermaps`.`hash_e` = ?", array($hash, $hash));
 		if($result->num_rows()){
 			$objects = $result->row_array();
 			$objects['maptype'] = (!in_array($objects['maptype'], array("yandex#satellite", "yandex#map"))) ? "yandex#satellite" : $objects['maptype'];
@@ -462,6 +451,22 @@ class Freehand extends CI_Controller {
 		}else{
 			return false;
 		}
+	}
+
+	private function get_map_objects_list($hash){
+		return $this->db->query("SELECT 
+		userobjects.name,
+		userobjects.description,
+		userobjects.coord,
+		userobjects.attributes,
+		userobjects.address,
+		userobjects.`type`,
+		userobjects.`link`
+		FROM
+		userobjects
+		WHERE
+		`userobjects`.`map_id` = ?
+		ORDER BY userobjects.timestamp", array($objects['hash_a']));
 	}
 	
 	private function write_incremented_map_counter() {
@@ -487,26 +492,14 @@ class Freehand extends CI_Controller {
 	}
 
 	function loadscript($hash = "YzkxNzVjYTI0MGZk") {
-		$objects = $this->get_script_map_data($hash);
+		$objects = $this->get_map_data($hash);
 		if (!$objects) {
 			print 'Карта не была обработана и не может быть выдана в виде HTML<br><br>
 			Вернитесь в <a href="/freehand">РЕДАКТОР КАРТ</a>, выберите в меню <strong>Карта</strong> -> <strong>Обработать</strong> и попробуйте ещё раз';
 			return false;
 		}
 		$output = array();
-		$result = $this->db->query("SELECT 
-		userobjects.name,
-		userobjects.description,
-		userobjects.coord,
-		userobjects.attributes,
-		userobjects.address,
-		userobjects.`type`,
-		userobjects.`link`
-		FROM
-		userobjects
-		WHERE
-		`userobjects`.`map_id` = ?", array($objects['hash_a']));
-	
+		$result = $this->get_map_objects_list($objects['hash_a']);
 		if($result->num_rows()){
 			foreach ($result->result_array() as $row){
 				$row = preg_replace("/'/", '"', $row);
@@ -517,78 +510,25 @@ class Freehand extends CI_Controller {
 		$this->write_incremented_map_counter();
 		$objects['mapobjects'] = implode($output, "\n");
 		$this->load->helper('download');
-		force_download("Minigis.NET - ".$objects['hash_a'].".html", $this->load->view('freehand/script', $objects, TRUE)); 
+		force_download("Minigis.NET - ".$objects['hash_a'].".html", $this->load->view('freehand/script', $objects, true)); 
 	}
 
-	function createframe($hash = "YzkxNzVjYTI0MGZk"){
-		$objects = array();
-		$result  = $this->db->query("SELECT 
-		`usermaps`.center_lon as `maplon`,
-		`usermaps`.center_lat as `maplat`,
-		`usermaps`.hash_a,
-		`usermaps`.hash_e,
-		`usermaps`.zoom as `mapzoom`,
-		`usermaps`.maptype,
-		`usermaps`.name
-		FROM
-		`usermaps`
-		WHERE
-		`usermaps`.`hash_a` = ? OR 
-		`usermaps`.`hash_e` = ? ",array($hash, $hash));
-		if($result->num_rows()){
-			$objects = $result->row_array();
-		}else{
-			print 'alert("Карта не была обработана. Нажмите кнопку обработать в выпадающем меню Карта")';
-			return false;
-		}
-
-		$result = $this->db->query("SELECT 
-		userobjects.name,
-		userobjects.description,
-		userobjects.coord,
-		userobjects.attributes,
-		userobjects.address,
-		userobjects.`type`,
-		userobjects.`link`
-		FROM
-		userobjects
-		WHERE
-		`userobjects`.`map_id` = ?", array($objects['hash_a']));
-		$output = array();
-		$mo = array();
+	function createframe($hash = "YzkxNzVjYTI0MGZk") {
+		$objects = $this->get_map_data($hash);
+		$output  = array();
+		$result  = $this->get_map_objects_list($objects['hash_a']);
 		if($result->num_rows()){
 			foreach ($result->result() as $row){
-				$addr = str_replace("'", "\"", $row->address);
-				$desc = str_replace("'", "\"", $row->description);
-				$name = str_replace("'", "\"", $row->name);
-				$attr = str_replace("'", "\"", $row->attributes);
-				$link = str_replace("'", "\"", $row->link);
+				$row  = preg_replace("/'/", '"', $row);
 				$prop = '{address: \''.$addr.'\', description: \''.$desc.'\', name: \''.$name.'\', hasHint: 1, hintContent: \''.$name.' '.$desc.'\', link: \''.$link.'\' }';
 				$opts = 'ymaps.option.presetStorage.get(\''.$attr.'\')';
-				switch($row->type){
-					case 1:
-						$string = 'object = new ymaps.Placemark( {type: \'Point\', coordinates: ['.$row->coord.']}, '.$prop.', '.$opts.' )';
-					break;
-					case 2:
-						$string = 'object = new ymaps.Polyline(new ymaps.geometry.LineString.fromEncodedCoordinates(\''.$row->coord.'\'), '.$prop.', '.$opts.')';
-					break;
-					case 3:
-						$string = 'object = new ymaps.Polygon(new ymaps.geometry.Polygon.fromEncodedCoordinates("'.$row->coord.'"), '.$prop.', '.$opts.')';
-					break;
-					case 4:
-						$coords = explode(",", $row->coord);
-						$string = 'object = new ymaps.Circle(new ymaps.geometry.Circle(['.$coords[0].', '.$coords[1].'], '.$coords[2].'), '.$prop.', '.$opts.')';
-					break;
-				}
-				array_push($output, $string.";\nms.add(object);");
+				$constant = $prop.", ".$opts.' );\nms.add(object);';
+				array_push($output, $this->return_script_string_by_type($row, $row['type']).$constant);
 			}
 		}
 		$objects['mapobjects'] = implode($output, "\n");
-		$script = $this->load->view('freehand/frame', $objects, TRUE);
 		$this->load->helper("file");
-		write_file('freehandcache/'.$objects['hash_a'], $script, 'w');
-		//$this->loadframe($objects['hash_a']);
-		//print "OK";
+		write_file('freehandcache/'.$objects['hash_a'], $this->load->view('freehand/frame', $objects, true), 'w');
 	}
 	
 	function loadframe($hash = "NWY2MjVlMzAwOWMz"){
@@ -691,80 +631,41 @@ class Freehand extends CI_Controller {
 			)
 		);
 		$lines  = array(
-			'1' => array(
-				'plainjs'		=> $line.': new ymaps.Placemark(<br>&nbsp;&nbsp;&nbsp;&nbsp;{type: "Point", coordinates: ['.$src['coord'].']},'.$adds[$format]['props'].$adds[$format]['opts']." )",
-				'plainobject'	=> $line.': [{ type: "Point", coord: ['.$src['coord'].'] },'.$adds[$format]['props'].$adds[$format]['opts']."]"
+			'plainobject' => array(
+				1 => $line.': [{ type: "Point", coord: ['.$src['coord'].'] },'.$adds[$format]['props'].$adds[$format]['opts']."]",
+				2 => $line.': [{ type: "LineString", coord: "'.$src['coord'].'" },'.$adds[$format]['props'].$adds[$format]['opts']."]",
+				3 => $line.': [{ type: "Polygon", coord: "'.$src['coord'].'" },'.$adds[$format]['props'].$adds[$format]['opts']."]",
+				4 => $line.': [{ type: "Circle", coord: ['.$coords[0].', '.$coords[1].', '.$coords[2].'] },'.$adds[$format]['props'].$adds[$format]['opts']."]"
 			),
-			'2' => array(
-				'plainjs'		=> $line.': new ymaps.Polyline(<br>&nbsp;&nbsp;&nbsp;&nbsp;new ymaps.geometry.LineString.fromEncodedCoordinates("'.$src['coord'].'"), '.$adds[$format]['props'].$adds[$format]['opts']." )",
-				'plainobject'	=> $line.': [{ type: "LineString", coord: "'.$src['coord'].'" },'.$adds[$format]['props'].$adds[$format]['opts']."]"
-			),
-			'3' => array(
-				'plainjs'		=> $line.': new ymaps.Polygon(<br>&nbsp;&nbsp;&nbsp;&nbsp; new ymaps.geometry.LineString.fromEncodedCoordinates("'.$src['coord'].'"), '.$adds[$format]['props'].$adds[$format]['opts']." )",
-				'plainobject'	=> $line.': [{ type: "Polygon", coord: "'.$src['coord'].'" },'.$adds[$format]['props'].$adds[$format]['opts']."]"
-			),
-			'4' => array(
-				'plainjs'		=> $line.': new ymaps.Circle(<br>&nbsp;&nbsp;&nbsp;&nbsp;new ymaps.geometry.Circle(['.$coords[0].', '.$coords[1].'], '.$coords[2].'), '.$adds[$format]['props'].$adds[$format]['opts']." )",
-				'plainobject'	=> $line.': [{ type: "Circle", coord: ['.$coords[0].', '.$coords[1].', '.$coords[2].'] },'.$adds[$format]['props'].$adds[$format]['opts']."]"
+			'plainjs' => array(
+				1 => $line.': new ymaps.Placemark(<br>&nbsp;&nbsp;&nbsp;&nbsp;{type: "Point", coordinates: ['.$src['coord'].']},'.$adds[$format]['props']. $adds[$format]['opts']." )",
+				2 => $line.': new ymaps.Polyline(<br>&nbsp;&nbsp;&nbsp;&nbsp;new ymaps.geometry.LineString.fromEncodedCoordinates("'.$src['coord'].'"), '.$adds[$format]['props'].$adds[$format]['opts']." )",
+				3 => $line.': new ymaps.Polygon(<br>&nbsp;&nbsp;&nbsp;&nbsp; new ymaps.geometry.LineString.fromEncodedCoordinates("'.$src['coord'].'"), '.$adds[$format]['props'].$adds[$format]['opts']." )",
+				4 => $line.': new ymaps.Circle(<br>&nbsp;&nbsp;&nbsp;&nbsp;new ymaps.geometry.Circle(['.$coords[0].', '.$coords[1].'], '.$coords[2].'), '.$adds[$format]['props'].$adds[$format]['opts']." )"
 			)
 		);
-		return $lines[$src['type']][$format];
-	}
-
-	private function get_transfer_map_data($hash) {
-		$result = $this->db->query("SELECT 
-		`usermaps`.center_lon as `maplon`,
-		`usermaps`.center_lat as `maplat`,
-		`usermaps`.hash_a,
-		`usermaps`.hash_e,
-		`usermaps`.zoom as `mapzoom`,
-		`usermaps`.maptype,
-		`usermaps`.name
-		FROM
-		`usermaps`
-		WHERE
-		`usermaps`.`hash_a` = ?", array($hash));
-		if($result->num_rows()){
-			return $result->row_array();
-		}else{
-			return false;
-		}
+		return $lines[$format][$src['type']];
 	}
 
 	public function transfer(){
 		$format  = ($this->input->post("format")) ? $this->input->post("format") : "plainobject";
-		$hash    = $this->input->post("hash");
-		$objects = $this->get_transfer_map_data($hash);
+		$objects = $this->get_map_data($this->input->post("hash"));
 		if (!$objects) {
 			print "Сопоставленная карта не обнаружена";
 			return false;
 		}
-		$result = $this->db->query("SELECT 
-		userobjects.name,
-		userobjects.description,
-		userobjects.coord,
-		userobjects.attributes,
-		userobjects.address,
-		userobjects.`type`,
-		userobjects.`link`
-		FROM
-		userobjects
-		WHERE
-		`userobjects`.`map_id` = ?
-		ORDER BY userobjects.timestamp", array($objects['hash_a']));
 		$output = array();
+		$result = $this->get_map_objects_list($objects['hash_a']);
 		if($result->num_rows()){
 			foreach ($result->result_array() as $row){
-				$row = preg_replace("/'/", "\"", $row);
-				$string = $this->return_transfer_line(sizeof($output), $row, $format);
-				array_push($output, $string);
+				$row = preg_replace("/'/", '"', $row);
+				array_push($output, $this->return_transfer_line(sizeof($output), $row, $format));
 			}
 		}else{
 			print "No Objects Found";
 		}
-		//$delimiter = ($format === 'plainjs') ? ",\n<br>" : ",\n<br>";
 		$objects['mapobjects'] = implode($output, ",\n<br>");
-		print $this->load->view('freehand/transfer', $objects, TRUE);
+		print $this->load->view('freehand/transfer', $objects, true);
 	}
 }
 
