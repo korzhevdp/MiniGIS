@@ -46,6 +46,48 @@ class Freehand extends CI_Controller {
 		$this->load->view('freehand/freehand_map', $act);
 	}
 
+	private function set_existing_user($data){
+		$found = 0;
+		$this->session->set_userdata('uid1', md5(strrev($data->identity)));
+		$this->session->set_userdata('suid', md5($name));
+		$this->session->set_userdata('name', $name);
+		foreach($passwd as $user){
+			$data = explode(",", $user);
+			if($data[0] == $this->session->userdata('uid1')){
+				$found++;
+			}
+			if($this->session->userdata('uidx') == $data[3]){
+				$this->session->set_userdata('supx', $data[1]);
+			}
+		}
+		return $found;
+	}
+
+	private function set_new_session($data){
+		$found = 0;
+		$file  = "/var/www/html/luft/shadow";
+		$passwd = file($file);
+		$name  = "";
+		$name .= (isset($data->name->first_name)) ? $data->name->first_name : "";
+		$name .= (isset($data->name->last_name))  ? " ".$data->name->last_name : "";
+		$fname = (isset($data->name->full_name))  ? (isset($data->name->full_name)) : "Временный поверенный";
+		$this->session->set_userdata('photo', ((isset($data->photo)) ? '<img src="'.$data->photo.'" style="width:16px;height:16px;border:none" alt="">' : ""));
+		$name  = (!strlen($name)) ? $fname : $name;
+		$this->session->set_userdata('supx', 0);
+		$this->session->set_userdata('uid1', md5(strrev($data->identity)));
+		$this->session->set_userdata('uidx', substr(strrev($this->session->userdata('uid1')), 0, 10));
+		$this->session->set_userdata('suid', md5($name));
+		$this->session->set_userdata('name', $name);
+		foreach($passwd as $user){
+			$data = explode(",", $user);
+			if($data[0] == $this->session->userdata('uid1')){
+				$this->session->set_userdata('supx', $data[1]);
+				$found++;
+			}
+		}
+		return $found;
+	}
+
 	public function logindata(){
 		if(!$this->input->post('token')){
 			$this->load->helper('url');
@@ -54,45 +96,12 @@ class Freehand extends CI_Controller {
 		$link = "http://loginza.ru/api/authinfo?token=".$this->input->post('token')."&id=70969&sig=".md5($this->input->post('token').'b8c8b99c759d5ad3edc5882559ba359c');
 		$data = json_decode(file_get_contents($link));
 		if(isset($data->identity)){
-			$file  = "/var/www/html/luft/shadow";
-			$passwd = file($file);
-			$name  = "";
 			$found = 0;
-			$name .= (isset($data->name->first_name)) ? $data->name->first_name : "";
-			$name .= (isset($data->name->last_name))  ? " ".$data->name->last_name : "";
-			$fname = (isset($data->name->full_name))  ? (isset($data->name->full_name)) : "Временный поверенный";
-			$this->session->set_userdata('photo', ((isset($data->photo)) ? '<img src="'.$data->photo.'" style="width:16px;height:16px;border:none" alt="">' : ""));
-			$name  = (!strlen($name)) ? $fname : $name;
-			$this->session->set_userdata('supx', 0);
-			# Session is not set. Checking rights
 			if(!$this->session->userdata('uid1')){
-				$this->session->set_userdata('uid1', md5(strrev($data->identity)));
-				$this->session->set_userdata('uidx', substr(strrev($this->session->userdata('uid1')), 0, 10));
-				$this->session->set_userdata('suid', md5($name));
-				$this->session->set_userdata('name', $name);
-
-				foreach($passwd as $user){
-					$data = explode(",", $user);
-					if($data[0] == $this->session->userdata('uid1')){
-						$this->session->set_userdata('supx', $data[1]);
-						$found++;
-					}
-				}
+				$found += $this->set_new_session($data);
 			}else{
-				$this->session->set_userdata('uid1', md5(strrev($data->identity)));
-				$this->session->set_userdata('suid', md5($name));
-				$this->session->set_userdata('name', $name);
-				foreach($passwd as $user){
-					$data = explode(",", $user);
-					if($data[0] == $this->session->userdata('uid1')){
-						$found++;
-					}
-					if($this->session->userdata('uidx') == $data[3]){
-						$this->session->set_userdata('supx', $data[1]);
-					}
-				}
+				$found += $this->set_existing_user($data);
 			}
-			// активирован - пишем в файл
 			if(!$found){
 				$string = array($this->session->userdata('uid1'), $this->session->userdata('supx'), $this->session->userdata('name'), $this->session->userdata('uidx'));
 				$open   = fopen($file, "a");
