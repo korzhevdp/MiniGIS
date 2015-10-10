@@ -2,7 +2,7 @@
 class Paymodel extends CI_Model {
 	function __construct() {
 		parent::__construct();
-		//$this->output->enable_profiler(TRUE);
+		$this->output->enable_profiler(TRUE);
 	}
 	
 	private function get_types() {
@@ -22,14 +22,44 @@ class Paymodel extends CI_Model {
 		return implode($output, "\n");
 	}
 
-	private function make_pay_location_string($row) {
-		final $paid     = ($row->paid)     ? 'success' : '';
-		final $active   = ($row->active)   ? '' : 'error muted';
-		final $comments = ($row->comments) ? ' checked="checked"' : "";
-		final $datefield = ($this->session->userdata('admin')) ? '<input type="text" class="datepicker" placeholder="Оплат нет" id="d'.$row->id.'" value="'.$row->end.'">' : $row->end ;
-		final $location_name = (strlen($row->location_name)) ? $row->location_name : "Нет названия";
-		final $string = '<tr class="'.$paid.$active.'"><td><a href="/editor/edit/'.$row->id.'">'.$location_name.'</a></td><td>'.$row->typename.'</td><td>'.$row->address.'</td><td>'.$row->nick.'</td><td>'.$row->contact_info.'</td><td><input type="checkbox" id="c'.$row->id.'"'.$comments.'></td><td>'.$datefield.'</td><td><button type="button" class="savePaidStatus" ref="'.$row->id.'">Сохранить</button></td></tr>';
+	private function make_pay_location_string($row, $paiddata) {
+		$paid          = (isset($paiddata['status']))  ? $paiddata['status']  : "" ;
+		$active        = ($row->active)                ? ''                   : 'error muted';
+		$comments      = ($row->comments)              ? ' checked="checked"' : "";
+		$end           = (isset($paiddata['end']))     ? $paiddata['end']     : "Оплат нет";
+		$location_name = (strlen($row->location_name)) ? $row->location_name  : "Нет названия";
+		$datefield     = ($this->session->userdata('admin'))
+			? '<input type="text" class="datepicker" placeholder="Оплат нет" id="d'.$row->id.'" value="'.$end.'">' 
+			: $end;
+
+		$string = '<tr class="'.$paid.$active.'"><td><a href="/editor/edit/'.$row->id.'">'.$location_name.'</a></td><td>'.$row->typename.'</td><td>'.$row->address.'</td><td>'.$row->nick.'</td><td>'.$row->contact_info.'</td><td><input type="checkbox" id="c'.$row->id.'"'.$comments.'></td><td>'.$datefield.'</td><td><button type="button" class="savePaidStatus" ref="'.$row->id.'">Сохранить</button></td></tr>';
 		return $string;
+	}
+
+	/*
+		(SELECT payments.paid from `payments` WHERE `payments`.`end` > NOW() AND `payments`.`location_id` = `locations`.`id` LIMIT 1) as paid,
+		(SELECT DATEDIFF(`payments`.`end`, now()) from `payments` WHERE `payments`.`location_id` = `locations`.`id` LIMIT 1) as paid2,
+		
+		а ещё как вариант попробуй через IN выбрать оплаченность и разницу дней до окончания срока.
+		хрен там, оптимальнее всего и без мозголомства выбирать вообще всё. Не так то уж часто и будут. На крайняк выделим отдельный поток обработки. Модуль инородный.
+	*/
+
+	private function get_paid_data(){
+		$output = array();
+		$result = $this->db->query("SELECT
+		`payments`.`location_id`,
+		DATE_FORMAT(`payments`.`end`, '%d.%m.%Y') as `end`,
+		IF(DATEDIFF(`payments`.`end`, NOW()) < 10, 'warning', 'success') as status
+		FROM
+		`payments`
+		WHERE
+		`payments`.`end` > NOW()");
+		if($result->num_rows()){
+			foreach($result->result_array() as $row){
+				$output[$row['location_id']] = $row;
+			}
+		}
+		return $output;
 	}
 
 	private function fill_search_arrays() {
@@ -38,60 +68,62 @@ class Paymodel extends CI_Model {
 			'data'  => array()
 		);
 		if ($this->input->post("byType")) {
-			array_push($output['where'], "AND `locations`.`type` = ?");
+			array_push($output['where'], "`locations`.`type` = ?");
 			array_push($output['data'],  $this->input->post("byType"));
 		}
 		if ( ! $this->session->userdata('admin') && !($this->config->item('admin_can_edit_user_locations'))) {
-			array_push($output['where'], "AND `locations`.`owner` = ?");
+			array_push($output['where'], "`locations`.`owner` = ?");
 			array_push($output['data'],  $this->session->userdata('user_id'));
 		}
-		if ($this->input->post("paid")) {
-			array_push($output['where'], "AND `payments`.`paid`");
-		}
 		if ($this->input->post("comments")) {
-			array_push($output['where'], "AND `locations`.`comments`");
+			array_push($output['where'], "`locations`.`comments`");
 		}
 		return $output;
 	}
 
 	public function get_locations_pay_summary() {
-		$output = array();
-		$data   = $this->fill_search_arrays();
-		$result = $this->db->query("SELECT 
+		$output   = array();
+		$data     = $this->fill_search_arrays();
+		//print_r($data);
+		$paiddata = $this->get_paid_data();
+		$result   = $this->db->query("SELECT
 		`locations`.`location_name`,
-		`payments`.`paid`,
 		`locations`.`contact_info`,
 		`locations`.`address`,
 		`locations`.`active`,
 		`locations`.`id`,
 		`locations`.`comments`,
 		`locations_types`.`name` as typename,
-		IF(ISNULL(`payments`.`end`), '', DATE_FORMAT(`payments`.`end`, '%d.%m.%Y')) AS end,
 		`users_admins`.nick
 		FROM
 		`locations`
-		LEFT OUTER JOIN `payments` ON (`locations`.`id` = `payments`.`location_id`)
 		LEFT OUTER JOIN `locations_types` ON (`locations`.`type` = `locations_types`.`id`)
 		LEFT OUTER JOIN `users_admins` ON (locations.owner = `users_admins`.uid)
-		WHERE
-		(`payments`.`paid` = 1 OR ISNULL(`payments`.`paid`))
-		".implode($data['where'], "\n")."
+		".((sizeof($data['where'])) ? "WHERE\n".implode($data['where'], "\nAND ") : "")."
 		ORDER BY typename, `locations`.`location_name`", $data['data']);
-		if($result->num_rows()){
-			foreach($result->result() as $row){
-				array_push($this->make_pay_location_string($row), $string);
+		if ($result->num_rows()) {
+			foreach($result->result() as $row) {
+				$paydata = (isset($paiddata[$row->id])) ? $paiddata[$row->id] : array();
+				if ($this->input->post("paid")) {
+					if (isset($paiddata[$row->id])) {
+						array_push($output, $this->make_pay_location_string($row, $paydata));
+					}
+				} else {
+					array_push($output, $this->make_pay_location_string($row, $paydata));
+				}
 			}
 		}
 		$paydata = array(
 			'table'   => implode($output, "\n"),
 			'types'   => $this->get_types(),
-			'checked' => ($this->input->post("paid")) ? ' checked="checked"' : ""
+			'paidchecked' => ($this->input->post("paid"))     ? ' checked="checked"' : "",
+			'commchecked' => ($this->input->post("comments")) ? ' checked="checked"' : ""
 		);
 		return $this->load->view('admin/payments', $paydata, true);
 	}
 
 	private function check_paid_period() {
-		$result = $this->db->query("SELECT 
+		$result = $this->db->query("SELECT
 		*
 		FROM
 		`payments`

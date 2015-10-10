@@ -353,10 +353,16 @@ class Editor extends CI_Controller{
 	}
 
 	public function get_shedule(){
-		$this->editormodel->get_shedule($this->input->post("location"));
+		$this->editormodel->get_schedule($this->input->post("location"));
 	}
+
 	public function get_context(){
 		$this->editormodel->get_context();
+	}
+
+	public function save_shedule(){
+		//$this->output->enable_profiler(TRUE);
+		$this->editormodel->save_shedule();
 	}
 }
 /* End of file editor.php */

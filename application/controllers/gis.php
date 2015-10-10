@@ -24,7 +24,7 @@ class Gis extends CI_Controller {
 			'content'  => ($content) ? $content : "Объект не кэширован",
 			'header'   => $this->load->view('frontend/page_header',	array(), TRUE),
 			'menu'     => $this->load->view('cache/menus/menu',		array(), TRUE).$this->usefulmodel->_rent_menu().$this->usefulmodel->_admin_menu(),
-			'footer'   => $this->load->view('frontend/page_footer',	array(), TRUE)
+			'footer'     => $this->load->view('shared/page_footer', array(), true),
 		);
 		$this->load->view('frontend/frontend_nomap2', $act);
 	}

@@ -37,23 +37,3 @@
 	<!-- Place this tag where you want the +1 button to render. -->
 	<div class="g-plusone" data-size="tall" data-annotation="none" style="clear:both"></div>
 </div>
-
-
-<script type="text/javascript">
-<!--
-	$('#moraleup').click(function () {
-		$.ajax({
-			url: '/ajaxutils/moraleup',
-			type: "POST",
-			dataType: "html",
-			success: function(data){ // and if you are lucky and sane response is received
-				$("#moralecounter").empty().html(data);
-			},
-			error: function(a,b){
-				alert("Nothing found");
-			}
-		});
-	});
-//-->
-</script>
-

@@ -15,7 +15,7 @@ class Editormodel extends CI_Model{
 				$data = $this->get_summary("location", $id);
 				$output = array(
 					'keywords'			=> '',
-					'shedule'			=> $this->get_shedule($id),
+					'shedule'			=> $this->load->view("editor/shedule", array(), true),
 					'pr_type'			=> $data['pr_type'],
 					'content'			=> $this->load->view('editor/summary', $data, true),
 					'panel'				=> $this->load->view('editor/altcontrols', $data, true),
@@ -29,7 +29,7 @@ class Editormodel extends CI_Model{
 			$data = $this->get_summary("type", $id);
 			$output = array(
 				'keywords'			=> '',
-				'shedule'			=> $this->get_shedule($id),
+				'shedule'			=> $this->load->view("editor/shedule", array(), true),
 				'pr_type'			=> $data['pr_type'],
 				'content'			=> $this->load->view('editor/summary', $data, true),
 				'panel'				=> $this->load->view('editor/altcontrols', $data, true),
@@ -40,8 +40,31 @@ class Editormodel extends CI_Model{
 		return $output;
 	}
 	
-	private function get_shedule($id){
-		return $this->load->view("editor/shedule", array(), true);
+	public function get_schedule() {
+		$input = array();
+		$schedule = array();
+		$result = $this->db->query("SELECT
+		DATE_FORMAT(`timers_week`.`start`, '%H:%i') as start,
+		DATE_FORMAT(`timers_week`.`end`, '%H:%i') as end,
+		`timers_week`.`location_id`,
+		`timers_week`.`day`
+		FROM
+		`timers_week`
+		WHERE `timers_week`.`location_id` = ?
+		ORDER BY `timers_week`.`day`, `timers_week`.`start`", array($this->input->post('lid')));
+		if ($result->num_rows()) {
+			foreach($result->result() as $row) {
+				if (!isset($input[$row->day])) {
+					$input[$row->day] = array();
+				}
+				array_push($input[$row->day], "'".$row->start."'");
+				array_push($input[$row->day], "'".$row->end."'");
+			}
+			foreach ($input as $key=>$val) {
+				array_push($schedule, "\t".$key." : [ ".implode($val, ", ")." ]");
+			}
+		}
+		print "shedule = {\n".implode($schedule, ",\n")."\n}";
 	}
 
 	private function get_summary($type, $id) {
@@ -412,106 +435,27 @@ class Editormodel extends CI_Model{
 		}
 		return implode($output, "\n");
 	}
-	/*
-		private function get_context(){
 
-		возвращает js-объект с информацией о всех объектах, связанных в рамках карты-отображения с текущим
-		по итогам обработки этих данных составляется описание связей в пределах карты отображения.
-
-		
-		SELECT 
-		  `locations`.`type`
-		FROM
-		  `locations`
-		WHERE
-		`locations`.`id` = 511
-
-		SELECT
-		  `locations`.location_name,
-		  `locations`.`type`,
-		  `locations`.style_override,
-		  `locations`.coord_y,
-		  `locations`.coord_obj,
-		  `locations`.contact_info,
-		  `locations`.address
-		FROM
-		  `locations`
-		WHERE `locations`.`type` IN(
-				SELECT CONCAT_WS(',', `map_content`.`a_types`,`map_content`.`b_types`)
-				FROM `map_content`
-				WHERE `map_content`.`a_types` AND `map_content`.`b_types`
-		  )
-
-		
-		//список типов объектов на выходе
-		$output_types = array();
-		$location = ($this->input->post("id")) ? $this->input->post("id") : 511;
-		$result = $this->db->query("SELECT 
-		`locations_types`.object_group as og,
-		`locations`.`type`
-		FROM
-		`locations_types`
-		INNER JOIN `locations` ON (`locations_types`.id = `locations`.`type`)
-		WHERE `locations`.id = ?", array($location));
-		if($result->num_rows()){
-			$row2 = $result->row();
-		}
-
-		$result = $this->db->query("SELECT 
-		CONCAT_WS(',', map_content.a_types, map_content.b_types) AS typelist,
-		map_content.a_layers
-		FROM
-		map_content");
-		if($result->num_rows()){
-			foreach($result->result() as $row){
-				$types = explode(",", $row->typelist);
-				if(in_array($row2->type, $types)){
-					$output_types = array_merge($output_types, $types);
-				}
-				if($row->a_layers == $row2->og ){
-					$result = $this->db->query("SELECT 
-					CONCAT_WS(',', `locations_types`.`id`) 
-					FROM `locations_types` 
-					WHERE 
-					`locations_types`.`object_group`");
-					if($result->num_rows()){
-						foreach($result->result() as $row3){
-							$types = explode(",", $row->typelist);
-							$output_types = array_merge($output_types, $types);
-						}
-					}
-				}
-			}
-		}
+	public function save_shedule(){
 		$output = array();
-		$result = $this->db->query("SELECT 
-		locations.id,
-		locations.location_name,
-		locations.`type`,
-		locations.coord_y,
-		locations.coord_obj,
-		locations.contact_info,
-		locations.address,
-		`locations_types`.name,
-		`locations_types`.pr_type
-		FROM
-		locations
-		INNER JOIN `locations_types` ON (locations.`type` = `locations_types`.id)
-		WHERE
-		locations.`type` IN (".implode($output_types, ",").")");
-		if($result->num_rows()){
-			foreach($result->result() as $obj){
-				$coord = "[".$obj->coord_y."]";
-				if($obj->pr_type == 2 || $obj->pr_type == 3){
-					$coord = "'".$obj->coord_y."'";
-				}
-				$string = $obj->id.": { n: '".$obj->location_name."', typename: '".$obj->name."', type: ".$obj->type.", c: ".$coord.", co: [".$obj->coord_obj."], info: '".$obj->contact_info."', addr: '".$obj->address."'}";
-				array_push($output, $string);
+		foreach ($this->input->post('shedule', true) as $key => $val) {
+			if ($this->input->post("h24")) {
+				$val = array( '00:00:00','12:00:00','12:00:00','23:59:59' );
 			}
+			$string = "('".$this->db->escape_str($val[0])."', '".$this->db->escape_str($val[1])."', '".$this->db->escape_str($this->input->post("lid", true))."', ".$this->db->escape_str($key)."),\n('".$this->db->escape_str($val[2])."', '".$this->db->escape_str($val[3])."', '".$this->db->escape_str($this->input->post("lid", true))."', ".$this->db->escape_str($key).")";
+			array_push($output, $string);
 		}
-		print "{\n\t".implode($output, ",\n\t")."\n}";
+		//print implode($output, ",\n");
+		$this->db->query("DELETE FROM timers_week WHERE timers_week.location_id = ?", array($this->input->post("lid", true)));
+		$result = $this->db->query("INSERT INTO
+		`timers_week`(
+			`timers_week`.`start`,
+			`timers_week`.`end`,
+			`timers_week`.`location_id`,
+			`timers_week`.`day`
+		)
+		VALUES ".implode($output, ",\n"));
 	}
-	*/
 }
 /* End of file editormodel.php */
 /* Location: ./system/application/models/editormodel.php */

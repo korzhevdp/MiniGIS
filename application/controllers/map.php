@@ -45,7 +45,7 @@ class Map extends CI_Controller {
 			$map_header = $groups[$row->id][$lang]." - ".$categories[$row->type][$lang];
 		}
 		$act = array(
-			'footer'		=> $this->load->view($this->session->userdata('lang').'/frontend/page_footer', array(), true),
+			'footer'		=> $this->load->view('shared/page_footer', array(), true),
 			'otype'			=> $type,
 			'mapset'		=> 0,
 			'menu'			=> $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true).$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu(),

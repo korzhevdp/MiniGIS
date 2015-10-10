@@ -23,7 +23,7 @@ class Mapmodel extends CI_Model{
 			'keywords'   => $this->config->item('maps_keywords'),
 			'map_header' => (strlen($maps[$mapset][$lang])) ? $maps[$mapset][$lang] : $row->name,
 			'content'    => "",
-			'footer'     => $this->load->view($lang.'/frontend/page_footer', array(), true),
+			'footer'     => $this->load->view('shared/page_footer', array(), true),
 			'mapset'     => $mapset,
 			'menu'       => $this->load->view('cache/menus/menu_'.$lang, array(), true).$this->usefulmodel->admin_menu(),
 			'selector'   => $this->load->view('cache/selectors/selector_'.$mapset."_".$lang, array(), true),

@@ -22,8 +22,8 @@
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
-		<td><input type="checkbox" name="comments" title="Только с включенными комментариями"<?=$checked;?>></td>
-		<td><label><input type="checkbox" name="paid" title="Только оплаченные"<?=$checked;?>></label></td>
+		<td><input type="checkbox" name="comments" title="Только с включенными комментариями"<?=$commchecked;?>></td>
+		<td><label><input type="checkbox" name="paid" title="Только оплаченные"<?=$paidchecked;?>></label></td>
 		<td><button type="submit">Показать</button></td>
 	</form>
 </tr>

@@ -35,23 +35,3 @@
 	<!-- Place this tag where you want the +1 button to render. -->
 	<div class="g-plusone" data-size="tall" data-annotation="none" style="clear:both"></div>
 </div>
-
-
-<script type="text/javascript">
-<!--
-	$('#moraleup').click(function () {
-		$.ajax({
-			url: '/ajaxutils/moraleup',
-			type: "POST",
-			dataType: "html",
-			success: function(data){ // и если повезло и ответ получен вменяемый
-				$("#moralecounter").empty().html(data);
-			},
-			error: function(a,b){
-				alert("Nichts gefunden");
-			}
-		});
-	});
-//-->
-</script>
-

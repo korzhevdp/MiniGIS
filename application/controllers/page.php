@@ -22,7 +22,7 @@ class Page extends CI_Controller {
 			'title'      => $this->config->item('site_title_start'),
 			'menu'       => $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true).$this->usefulmodel->admin_menu(),
 			'header'     => '', //$this->load->view($this->session->userdata('lang').'/frontend/page_header', array(), true),
-			'footer'     => $this->load->view($this->session->userdata('lang').'/frontend/page_footer', array(), true),
+			'footer'     => $this->load->view('shared/page_footer', array(), true),
 			'links_heap' => $this->load->view('cache/links/links_heap', array(), true),
 			'content'    => $this->load->view($this->session->userdata('lang')."/frontend/main_page_content", array(), true)
 		);
@@ -48,7 +48,7 @@ class Page extends CI_Controller {
 			'title'      => $this->config->item('site_title_start')." Интерактивная карта",
 			'menu'       => $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), TRUE).$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu(),
 			'selector'   => $this->load->view('cache/menus/selector_'.$mapset."_".$this->session->userdata('lang'),	array(), TRUE),
-			'footer'     => $this->load->view($this->session->userdata('lang').'/frontend/page_footer',			array(), TRUE),
+			'footer'     => $this->load->view('shared/page_footer', array(), true),
 			'links_heap' => $this->load->view('cache/links/links_heap',			array(), TRUE)
 		);
 		$this->load->view($this->session->userdata('lang').'/frontend/frontend_map2', $act);
@@ -64,7 +64,7 @@ class Page extends CI_Controller {
 			'content'  => $this->frontendmodel->get_cached_content($location_id),
 			'header'   => '',//$this->load->view($this->session->userdata('lang').'/frontend/page_header',	array(), TRUE),
 			'menu'     => $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), TRUE).$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu(),
-			'footer'   => $this->load->view($this->session->userdata('lang').'/frontend/page_footer',	array(), TRUE)
+			'footer'   => $this->load->view('shared/page_footer', array(), true),
 		);
 		$this->load->view($this->session->userdata('lang').'/frontend/frontend_nomap2', $act);
 	}
@@ -84,7 +84,7 @@ class Page extends CI_Controller {
 
 	function docs($docid = 1){
 		$act = array(
-			'footer'		=> "",
+			'footer'		=> $this->load->view('shared/page_footer', array(), true),
 			'mapset'		=> 0,
 			'menu'			=> $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true),
 			'keywords'		=> $this->config->item('map_keywords'),
