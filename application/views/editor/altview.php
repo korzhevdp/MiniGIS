@@ -4,6 +4,10 @@
 	<title>Административная консоль - редактор объектов</title>
 	<?=$this->load->view("shared/shared_js_css");?>
 	<link href="<?=$this->config->item('api');?>/css/editor.css" rel="stylesheet">
+	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/maps2.js"></script>
+	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/map_calc.js"></script>
+	<script type="text/javascript" src="<?=$this->config->item('api');?>/jqueryui/js/jqueryui.js"></script>
+	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/dragndrop.js"></script>
 	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/yandex_styles.js"></script>
 </head>
 
@@ -48,16 +52,26 @@
 		<div class="input-prepend">
 			<span class="add-on" style="margin:0px; width:70px;">Телефон</span><input type="text" form="tForm" id="l_cont" name="object[contact]" value="<?=$contact_info;?>">
 		</div>
-
-		<hr>
+		<table class="table">
+		<tr>
+			<td>
+				<ul class="imageGallery">
+					<?=$images;?>
+				</ul>
+			</td>
+		</tr>
+		<tr>
+			<td><button type="button" class="btn btn-block btn-primary" id="loadImage" title="Загрузка изображений">Загрузить изображение</button></td>
+		</tr>
+		</table>
 		<?=$panel;?>
+
 		<label class="checkbox" title="Объект доступен для поиска" for="l_act"><input type="checkbox" class="l_act" style="margin-top:4px;" id="l_act">Опубликовано</label>
 		<label class="checkbox" title="Включить возможность комментирования" for="l_comm"><input type="checkbox" class="l_comm" style="margin-top:4px;" id="l_comm">Комментарии</label>
 		<hr>
-		<hr>
-
 		<button type="button" class="btn btn-primary btn-block" id="saveBtn" title="Сохранить данные объекта">Сохранить</button>
-		<!-- <button type="button" class="btn btn-block" id="map_calc" title="Запрос расчёта локации">Расчёт зависимостей</button> -->
+
+		
 	</td>
 	<td class="rightColumn tab-content">
 		<div class="tab-pane active"   id="YMapsID"></div>
@@ -91,6 +105,26 @@
 	</div>
 </div>
 
+<div id="imageLoader" class="modal hide fade" style="width:700px;">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		<h3>Выберите изображения</h3>
+	</div>
+	<div class="modal-body" style="height:400px;overflow:auto;">
+		<form action="/upload.php" enctype="multipart/form-data">
+			<div id="dropZone" name="userfile">Для загрузки, перетащите файл сюда.</div>
+			<input type="hidden" name="lid" value="<?=$lid?>" id="uploadLID">
+		</form>
+		<ul class="imageGallery">
+			<?=$images;?>
+		</ul>
+	</div>
+	<div class="modal-footer">
+		<a href="#" data-dismiss="modal" class="btn">Закрыть</a>
+		<!-- <a href="#" id="loadSelectedObjects" class="btn btn-primary">Загрузить</a> -->
+	</div>
+</div>
+
 <div id="nodeExport" class="modal hide fade" style="width:700px;">
 	<div class="modal-header">
 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -102,14 +136,17 @@
 		<a href="#" id="loadSelectedObjects" class="btn btn-primary">Загрузить точки</a>
 	</div>
 </div>
-
 <script type="text/javascript">
 <!--
-	$('.modal').modal({ show: 0 })
+	$(function() {
+	$( ".imageGallery" ).sortable({
+		stop: function( event, ui ) {
+			//alert(1)
+		}
+	});
+	$( ".imageGallery" ).disableSelection();
+});
 //-->
 </script>
-<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/maps2.js"></script>
-<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/map_calc.js"></script>
-
 </body>
 </html>

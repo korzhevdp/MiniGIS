@@ -4,6 +4,28 @@ class Editormodel extends CI_Model{
 		parent::__construct();
 	}
 	
+	private function get_images($location){
+		$output = array();
+		$result = $this->db->query("SELECT
+		`images`.`filename`,
+		`images`.`id`,
+		`images`.`small`
+		FROM
+		`images`
+		WHERE
+		`images`.`location_id` = ?
+		AND `images`.`active`
+		ORDER BY `images`.`order`, `images`.`id`", array($location));
+		if($result->num_rows()){
+			foreach($result->result() as $row){
+				$sizes = explode(",", $row->small);
+				$string = '<li class="locationImg" ref='.$row->id.'><img src="/uploads/small/'.$row->filename.'" height="'.$sizes[0].'" width="'.$sizes[0].'"></li>';
+				array_push($output, $string);
+			}
+		}
+		return implode($output, "\n");
+	}
+
 	public function starteditor($mode = "edit", $id = 0) {
 		//$this->output->enable_profiler(TRUE);
 		if ($mode == "edit") {
@@ -14,6 +36,8 @@ class Editormodel extends CI_Model{
 				}
 				$data = $this->get_summary("location", $id);
 				$output = array(
+					'images'			=> $this->get_images($id),
+					'lid'				=> $id,
 					'keywords'			=> '',
 					'shedule'			=> $this->load->view("editor/shedule", array(), true),
 					'pr_type'			=> $data['pr_type'],
@@ -28,6 +52,7 @@ class Editormodel extends CI_Model{
 		if ($mode == "add") {
 			$data = $this->get_summary("type", $id);
 			$output = array(
+				'lid'				=> 0,
 				'keywords'			=> '',
 				'shedule'			=> $this->load->view("editor/shedule", array(), true),
 				'pr_type'			=> $data['pr_type'],

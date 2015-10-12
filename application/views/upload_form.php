@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>Загрузка изображений</title>
+<title>Р—Р°РіСЂСѓР·РєР° РёР·РѕР±СЂР°Р¶РµРЅРёР№</title>
 </head>
 <body>
 
@@ -12,7 +12,7 @@
 
 <br /><br />
 
-<input type="submit" value="Загрузить" />
+<input type="submit" value="Р—Р°РіСЂСѓР·РёС‚СЊ" />
 
 </form>
 
