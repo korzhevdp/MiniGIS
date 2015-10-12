@@ -3,6 +3,7 @@ class Login extends CI_Controller{
 	function __construct(){
 		parent::__construct();
 		$this->load->model('loginmodel');
+		$this->load->model('usefulmodel');
 		$this->load->library('email');
 		if(!$this->session->userdata('common_user')){
 			$this->session->set_userdata('common_user', md5(rand(0, 9999).'zy'.$this->input->ip_address()));
@@ -111,7 +112,7 @@ class Login extends CI_Controller{
 			'menu'      => $this->load->view('cache/menus/menu', array(), true)
 		);
 		if($mode == "form"){
-			$this->loginmodel->captcha_make();
+			$this->usefulmodel->captcha_make();
 			$this->load->view('login/login_view2', $act);
 		}
 		if($mode == "run"){

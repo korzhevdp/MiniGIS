@@ -79,28 +79,9 @@ class Adminmodel extends CI_Model{
 		return $output;
 	}
 
-	private function get_library_locations_list_by_type($loc_type) {
+	public function get_library_items($result, $loc_type){
 		$output = array();
-		$view_user_locations = "AND `locations`.owner = ?";
-		if($this->config->item('admin_can_edit_user_locations') === true){
-			if($this->session->userdata('admin')){
-				$view_user_locations = "";
-			}
-		}
-		$result = $this->db->query("SELECT 
-		IF(LENGTH(`locations`.location_name) > 49, CONCAT(LEFT(`locations`.location_name, 46), '...'),`locations`.location_name) AS name,
-		`locations`.location_name AS title,
-		`locations`.id
-		FROM
-		`locations`
-		WHERE
-		`locations`.`type`    = ?"
-		.$view_user_locations."
-		ORDER BY title", array(
-			$loc_type,
-			$this->session->userdata("user_id"))
-		);
-		if($result->num_rows()){
+		if($result->num_rows()) {
 			foreach ($result->result_array() as $row){
 				$row['img']  = '<img src="'.$this->config->item("api").'/images/location_pin.png" alt="">';
 				$row['link'] = '/editor/edit/'.$row['id'];
@@ -114,6 +95,31 @@ class Adminmodel extends CI_Model{
 			'title' => "Добавить новый объект этого класса"
 		);
 		array_push($output, $this->load->view("admin/libraryitem", $row, true));
+		return $output;
+	}
+
+	private function get_library_locations_list_by_type($loc_type) {
+		
+		$view_user_locations = "AND `locations`.owner = ?";
+		if($this->config->item('admin_can_edit_user_locations') === true) {
+			if($this->session->userdata('admin')){
+				$view_user_locations = "";
+			}
+		}
+		$result = $this->db->query("SELECT 
+		IF(LENGTH(`locations`.location_name) > 49, CONCAT(LEFT(`locations`.location_name, 46), '...'),`locations`.location_name) AS name,
+		`locations`.location_name AS title,
+		`locations`.id
+		FROM
+		`locations`
+		WHERE
+		`locations`.`type` = ?"
+		.$view_user_locations."
+		ORDER BY title", array(
+			$loc_type,
+			$this->session->userdata("user_id"))
+		);
+		$output = $this->get_library_items($result, $loc_type);
 		return $output;
 	}
 

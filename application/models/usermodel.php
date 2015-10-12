@@ -29,7 +29,6 @@ class Usermodel extends CI_Model{
 			`locations_types`.`pl_num` AND
 			`locations_types`.`object_group` = ?
 			ORDER BY title", array($obj_group));
-
 			if($result->num_rows()){
 				foreach ($result->result_array() as $row){
 					$row['img']  = '<img src="'.$this->config->item("api").'/images/folder.png" alt="">';
@@ -61,20 +60,7 @@ class Usermodel extends CI_Model{
 			WHERE `locations`.`owner` = ? AND
 			`locations`.`type` = ?
 			ORDER BY title", array($this->session->userdata('user_id'), $loc_type));
-			if($result->num_rows()){
-				foreach ($result->result_array() as $row) {
-					$row['img']  = '<img src="'.$this->config->item("api").'/images/location_pin.png" alt="">';
-					$row['link'] = '/editor/edit/'.$row['id'];
-					array_push($output, $this->load->view("admin/libraryitem", $row, true));
-				}
-			}
-			$row = array(
-				'img'   => '<img src="'.$this->config->item("api").'/images/location_pin.png" alt="">',
-				'name'  => 'Добавить объект',
-				'link'  => '/editor/add/'.$loc_type,
-				'title' => "Добавить новый объект этого класса"
-			);
-			array_push($output, $this->load->view("admin/libraryitem", $row, true));
+			$output = $this->get_library_items($result, $loc_type);
 		}
 		array_push($output, "</ul>");
 		return implode($output, "\n");

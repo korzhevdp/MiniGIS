@@ -47,27 +47,10 @@ class Usefulmodel extends CI_Model{
 	}
 
 	public function rent_menu(){
-		//return $this->admin_menu();
-		/*
-		if($this->session->userdata('user_class') == md5('secret_userclass3')){
-			return $this->load->view("userclass3", array('user' => $this->session->userdata('user_name')), true);
-		}else{
-			return "";
-		}
-		*/
 		return "";
 	}
 
 	public function admin_menu(){
-		/*
-		if($this->session->userdata('user_class') == md5('secret_userclass2')){
-			return $this->load->view("menu/userclass2", array('user' => $this->session->userdata('user_name')), true);
-		}
-		if($this->session->userdata('user_class') == md5('secret_userclass1')){
-			//print 1;
-			return $this->load->view("menu/userclass1", array('user' => $this->session->userdata('user_name')), true);
-		}
-		*/
 		$menu = $this->load->view("menu/userclass0", array(), true);
 		if ($this->session->userdata('user_name') !== false) {
 			$menu = $this->load->view("menu/userclass1", array('user' => $this->session->userdata('user_name')), true);
@@ -76,6 +59,23 @@ class Usefulmodel extends CI_Model{
 	}
 
 	public function captcha_make(){
+		$imgname          = "captcha/src.gif";
+		$im               = ImageCreateFromGIF($imgname);
+		//$im = @ImageCreate (100, 50) or die ("Cannot Initialize new GD image stream");
+		$filename         ="captcha/src/capt.gif";
+		$background_color = ImageColorAllocate($im, 255, 255, 255);
+		$text_color       = ImageColorAllocate($im, 0,0,0);
+		$string           = "";
+		$symbols          = array("A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","W","X","Y","Z","2","3","4","5","6","7","8","9");
+		for( $i = 0; $i < 5; $i++ ){
+			$string      .= $symbols[rand(0, (sizeof($symbols)-1))];
+		}
+		ImageTTFText($im, 24, 8, 5, 50, $text_color, "captcha/20527.ttf", $string);
+		$this->session->set_userdata('cpt', md5(strtolower($string)));
+		ImageGIF($im, $filename);
+		return $filename;
+		//return "zz";
+		/*
 		$imgname="captcha/src.gif";
 		$im = @ImageCreateFromGIF($imgname);
 		//$im = @ImageCreate (100, 50) or die ("Cannot Initialize new GD image stream");
@@ -92,6 +92,7 @@ class Usefulmodel extends CI_Model{
 		ImageGIF ($im, $filename);
 		return $filename;
 		//return "zz";
+		*/
 	}
 
 	public function semantics_supermenu(){
@@ -100,19 +101,19 @@ class Usefulmodel extends CI_Model{
 		`objects_groups`.name
 		FROM
 		`objects_groups`
-		WHERE `objects_groups`.active = 1
+		WHERE `objects_groups`.active
 		ORDER BY `objects_groups`.name");
-		$ogps = Array();
-		$gis_library = Array();
+		$object_groups = array();
+		$gis_library   = array();
 		if($result->num_rows()){
 			foreach($result->result() as $row){
-				$c1 = ($_SERVER["REQUEST_URI"] == '/admin/semantics/'.$row->id) ? 'class="active"': "";
-				$c2 = ($_SERVER["REQUEST_URI"] == '/admin/library/'.$row->id) ? 'class="active"': "";
-				array_push($ogps,'<li '.$c1.'><a href="/admin/semantics/'.$row->id.'"><i class="icon-folder-open"></i>&nbsp;'.$row->name.'</a></li>');
-				array_push($gis_library,'<li '.$c2.'><a href="/admin/library/'.$row->id.'" title="Каталог объектов: '.$row->name.'"><i class="icon-folder-open"></i>&nbsp;'.$row->name.'</a></li>');
+				$class1 = ($this->uri->uri_string() == '/admin/semantics/'.$row->id) ? 'class="active"': "";
+				$class2 = ($this->uri->uri_string() == '/admin/library/'.$row->id)   ? 'class="active"': "";
+				array_push($object_groups, '<li '.$class1.'><a href="/admin/semantics/'.$row->id.'"><i class="icon-folder-open"></i>&nbsp;'.$row->name.'</a></li>');
+				array_push($gis_library,'<li '.$class2.'><a href="/admin/library/'.$row->id.'" title="Каталог объектов: '.$row->name.'"><i class="icon-folder-open"></i>&nbsp;'.$row->name.'</a></li>');
 			}
 		}
-		$out = array('semantics' => implode($ogps, "\n"), 'gis_library' => implode($gis_library, "\n"));
+		$out = array('semantics' => implode($object_groups, "\n"), 'gis_library' => implode($gis_library, "\n"));
 		return $out;
 	}
 

@@ -8,7 +8,7 @@ class Loginmodel extends CI_Model{
 
 	function index($mode='auth'){
 		$act = array(
-			'captcha'   => $this->captcha_make(),
+			'captcha'   => $this->usefulmodel->captcha_make(),
 			'page'      => 1,
 			'errorlist' => "",
 			'reg'       => ($mode =='auth') ? 0 : 1,
@@ -18,28 +18,8 @@ class Loginmodel extends CI_Model{
 	}
 
 	function test_user(){
-		$ack    = array();
 		$errors = array();
-		$result = $this->db->query("SELECT 
-		users_admins.passw,
-		users_admins.uid,
-		CONCAT_WS(' ', users_admins.name_i, users_admins.name_o) AS io,
-		users_admins.class_id,
-		users_admins.valid,
-		users_admins.active,
-		IF(LENGTH(users_admins.lang), users_admins.lang, 'en') AS lang,
-		users_admins.access,
-		users_admins.map_center,
-		users_admins.map_zoom,
-		users_admins.map_type,
-		MIN(locations.id) AS init_loc
-		FROM
-		locations
-		RIGHT OUTER JOIN users_admins ON (locations.owner = users_admins.uid)
-		WHERE
-		(users_admins.nick = ?)
-		LIMIT 1", array($this->input->post('name', true)));
-
+		$result = $this->db->query("SELECT users_admins.passw, users_admins.uid, CONCAT_WS(' ', users_admins.name_i, users_admins.name_o) AS io, users_admins.class_id, users_admins.valid, users_admins.active, IF(LENGTH(users_admins.lang), users_admins.lang, 'en') AS lang, users_admins.access, users_admins.map_center, users_admins.map_zoom, users_admins.map_type, MIN(locations.id) AS init_loc FROM locations RIGHT OUTER JOIN users_admins ON (locations.owner = users_admins.uid) WHERE (users_admins.nick = ?) LIMIT 1", array($this->input->post('name', true)));
 		if($result->num_rows()){
 			$row = $result->row();
 			if(md5(md5('secret').$this->input->post('pass')) == $row->passw){ // если пароль верен
@@ -63,7 +43,6 @@ class Loginmodel extends CI_Model{
 						'map_type'		=> (strlen($row->map_type)       ? $row->map_type   : $this->config->item('map_type'))
 					);
 					$this->session->set_userdata($session);
-					//print "logged";
 					redirect('user');
 				}
 			}else{
@@ -73,15 +52,14 @@ class Loginmodel extends CI_Model{
 			array_push($errors,'Пользователь с указанными именем и паролем не найден. Проверьте правильность ввода имени пользователя и пароля. Обратите внимание, что прописные и строчные буквы различаются');
 		}
 		$act = array(
-			'captcha'   => $this->captcha_make(),
+			'captcha'   => $this->usefulmodel->captcha_make(),
 			'menu'      => $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), TRUE),
 			'errorlist' => implode($errors, "</li>\n<li>"),
 			'page'		=> 1
 		);
-
 		$this->load->view('login/login_view2', $act);
 	}
-
+	/*
 	function captcha_make(){
 		$imgname          = "captcha/src.gif";
 		$im               = @ImageCreateFromGIF($imgname);
@@ -100,6 +78,7 @@ class Loginmodel extends CI_Model{
 		return $filename;
 		//return "zz";
 	}
+	*/
 
 	function new_user_data_test(){
 		$errors  = array();
@@ -131,7 +110,7 @@ class Loginmodel extends CI_Model{
 			return true;
 		}else{
 			$act = array(
-				'captcha'   => $this->captcha_make(),
+				'captcha'   => $this->usefulmodel->captcha_make(),
 				'reg'       => 1,
 				'page'      => 2,
 				'menu'      => $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true),
@@ -223,7 +202,7 @@ class Loginmodel extends CI_Model{
 				}
 			}
 			$act = array(
-				'captcha'   => $this->captcha_make(),
+				'captcha'   => $this->usefulmodel->captcha_make(),
 				'errorlist' => implode($errors,"</li>\n<li>"),
 				'page'      => 3,
 				'menu'      => $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true)
