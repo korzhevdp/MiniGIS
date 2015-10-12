@@ -4,10 +4,8 @@ class Semanticsmodel extends CI_Model{
 		parent::__construct();
 	}
 
-	public function show_semantics($object_group = 0, $type_id = 0) {
-		$table  = array();
-		if ($object_group) {
-			$result = $this->db->query("SELECT
+	private function get_group_result($object_group){
+			return $this->db->query("SELECT
 			IF(properties_list.page = 1, 0, 1) AS editable,
 			properties_list.id,
 			properties_list.`label`,
@@ -25,8 +23,10 @@ class Semanticsmodel extends CI_Model{
 			properties_list.page,
 			properties_list.`row`,
 			properties_list.element", array($object_group, $object_group));
-		} else {
-			$result = $this->db->query("SELECT
+	}
+
+	private function get_nongroup_result(){
+		return $this->db->query("SELECT
 			IF(properties_list.page = 1, 0, 1) AS editable,
 			properties_list.id,
 			properties_list.`label`,
@@ -42,10 +42,17 @@ class Semanticsmodel extends CI_Model{
 			properties_list.page,
 			properties_list.`row`,
 			properties_list.element");
+	}
+
+	public function show_semantics($object_group = 0, $type_id = 0) {
+		$table  = array();
+		if ($object_group) {
+			$result = $this->get_group_result($object_group);
+		} else {
+			$result = $this->get_nongroup_result();
 		}
 		if ($result->num_rows()) {
-			//array_push($table,'<ul class="span12 row-fluid" style="list-style-type: none; margin-left:0px;">');
-			foreach ($result->result_array() as $row){
+			foreach ($result->result_array() as $row) {
 				$row['object_group'] = $object_group;
 				$row['infoclass']	 = ($row['editable'])	? ' title="Назначаемое свойство"' : ' class="warning" title="Главный признак типа/категории объекта"';
 				if ($object_group) {
