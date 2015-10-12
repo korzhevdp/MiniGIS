@@ -8,6 +8,7 @@ class Admin extends CI_Controller{
 		}else{
 			$this->load->model('usefulmodel');
 			$this->load->model('adminmodel');
+			$this->load->model('semanticsmodel');
 			$this->session->set_userdata("c_l", 0);
 		}
 		if(!$this->session->userdata('lang')){
@@ -92,8 +93,8 @@ class Admin extends CI_Controller{
 
 	public function semantics($obj_group = 0, $obj = 0){
 		$this->usefulmodel->check_admin_status();
-		$values         = $this->adminmodel->show_semantics_values($obj_group, $obj);
-		$values['list'] = $this->adminmodel->show_semantics($obj_group, $obj);
+		$values         = $this->semanticsmodel->show_semantics_values($obj_group, $obj);
+		$values['list'] = $this->semanticsmodel->show_semantics($obj_group, $obj);
 		$output = array(
 			'menu'    => $this->load->view('admin/menu', array(), true)
 						.$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true),
@@ -104,7 +105,7 @@ class Admin extends CI_Controller{
 
 	public function save_semantics(){
 		$this->usefulmodel->check_admin_status();
-		$this->adminmodel->save_semantics();
+		$this->semanticsmodel->save_semantics();
 	}
 
 	public function usermanager($id=0){
