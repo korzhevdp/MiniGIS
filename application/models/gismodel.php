@@ -7,8 +7,51 @@ class Gismodel extends CI_Model{
 	#######################################################################
 	### объекты ГИС VERIFIED
 	#######################################################################
+
+	private function get_object_groups_list($object_group){
+		$output = array('<option value="0">Выберите группу объектов</option>');
+		$result = $this->db->query("SELECT 
+		`objects_groups`.id,
+		`objects_groups`.name
+		FROM
+		`objects_groups`
+		WHERE
+		`objects_groups`.`active`");
+		if($result->num_rows()){
+			foreach($result->result() as $row){
+				array_push($output, '<option value="'.$row->id.'"'.(($row->id == $object_group) ? ' selected="selected"' : '').'>'.$row->name.'</option>');
+			}
+		}
+		return implode($output,"\n");
+	}
+
+	function get_images($type) {
+		$pics = array(
+			1 => array(
+				'pic' => "marker.png",
+				'pictitle' => "Точечная метка"
+			),
+			2 => array(
+				'pic' => 'layer-shape-polyline.png',
+				'pictitle' => "Ломаная"
+			),
+			3 => array(
+				'pic' => 'layer-shape-polygon.png',
+				'pictitle' => "Полигон"
+			),
+			4 => array(
+				'pic' => 'layer-shape-ellipse.png',
+				'pictitle' => "Круг"
+			),
+			5 => array(
+				'pic' => 'layer-select.png',
+				'pictitle' => "Прямоугольник"
+			)
+		);
+		return $pics[$type];
+	}
+
 	function gis_objects_show($obj = 0) {
-		//Выбираем объект
 		$object = array(
 			'id'			=> 0,
 			'has_child'		=> 0,
@@ -20,7 +63,7 @@ class Gismodel extends CI_Model{
 			'pr_type'		=> 0,
 			'pl_num'		=> 0
 		);
-		if($obj){
+		if ($obj) {
 			$result = $this->db->query("SELECT 
 			locations_types.id,
 			locations_types.has_child,
@@ -39,23 +82,9 @@ class Gismodel extends CI_Model{
 			}
 		}
 		// группы объектов для формы редактирования
-		$object['obj_group'] = array('<option value="0">Выберите группу объектов</option>');
-		$result = $this->db->query("SELECT 
-		`objects_groups`.id,
-		`objects_groups`.name
-		FROM
-		`objects_groups`
-		WHERE
-		`objects_groups`.`active`");
-		if($result->num_rows()){
-			foreach($result->result() as $row){
-				array_push($object['obj_group'], '<option value="'.$row->id.'" '.(($row->id == $object['object_group']) ? 'selected="selected"' : '').'>'.$row->name.'</option>');
-			}
-		}
-		$object['obj_group'] = implode($object['obj_group'],"\n");
+		$object['obj_group'] = $this->get_object_groups_list($object['object_group']);
 		//для таблицы свойств
-
-		$result=$this->db->query("SELECT 
+		$result=$this->db->query("SELECT
 		locations_types.id,
 		locations_types.has_child,
 		locations_types.name,
@@ -73,88 +102,76 @@ class Gismodel extends CI_Model{
 		$table2 = array();
 		if($result->num_rows()){
 			foreach ($result->result_array() as $row){
-				$row['pic']		 = "marker.png";
-				$row['pictitle'] = "точечная метка";
-				switch($row['pr_type']){
-					case 2:
-						$row['pic']		 = 'layer-shape-polyline.png';
-						$row['pictitle'] = "Ломаная";
-					break;
-					case 3:
-						$row['pic']		 = 'layer-shape-polygon.png';
-						$row['pictitle'] = "Полигон";
-					break;
-					case 4:
-						$row['pic']		 = 'layer-shape-ellipse.png';
-						$row['pictitle'] = "Круг";
-					break;
-					case 5:
-						$row['pic']		 = 'layer-select.png';
-						$row['pictitle'] = "Прямоугольник";
-					break;
-				}
+				$row = array_merge($row, $this->get_images($row['pr_type']));
 				array_push($table2, $this->load->view('admin/parameterline2', $row, true));
 			}
 			$object['table2'] = implode($table2, "\n");
-		}else{
-			$out = "<tr><td colspan=5>Справочник объектов пуст.</td></tr>";
 		}
 		return $this->load->view('admin/object_types_control_table', $object, true);
 	}
 
+	private function insert_object_main_property(){
+		$this->db->query("INSERT INTO
+		`properties_list` (
+			`properties_list`.`row`,
+			`properties_list`.element,
+			`properties_list`.label,
+			`properties_list`.algoritm,
+			`properties_list`.selfname,
+			`properties_list`.page,
+			`properties_list`.property_group,
+			`properties_list`.fieldtype,
+			`properties_list`.cat,
+			`properties_list`.object_group,
+			`properties_list`.parameters,
+			`properties_list`.active,
+			`properties_list`.searchable,
+			`properties_list`.coef
+		) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", array(
+			1,
+			1,
+			"Укажите метку",
+			'ud',
+			$this->input->post('name', true),
+			1,
+			"",
+			"checkbox",
+			"",
+			$this->input->post('obj_group', true),
+			"",
+			0,
+			1,
+			1
+		));
+		return $this->db->insert_id();
+	}
+
+	private function insert_object_type(){
+		$insert_id = $this->insert_object_main_property();
+		$this->db->query("INSERT INTO
+		locations_types(
+			locations_types.has_child,
+			locations_types.name,
+			locations_types.attributes,
+			locations_types.object_group,
+			locations_types.pl_num,
+			locations_types.pr_type
+		) VALUES ( ?, ?, ?, ?, ?, ? )", array(
+			$haschild,
+			$this->input->post('name',       true),
+			$this->input->post('attributes', true),
+			$this->input->post('obj_group',  true),
+			$insert_id,
+			$this->input->post('pr_type',    true)
+		));
+		$text = "Администратором ".$this->session->userdata("user_name")." создан тип объекта #".$this->db->insert_id()." - ".$this->input->post('name');
+		$this->usefulmodel->insert_audit($text);
+	}
+
 	function gis_save() {
-		$hc = ($this->input->post('has_child')) ? 1 : 0;
+		$haschild = ($this->input->post('has_child')) ? 1 : 0;
 		if(!$this->input->post('obj')){
-			$this->db->query("INSERT INTO
-			`properties_list` (
-				`properties_list`.`row`,
-				`properties_list`.element,
-				`properties_list`.label,
-				`properties_list`.algoritm,
-				`properties_list`.selfname,
-				`properties_list`.page,
-				`properties_list`.property_group,
-				`properties_list`.fieldtype,
-				`properties_list`.cat,
-				`properties_list`.object_group,
-				`properties_list`.parameters,
-				`properties_list`.active,
-				`properties_list`.searchable,
-				`properties_list`.coef
-			) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", array(
-				1,
-				1,
-				"Укажите метку",
-				'ud',
-				$this->input->post('name', true),
-				1,
-				"",
-				"checkbox",
-				"",
-				$this->input->post('obj_group', true),
-				"",
-				0,
-				1,
-				1
-			));
-			$this->db->query("INSERT INTO
-			locations_types(
-				locations_types.has_child,
-				locations_types.name,
-				locations_types.attributes,
-				locations_types.object_group,
-				locations_types.pl_num,
-				locations_types.pr_type
-			) VALUES ( ?, ?, ?, ?, ?, ? )", array(
-				$hc,
-				$this->input->post('name',       true),
-				$this->input->post('attributes', true),
-				$this->input->post('obj_group',  true),
-				$this->db->insert_id(),
-				$this->input->post('pr_type',    true)
-			));
-			$text = "Администратором ".$this->session->userdata("user_name")." создан тип объекта #".$this->db->insert_id()." - ".$this->input->post('name');
-			$this->usefulmodel->insert_audit($text);
+			$this->insert_object_type();
 		}else{
 			$this->db->query("UPDATE
 			locations_types
@@ -167,7 +184,7 @@ class Gismodel extends CI_Model{
 			locations_types.pr_type = ?
 			WHERE
 			locations_types.id = ?", array(
-				$hc,
+				$haschild,
 				$this->input->post('name',       true),
 				$this->input->post('attributes', true),
 				$this->input->post('obj_group',  true),
@@ -175,7 +192,6 @@ class Gismodel extends CI_Model{
 				$this->input->post('pr_type',    true),
 				$this->input->post('obj',        true)
 			));
-
 			$this->db->query("UPDATE
 			properties_list
 			SET
@@ -252,7 +268,7 @@ class Gismodel extends CI_Model{
 	function group_save(){
 		//$this->output->enable_profiler(TRUE);
 		//return false;
-		$id = $this->input->post('id', true);
+		$groupid = $this->input->post('id', true);
 		if($this->input->post('mode', true) === 'save') {
 			$result = $this->db->query("UPDATE
 				`objects_groups`
@@ -289,11 +305,11 @@ class Gismodel extends CI_Model{
 				$this->input->post('name'  , true),
 				$this->input->post('active', true)
 			));
-			$id = $this->db->insert_id();
-			$text = "Администратором ".$this->session->userdata("user_name")." создана группа #".$id." - ".$this->input->post('name', true);
+			$groupid = $this->db->insert_id();
+			$text = "Администратором ".$this->session->userdata("user_name")." создана группа #".$groupid." - ".$this->input->post('name', true);
 			$this->usefulmodel->insert_audit($text);
 		}
-		return $id;
+		return $groupid;
 	}
 }
 
