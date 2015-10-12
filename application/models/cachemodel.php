@@ -2,7 +2,6 @@
 class Cachemodel extends CI_Model{
 	function __construct(){
 		parent::__construct();
-		// работа с переводами будет принципиально везде
 		$this->load->helper('file');
 	}
 	private function get_statmap($type = 1, $coords = "0,0"){
@@ -40,10 +39,8 @@ class Cachemodel extends CI_Model{
 		return $out;
 	}
 
-	private function get_location_properties($location){
-		$input  = array();
-		$output = array();
-		$result = $this->db->query("SELECT DISTINCT
+	private function get_location_properties_result(){
+		return $this->db->query("SELECT DISTINCT
 		properties_assigned.property_id,
 		properties_assigned.location_id,
 		properties_assigned.value,
@@ -62,6 +59,12 @@ class Cachemodel extends CI_Model{
 		properties_assigned.location_id = ?
 		GROUP BY properties_assigned.property_id
 		ORDER BY properties_list.label, properties_list.selfname", array($location));
+	}
+
+	private function get_location_properties($location){
+		$input  = array();
+		$output = array();
+		$result = $this->get_location_properties_result();
 		if($result->num_rows()){
 			foreach($result->result() as $row){
 				if (!isset($input[$row->label])){
@@ -94,11 +97,8 @@ class Cachemodel extends CI_Model{
 		return implode($output, "\n");
 	}
 
-	// кэширование объекта
 	public function cache_location($location = 0, $with_output = 0, $mode = 'file'){
 		$act      = array();
-
-		// наполняем $act данными объекта из основного хранилища
 		$result = $this->db->query("SELECT
 		`locations`.`address`,
 		`locations`.`contact_info` as contact,
@@ -117,7 +117,7 @@ class Cachemodel extends CI_Model{
 		WHERE locations.id = ?", array($location));
 		if($result->num_rows()){
 			$act = $result->row_array();
-			if(in_array($act['pr_type'], array(2,3))) {
+			if(in_array($act['pr_type'], array(2, 3))) {
 				$act['lat'] = $act['coord_array'];
 				$act['lon'] = $act['coord_y'];
 			}
@@ -125,23 +125,17 @@ class Cachemodel extends CI_Model{
 		$act = array_merge($act, $this->get_statmap($act['pr_type'], $act['coord_y']));
 		$act['content'] = $this->get_location_properties($location);
 
-		
-		$cache = $this->load->view('ru/frontend/std_view', $act, true);
-
 		if($mode === 'file') {
-			write_file('application/views/cache/locations/location_'.$location.".src", $cache, "w");
-		}else{
-			print $cache."<hr>";
+			write_file('application/views/cache/locations/location_'.$location.".src", $this->load->view('ru/frontend/std_view', $act, true), "w");
 		}
 		
 		if($with_output){
-			return $cache;
+			$this->load->view('ru/frontend/std_view', $act, true);
 		}
 	}
 
 	private function cache_gis_part($gisroot = 0) {
 		$langs  = $this->config->item('lang');
-
 		$result = $this->db->query("SELECT
 		locations_types.id   AS type_id,
 		objects_groups.id    AS group_id,
@@ -225,14 +219,11 @@ class Cachemodel extends CI_Model{
 		}
 	}
 
-	//кэширование меню
-	// verified --->
 	public function menu_build($docroot = 1, $gisroot = 0, $mode = "file"){
 		/*
 		меню строится из дерева созданных документов, начиная сid документа указанного как $docroot и рекурсивно далее
 		кроме того отстраивается дерево объектов GIS. Корневой объект задаётся в конфигурационном файле или явно
 		*/
-
 		$this->load->helper('html');
 		$this->cache_gis_part($gisroot);
 		$this->cache_docs($docroot);
@@ -245,8 +236,6 @@ class Cachemodel extends CI_Model{
 			);
 			if($mode === 'file'){
 				write_file('application/views/cache/menus/menu_'.$lang.'.php', $this->load->view($lang.'/frontend/menu', $ans, true));
-			}else{
-				print '<link href="http://api.korzhevdp.com/css/frontend.css" rel="stylesheet" media="screen" type="text/css">'.$this->load->view('frontend/menu', $ans, true)."<hr>";
 			}
 		}
 	}
@@ -344,16 +333,8 @@ class Cachemodel extends CI_Model{
 		}
 		return $output;
 	}
-	/*
-	# Для селектора генерируются только поля типа: text, select и checkbox. 
-	# Поле Textarea предназаначено исключительно для ввода больших текстов в админской консоли
-	*/
 	
 	private function generate_selector($src, $map, $mode){
-		//print $map."<br>";
-		//print $mode."<br>";
-		//print_r($src)."<hr>";
-		//exit;
 		$properties = $this->config->item('properties');
 		$labels     = $this->config->item('labels');
 		foreach ($this->config->item('lang') as $lang => $val){
@@ -369,11 +350,8 @@ class Cachemodel extends CI_Model{
 					$htmlcontrol = array();
 					foreach($objects as $object_id => $element) {
 						$options = array('<option value="0">Выберите вариант</option>');
-						if (!isset($element['alg'])) {
-							$element['alg'] = "u"; 
-						}
+						if (!isset($element['alg'])) { $element['alg'] = "u"; }
 						$element['name'] = (isset($properties[$object_id]) && strlen($properties[$object_id][$lang])) ? $properties[$object_id][$lang] : $element['name'];
-						/* генерация */
 						switch ($element['fieldtype']){
 							case 'text':
 								$string = '<li class="itemcontainer"><input type="text" class="itemtext" obj="'.$object_id.'">'.$element['name']."</li>";
@@ -401,17 +379,10 @@ class Cachemodel extends CI_Model{
 					}
 					array_push($table, '<div class="groupcontainer" id="gc_'.$rowmarker.$incrementer++.'">'."\n".implode($htmlcontrol, "\n")."\n</div>");
 				}
-				//print implode($htmlcontrol, "\n");
-				//array_push($table, '<div class="grouplabel" id="gl_'.$rowmarker.'">'."\n".$label."\n</div>");
-				//; # штатная генерация элементов
-				######## конец переключателей
 			}
 			$content = implode($table, "\n");
 			if ($mode === "file") {
 				write_file('application/views/cache/selectors/selector_'.$map.'_'.$lang.'.php', $content);
-			} else {
-				print '<link href="http://api.korzhevdp.com/css/frontend.css" rel="stylesheet" media="screen" type="text/css">'.$content;
-				print '<br>########################################## end of map item ##########################################';
 			}
 		}
 	}
@@ -428,19 +399,6 @@ class Cachemodel extends CI_Model{
 							$element['alg'] = "u"; 
 						}
 						$element['name'] = (isset($properties[$object_id]) && strlen($properties[$object_id][$lang])) ? $properties[$object_id][$lang] : $element['name'];
-						/*
-						switch ($element['fieldtype']){
-							case 'text':
-								$sws[$object_id] = $object_id.': { value: "", fieldtype: "text",    alg: "'.$element['alg'].'", text: "'.$element['name'].'" }';
-							break;
-							case 'select':
-								$sws[$object_id] = $object_id.': { value: 0, fieldtype: "select",   alg: "'.$element['alg'].'" , text: "'.$element['name'].'" }';
-							break;
-							case 'checkbox':
-								$sws[$object_id] = $object_id.': { value: 0, fieldtype: "checkbox", alg: "'.$element['alg'].'", text: "'.$element['name'].'" }';
-							break;
-						}
-						*/
 						$sws[$object_id] = $object_id.': { value: 0, fieldtype: "'.$element['fieldtype'].'", alg: "'.$element['alg'].'", text: "'.$element['name'].'" }';
 					}
 				}
@@ -448,14 +406,9 @@ class Cachemodel extends CI_Model{
 			$content = "switches = {\n\t".implode($sws, ",\n")."\n}";
 			if ($mode === "file") {
 				write_file('application/views/cache/selectors/selector_'.$map.'_switches_'.$lang.'.php', $content);
-			} else {
-				print "<hr>";
-				print '<link href="http://api.korzhevdp.com/css/frontend.cs-s" rel="stylesheet" media="screen" type="text/css">'.$content;
-				print '<br>########################################## end of map item ##########################################';
 			}
 		}
 	}
-
 	//кэширование навигатора
 	public function cache_selector_content($mode = "file") {
 		$output      = array();
@@ -472,7 +425,7 @@ class Cachemodel extends CI_Model{
 				$map_content[$row->id] = array($row->a_layers, $row->a_types);
 			}
 		}
-		foreach($map_content as $map => $val){
+		foreach($map_content as $map => $val) {
 			$output     = array();
 			$refgroups  = array();
 			if($val[0] == "0" && strlen($val[1]) && $val[1] != 0){
@@ -490,19 +443,15 @@ class Cachemodel extends CI_Model{
 			if(strlen($val[0]) && $val[0] != 0){
 				$output = $this->cache_selector_layers($val[0]);
 			}
-			// затем типы
 			if(strlen($val[1]) && $val[1] != 0){
 				$output = array_merge($output, $this->cache_selector_types($val[1]));
 			}
-			// затем свойства
 			if($val[0] == "0" && strlen($val[1]) && $val[1] != 0){
 				$output = array_merge($output, $this->cache_selector_properties(implode($refgroups, ",")));
 			}
 			$this->generate_selector($output, $map, $mode);
 			$this->generate_switches($output, $map, $mode);
 		}
-
-		#######################################################################
 	}
 
 	public function build_object_lists(){

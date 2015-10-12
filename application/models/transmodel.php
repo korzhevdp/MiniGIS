@@ -106,10 +106,17 @@ class Transmodel extends CI_Model{
 	public function trans_save(){
 		//$this->output->enable_profiler(TRUE);
 		$output = array();
+		$files  = array(
+			'groups'		=> 'application/config/translations_g.php',
+			'categories'	=> 'application/config/translations_c.php',
+			'properties'	=> 'application/config/translations_p.php',
+			'articles'		=> 'application/config/translations_a.php',
+			'maps'			=> 'application/config/translations_m.php',
+			'labels'		=> 'application/config/translations_l.php'
+		);
+		$filename = $files[$this->input->post("type")];
 		if($this->input->post("type") === 'labels'){
-			$filename = 'application/config/translations_l.php';
 			if(sizeof($this->input->post($this->input->post("type")))){
-
 				foreach($this->input->post($this->input->post("type")) as $key=>$val) {
 					$orig = $val['original'];
 					$input = array();
@@ -122,21 +129,6 @@ class Transmodel extends CI_Model{
 				}
 			}
 		} else {
-			if($this->input->post("type") === 'groups'){
-				$filename = 'application/config/translations_g.php';
-			}
-			if($this->input->post("type") === 'categories'){
-				$filename = 'application/config/translations_c.php';
-			}
-			if($this->input->post("type") === 'properties'){
-				$filename = 'application/config/translations_p.php';
-			}
-			if($this->input->post("type") === 'articles'){
-				$filename = 'application/config/translations_a.php';
-			}
-			if($this->input->post("type") === 'maps'){
-				$filename = 'application/config/translations_m.php';
-			}
 			if(sizeof($this->input->post($this->input->post("type")))){
 				foreach($this->input->post($this->input->post("type")) as $key=>$val) {
 					$input = array();
@@ -149,7 +141,6 @@ class Transmodel extends CI_Model{
 				}
 			}
 		}
-
 		$config = $this->load->view('admin/translations_template', array('group' => $this->input->post("type"), 'content' => implode($output, ",\n")), true);
 		$this->load->helper('file');
 		write_file($filename, "<".$config, "w");
