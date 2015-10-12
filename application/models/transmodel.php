@@ -84,16 +84,16 @@ class Transmodel extends CI_Model{
 						$value = (isset($groups[$row->id][$key])) ? $groups[$row->id][$key] : '';
 					}
 					if($mode === 'labels'){
-						$cell = "\t".'<td><input type="text" name="'.$mode.'['.$id.']['.$key.']" class="translation" ref="'.$row->id.'" lang="'.$key.'" value="'.$value.'" placeholder="Íåò ïåðåâîäà"'.$readonly.'></td>';
+						$cell = "\t".'<td><input type="text" name="'.$mode.'['.$id.']['.$key.']" class="translation" ref="'.$row->id.'" lang="'.$key.'" value="'.$value.'" placeholder="ÐÐµÑ‚ Ð¿ÐµÑ€ÐµÐ²Ð¾Ð´Ð°"'.$readonly.'></td>';
 					}
 					else{
-						$cell = "\t".'<td><input type="text" name="'.$mode.'['.$row->id.']['.$key.']" class="translation" ref="'.$row->id.'" lang="'.$key.'" value="'.$value.'" placeholder="Íåò ïåðåâîäà"'.$readonly.'></td>';
+						$cell = "\t".'<td><input type="text" name="'.$mode.'['.$row->id.']['.$key.']" class="translation" ref="'.$row->id.'" lang="'.$key.'" value="'.$value.'" placeholder="ÐÐµÑ‚ Ð¿ÐµÑ€ÐµÐ²Ð¾Ð´Ð°"'.$readonly.'></td>';
 					}
 					array_push($string, $cell);
 
 				}
 				if($mode === 'labels'){
-					$cell = "\t".'<td class="hide"><input type="hidden" name="'.$mode.'['.$id.'][original]" class="translation" ref="'.$row->id.'" lang="'.$key.'" value="'.$row->name.'" placeholder="Íåò ïåðåâîäà"></td>';
+					$cell = "\t".'<td class="hide"><input type="hidden" name="'.$mode.'['.$id.'][original]" class="translation" ref="'.$row->id.'" lang="'.$key.'" value="'.$row->name.'" placeholder="ÐÐµÑ‚ Ð¿ÐµÑ€ÐµÐ²Ð¾Ð´Ð°"></td>';
 					array_push($string, $cell);
 				}
 

@@ -28,6 +28,7 @@ class Frontendmodel extends CI_Model{
 
 	public function get_cached_content($location_id){
 		//$this->output->enable_profiler(TRUE);
+		$this->load->model('cachemodel');
 		$output = "";
 		$cachefile = "/var/www/html/minigis/application/views/cache/locations/location_".$location_id.".src";
 		if(file_exists($cachefile)){
