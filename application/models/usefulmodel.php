@@ -12,12 +12,8 @@ class Usefulmodel extends CI_Model{
 				return TRUE;
 			}
 		}
-		/*
-		if($this->session->userdata('user_id') == $this->config->item('golden_hash')){
-			return TRUE;
-		}
-		*/
-		$result=$this->db->query("SELECT
+
+		$result = $this->db->query("SELECT
 		`locations`.`owner`
 		FROM
 		`locations`

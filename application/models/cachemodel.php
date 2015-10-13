@@ -39,7 +39,7 @@ class Cachemodel extends CI_Model{
 		return $out;
 	}
 
-	private function get_location_properties_result(){
+	private function get_location_properties_result($location){
 		return $this->db->query("SELECT DISTINCT
 		properties_assigned.property_id,
 		properties_assigned.location_id,
@@ -64,7 +64,7 @@ class Cachemodel extends CI_Model{
 	private function get_location_properties($location){
 		$input  = array();
 		$output = array();
-		$result = $this->get_location_properties_result();
+		$result = $this->get_location_properties_result($location);
 		if($result->num_rows()){
 			foreach($result->result() as $row){
 				if (!isset($input[$row->label])){
@@ -85,7 +85,7 @@ class Cachemodel extends CI_Model{
 					}
 					$value = '<span class="line">'.$row->selfname.' '.$value.'</span><br>';
 				}
-				if ($row->fieldtype == "select") {
+				if ($row->fieldtype === "select") {
 					$value = '<p class="line">'.$row->selfname.'</p>';
 				}
 				array_push($input[$row->label], $value);
