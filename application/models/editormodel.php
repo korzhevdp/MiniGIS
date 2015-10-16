@@ -92,7 +92,78 @@ class Editormodel extends CI_Model{
 		print "shedule = {\n".implode($schedule, ",\n")."\n}";
 	}
 
-	private function get_summary($type, $id) {
+	private function fill_in_type_mode($type_id){
+		$output = array();
+		$result = $this->db->query("SELECT
+		locations_types.object_group,
+		locations_types.attributes,
+		locations_types.pr_type
+		FROM
+		locations_types
+		WHERE
+		(locations_types.id = ?)
+		LIMIT 1", array($type_id));
+		if($result->num_rows()){
+			$row = $result->row(0);
+			$output = array(
+				'object_group'   => $row->object_group,
+				'pr_type'        => $row->pr_type,
+				'attributes'     => $row->attributes,
+				'style_override' => $row->attributes,
+				'type'           => $id
+			);
+		}
+		return $output;
+	}
+
+	private function fill_in_location_mode($location_id) {
+		$output = array();
+		$result = $this->db->query("SELECT
+		locations.id,
+		locations.location_name,
+		locations.address,
+		locations.active,
+		locations.`type`,
+		locations.coord_y,
+		locations.contact_info,
+		`locations_types`.name AS `description`,
+		IF(LENGTH(locations.style_override) > 0, locations.style_override,`locations_types`.attributes) AS attributes,
+		`locations_types`.pr_type,
+		`locations_types`.object_group,
+		`locations`.comments
+		FROM
+		`locations_types`
+		INNER JOIN locations ON (`locations_types`.id = locations.`type`)
+		WHERE
+		(locations.id = ?)", array($location_id));
+		if($result->num_rows()){
+			$output = $result->row_array();
+		}
+		return $output;
+	}
+
+	private function get_object_types_of_group($group, $own_type) {
+		$output = array();
+		$result = $this->db->query("SELECT
+		`locations_types`.id,
+		`locations_types`.pr_type,
+		`locations_types`.name,
+		locations_types.attributes AS app
+		FROM
+		`locations_types`
+		WHERE `locations_types`.`object_group` = ?
+		AND `locations_types`.pl_num <> 0", array($output['object_group']));
+		if($result->num_rows()){
+			foreach($result->result() as $row){
+				$selected = ($own_type == $row->id) ? ' selected="selected"' : "";
+				$string   = '<option value="'.$row->id.'" ref="'.$row->pr_type.'" apply="'.$row->app.'"'.$selected.'>'.$row->name.'</option>';
+				array_push($output, $string);
+			}
+		}
+		return implode($output, "\n");
+	}
+
+	private function get_summary($type = "type", $id = 0) {
 		$output = array(
 			'id' => 0,
 			'location_name'		=> 'Новое имя',
@@ -108,70 +179,13 @@ class Editormodel extends CI_Model{
 			'coord_y'			=> 0,
 			'comments'			=> 0
 		);
-
-		if ($type == "location") {
-			$result = $this->db->query("SELECT
-			locations.id,
-			locations.location_name,
-			locations.address,
-			locations.active,
-			locations.`type`,
-			locations.coord_y,
-			locations.contact_info,
-			`locations_types`.name AS `description`,
-			IF(LENGTH(locations.style_override) > 0, locations.style_override,`locations_types`.attributes) AS attributes,
-			`locations_types`.pr_type,
-			`locations_types`.object_group,
-			`locations`.comments
-			FROM
-			`locations_types`
-			INNER JOIN locations ON (`locations_types`.id = locations.`type`)
-			WHERE
-			(locations.id = ?)", array($id));
-			if($result->num_rows()){
-				$output = $result->row_array();
-			}
+		if ($type === "type") {
+			$output = $this->fill_in_type_mode($id);
 		}
-		
-		if ($type == "type") {
-			$result = $this->db->query("SELECT 
-			locations_types.object_group,
-			locations_types.attributes,
-			locations_types.pr_type
-			FROM
-			locations_types
-			WHERE
-			(locations_types.id = ?)
-			LIMIT 1", array($id));
-			if($result->num_rows()){
-				$row = $result->row(0);
-				$output['object_group']   = $row->object_group;
-				$output['pr_type']        = $row->pr_type;
-				$output['attributes']     = $row->attributes;
-				$output['style_override'] = $row->attributes;
-				$output['type']           = $id;
-			}
+		if ($type === "location") {
+			$output = $this->fill_in_location_mode($id);
 		}
-
-		$typelist = array();
-		$result = $this->db->query("SELECT
-		`locations_types`.id,
-		`locations_types`.pr_type,
-		`locations_types`.name,
-		locations_types.attributes AS app
-		FROM
-		`locations_types`
-		WHERE `locations_types`.`object_group` = ?
-		AND `locations_types`.pl_num <> 0", array($output['object_group']));
-		if($result->num_rows()){
-			foreach($result->result() as $row){
-				$selected = ($output['type'] == $row->id) ? ' selected="selected"' : "";
-				$string   = '<option value="'.$row->id.'" ref="'.$row->pr_type.'" apply="'.$row->app.'"'.$selected.'>'.$row->name.'</option>';
-				array_push($typelist, $string);
-			}
-		}
-		$output['typelist'] = implode($typelist, "\n");
-
+		$output['typelist'] = $this->get_object_types_of_group($group, $output['type']);
 		$pagelist     = array();
 		$pagelist_alt = array();
 		$result       = $this->db->query("SELECT 
@@ -198,8 +212,6 @@ class Editormodel extends CI_Model{
 		$output['pagelist']     = implode($pagelist, "&nbsp;");
 		$output['pagelist_alt'] = implode($pagelist_alt, "&nbsp;");
 		$output['liblink']      = implode(array($output['object_group'], $output['type']), "/");
-		//print_r($output);
-		//exit;
 		return $output;
 	}
 
