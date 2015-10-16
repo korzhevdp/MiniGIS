@@ -14,6 +14,12 @@ class Foxhound extends CI_Controller{
 
 	private function perform_tests($full){
 		$list = array(); // массив накопитель найденных объектов. Над ним проводятся операции
+		$list = $this->perform_common_tests($list, $full);
+		$list = $this->perform_special_tests($list, $full);
+		return $list;
+	}
+
+	private function perform_common_tests($list, $full){
 		if(isset($full['u']) && sizeof($full['u'])) {
 			$list = $this->select_by_U_algorithm($full['u']);
 		}
@@ -26,6 +32,10 @@ class Foxhound extends CI_Controller{
 		if (isset($full['me']) && sizeof($full['me'])) {
 			$list = $this->test_search_array($list, $this->select_by_ME_algorithm($full['me']));
 		}
+		return $list;
+	}
+
+	private function perform_special_tests($list, $full){
 		if (isset($full['d']) && sizeof($full['d'])) {
 			$list = $this->test_search_array($list, $this->select_by_D_algorithm($full['d']));
 		}

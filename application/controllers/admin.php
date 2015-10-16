@@ -32,7 +32,6 @@ class Admin extends CI_Controller{
 
 	public function sheets($mode, $sheet_id="0") {
 		$this->usefulmodel->check_admin_status();
-
 		$this->load->model('docmodel');
 		if ($mode === 'save') {
 			$this->docmodel->sheet_save($sheet_id);

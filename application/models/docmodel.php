@@ -155,6 +155,7 @@ class Docmodel extends CI_Model{
 				$this->input->post('sheet_comment',  TRUE)
 			);
 		} else {
+			//$this->output->enable_profiler(TRUE);
 			$this->db->query("UPDATE `sheets` SET
 				`sheets`.`ts`        = NOW(),
 				`sheets`.`text`      = ?,
@@ -165,17 +166,17 @@ class Docmodel extends CI_Model{
 				`sheets`.`redirect`  = ?,
 				`sheets`.`comment`   = ?,
 				`sheets`.`root`      = ?
-			WHERE `sheets`.`id`        = ?", array(
-				$this->input->post('sheet_text',     TRUE),
-				$this->input->post('sheet_header',   TRUE),
-				$this->input->post('pageorder',      TRUE),
-				$this->input->post('is_active')) ? 1 : 0,
-				$this->input->post('sheet_parent',   TRUE),
-				$this->input->post('sheet_redirect', TRUE),
-				$this->input->post('sheet_comment',  TRUE),
-				$this->input->post('sheet_root',     TRUE),
+			WHERE `sheets`.`id`      = ?", array(
+				$this->input->post('sheet_text',     true),
+				$this->input->post('sheet_header',   true),
+				$this->input->post('pageorder',      true),
+				(($this->input->post('is_active')) ? 1 : 0),
+				$this->input->post('sheet_parent',   true),
+				$this->input->post('sheet_redirect', true),
+				$this->input->post('sheet_comment',  true),
+				$this->input->post('sheet_root',     true),
 				$sheet_id
-			);
+			));
 		}
 		$this->load->model('cachemodel');
 		$this->cachemodel->menu_build(1, 0, 'file');

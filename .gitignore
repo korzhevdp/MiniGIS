@@ -16,6 +16,8 @@ gisicons/*
 scripts/*
 
 application/views/cache/*
+application/config/*
+!application/config/maps.php
 application/trashbin/*
 uploads/*
 freehandcache/*

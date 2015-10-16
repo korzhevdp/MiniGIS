@@ -6,7 +6,6 @@ class Cachemodel extends CI_Model{
 	}
 	private function get_statmap($type = 1, $coords = "0,0"){
 		$output = array();
-		
 		$maps   = array(
 			1 => "http://static-maps.yandex.ru/1.x/?z=13&l=map&size=128,128&pt=".$coords.",vkbkm",
 			2 => "http://static-maps.yandex.ru/1.x/?l=map&size=128,128&pl=".$coords,
@@ -124,7 +123,6 @@ class Cachemodel extends CI_Model{
 		}
 		$act = array_merge($act, $this->get_statmap($act['pr_type'], $act['coord_y']));
 		$act['content'] = $this->get_location_properties($location);
-
 		if($mode === 'file') {
 			write_file('application/views/cache/locations/location_'.$location.".src", $this->load->view('ru/frontend/std_view', $act, true), "w");
 		}
@@ -172,6 +170,27 @@ class Cachemodel extends CI_Model{
 			}
 		}
 	}
+	
+	private function make_UL($result, $lang){
+		$input = array();
+		$list  = array();
+		foreach($result->result() as $row) {
+			$link      = (strlen($row->redirect)) ? $row->redirect : '/page/docs/'.$row->id;
+			$groupname = (isset($articles[$row->parent]) && strlen($articles[$row->parent][$lang]))    ? $articles[$row->parent][$lang]    : $row->topheader;
+			$itemname  = (isset($articles[$row->id]) && strlen($articles[$row->id][$lang])) ? $articles[$row->id][$lang] : $row->header;
+			$grouplink = '<a href="#"><i class="icon-tags"></i>&nbsp;&nbsp;'.$groupname."</a>";
+			$itemlink  = '<a href="'.$link.'"><i class="icon-tag"></i>&nbsp;&nbsp;'.$itemname."</a>";
+			if (!isset($input[$grouplink])) {
+				$input[$grouplink] = array();
+			}
+			array_push($input[$grouplink], $itemlink);
+		}
+		foreach($input as $key => $val){
+			$list = $input[$key];
+			break;
+		}
+		return $list;
+	}
 
 	private function cache_docs($root = 1, $mode = 'file'){
 		$this->config->load('translations_a', FALSE);
@@ -193,23 +212,7 @@ class Cachemodel extends CI_Model{
 		if($result->num_rows()){
 			$this->load->helper('html');
 			foreach ($langs as $lang => $langname) {
-				$input = array();
-				foreach($result->result() as $row) {
-					$link = (strlen($row->redirect)) ? $row->redirect : '/page/docs/'.$row->id;
-					$groupname = (isset($articles[$row->parent]) && strlen($articles[$row->parent][$lang]))    ? $articles[$row->parent][$lang]    : $row->topheader;
-					$itemname  = (isset($articles[$row->id]) && strlen($articles[$row->id][$lang])) ? $articles[$row->id][$lang] : $row->header;
-					$grouplink = '<a href="#"><i class="icon-tags"></i>&nbsp;&nbsp;'.$groupname."</a>";
-					$itemlink  = '<a href="'.$link.'"><i class="icon-tag"></i>&nbsp;&nbsp;'.$itemname."</a>";
-					if (!isset($input[$grouplink])) {
-						$input[$grouplink] = array();
-					}
-					array_push($input[$grouplink], $itemlink);
-				}
-				foreach($input as $key => $val){
-					$list = $input[$key];
-					break;
-				}
-				//print_r($list);
+				$list = $this->make_UL($result, $lang);
 				if($mode === 'file') {
 					write_file('application/views/cache/menus/docs_'.$lang.'.php', ul($list, array('class' => 'dropdown-menu')));
 				} else {
@@ -333,9 +336,45 @@ class Cachemodel extends CI_Model{
 		}
 		return $output;
 	}
+
+	private function generate_labeled_controls_set($objects, $lang, $properties) {
+		$backcounter = sizeof($objects);
+		$checkboxes  = array();
+		$values      = array();
+		$output      = array();
+		foreach($objects as $object_id => $element) {
+			$options = array('<option value="0">Выберите вариант</option>');
+			if (!isset($element['alg'])) { $element['alg'] = "u"; }
+			$element['name'] = (isset($properties[$object_id]) && strlen($properties[$object_id][$lang])) ? $properties[$object_id][$lang] : $element['name'];
+			switch ($element['fieldtype']){
+				case 'text':
+					$string = '<li class="itemcontainer"><input type="text" class="itemtext" obj="'.$object_id.'">'.$element['name']."</li>";
+					array_push($output, $string);
+				break;
+				case 'select':
+					$string = '<option value="'.$object_id.'">'.$element['name'].'</option>';
+					array_push($values, $string);
+					--$backcounter;
+					if($backcounter === 0) {
+						array_unshift($values, '<option value="0" selected="selected"> - - - </option>');
+						$string = '<li class="itemcontainer"><select class="itemselect" obj="'.$object_id.'">'."\n".implode($values,"\n").'</select></li>';
+						array_push($output, $string);
+					}
+				break;
+				case 'checkbox':
+					$string = '<li class="itemcontainer itemcheckbox" obj="'.$object_id.'"><img src="'.$this->config->item('api').'/images/clean_grey.png" alt=" ">'.$element['name'].'</li>';
+					array_push($checkboxes, $string);
+					--$backcounter;
+					if ($backcounter === 0){
+						array_push($output, "<ul>\n".implode($checkboxes, "\n")."\n</ul>");
+					}
+				break;
+			}
+		}
+		return $output;
+	}
 	
 	private function generate_selector($src, $map, $mode){
-		$properties = $this->config->item('properties');
 		$labels     = $this->config->item('labels');
 		foreach ($this->config->item('lang') as $lang => $val){
 			$table = array();
@@ -344,40 +383,8 @@ class Cachemodel extends CI_Model{
 				foreach($elements as $label => $objects){
 					$label = (isset($labels[$label]) && strlen($labels[$label][$lang])) ? $labels[$label][$lang] : $label;
 					array_push($table, '<div class="grouplabel" id="gl_'.$rowmarker.$incrementer.'">'."\n".$label."\n</div>");
-					$backcounter = sizeof($objects);
-					$checkboxes  = array();
-					$values      = array();
-					$htmlcontrol = array();
-					foreach($objects as $object_id => $element) {
-						$options = array('<option value="0">Выберите вариант</option>');
-						if (!isset($element['alg'])) { $element['alg'] = "u"; }
-						$element['name'] = (isset($properties[$object_id]) && strlen($properties[$object_id][$lang])) ? $properties[$object_id][$lang] : $element['name'];
-						switch ($element['fieldtype']){
-							case 'text':
-								$string = '<li class="itemcontainer"><input type="text" class="itemtext" obj="'.$object_id.'">'.$element['name']."</li>";
-								array_push($htmlcontrol, $string);
-							break;
-							case 'select':
-								$string = '<option value="'.$object_id.'">'.$element['name'].'</option>';
-								array_push($values, $string);
-								--$backcounter;
-								if($backcounter === 0) {
-									array_unshift($values, '<option value="0" selected="selected"> - - - </option>');
-									$string = '<li class="itemcontainer"><select class="itemselect" obj="'.$object_id.'">'."\n".implode($values,"\n").'</select></li>';
-									array_push($htmlcontrol, $string);
-								}
-							break;
-							case 'checkbox':
-								$string = '<li class="itemcontainer itemcheckbox" obj="'.$object_id.'"><img src="'.$this->config->item('api').'/images/clean_grey.png" alt=" ">'.$element['name'].'</li>';
-								array_push($checkboxes, $string);
-								--$backcounter;
-								if ($backcounter === 0){
-									array_push($htmlcontrol, "<ul>\n".implode($checkboxes, "\n")."\n</ul>");
-								}
-							break;
-						}
-					}
-					array_push($table, '<div class="groupcontainer" id="gc_'.$rowmarker.$incrementer++.'">'."\n".implode($htmlcontrol, "\n")."\n</div>");
+					$controls_set = $this->generate_labeled_controls_set($objects, $lang, $this->config->item('properties'));
+					array_push($table, '<div class="groupcontainer" id="gc_'.$rowmarker.$incrementer++.'">'."\n".implode($controls_set, "\n")."\n</div>");
 				}
 			}
 			$content = implode($table, "\n");
@@ -409,7 +416,7 @@ class Cachemodel extends CI_Model{
 			}
 		}
 	}
-	//кэширование навигатора
+
 	public function cache_selector_content($mode = "file") {
 		$output      = array();
 		$table       = array();
@@ -488,6 +495,5 @@ class Cachemodel extends CI_Model{
 		write_file('../base/extralinks.html', '<!doctype html><html lang="en"><head><meta charset="UTF-8"></head><body>'.implode($links,"<br>\n")).'</body></html>';
 	}
 }
-#
 /* End of file cachemodel.php */
 /* Location: ./application/models/cachemodel.php */
