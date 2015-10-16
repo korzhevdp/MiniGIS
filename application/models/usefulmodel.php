@@ -42,10 +42,6 @@ class Usefulmodel extends CI_Model{
 		return $output;
 	}
 
-	public function rent_menu(){
-		return "";
-	}
-
 	public function admin_menu(){
 		$menu = $this->load->view("menu/userclass0", array(), true);
 		if ($this->session->userdata('user_name') !== false) {

@@ -10,7 +10,9 @@
 	$config['map_def_loc']  = "Архангельск";	#Умолчательное описание расположения
 	$config['map_label']    = "Объекты ";		# Ярлык карты начинается с:
 	$config['api']          = "http://api.korzhevdp.com";
-	$config['native_lang'] = 'ru';
+	$config['native_lang']  = 'ru';
+	$config['image_limit']  = 3;
+	$config['image_paid_limit'] = 7;
 	$config['lang']         = array(
 		"ru" => 'Русский',
 		"en" => 'English',

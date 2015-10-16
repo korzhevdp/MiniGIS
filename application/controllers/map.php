@@ -48,7 +48,7 @@ class Map extends CI_Controller {
 			'footer'		=> $this->load->view('shared/page_footer', array(), true),
 			'otype'			=> $type,
 			'mapset'		=> 0,
-			'menu'			=> $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true).$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu(),
+			'menu'			=> $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true).$this->usefulmodel->admin_menu(),
 			'keywords'		=> $this->config->item('map_keywords'),
 			'map_header'	=> $map_header,
 			'switches'		=> 'switches = {}',
@@ -101,8 +101,8 @@ class Map extends CI_Controller {
 			} else {
 				$attr = $row->attr;
 			}
-			$image  = (strlen($row->img)) ? $row->img : "nophoto.gif";
-			$string = "\t".$row->id.": { img: '".$image."', description: '".$row->address."', type: '".$row->typename."', name: '".$row->location_name."', attr: '".$attr."', coord: '".$row->coord_y."', pr: ".$row->pr_type.", contact: '".$row->contact_info."', link: '".$row->link."', p: ".$row->paid." }";
+			$image  = (strlen($row->img)) ? "img: '".$row->img."', " : "";
+			$string = "\t".$row->id.": { ".$image."description: '".$row->address."', type: '".$row->typename."', name: '".$row->location_name."', attr: '".$attr."', coord: '".$row->coord_y."', pr: ".$row->pr_type.", contact: '".$row->contact_info."', link: '".$row->link."', p: ".$row->paid." }";
 			array_push($out, $string);
 		}
 		return $out;
@@ -157,7 +157,7 @@ class Map extends CI_Controller {
 		CONCAT('/page/gis/', locations.id) AS link,
 		objects_groups.array,
 		locations_types.pr_type,
-		IF(LENGTH(`locations`.`style_override`) > 1, `locations`.`style_override`, IF(LENGTH(locations_types.attributes), locations_types.attributes, 'default#houseIcon')) AS attr,
+		IF(LENGTH(`locations`.`style_override`) > 1, `locations`.`style_override`, locations_types.attributes) AS attr,
 		IF(ISNULL(payments.paid) OR `payments`.`paid` = 0, 0, 1) AS `paid`
 		FROM
 		locations_types
@@ -224,7 +224,7 @@ class Map extends CI_Controller {
 		locations_types.pr_type,
 		CONCAT('/page/gis/', locations.id) AS link,
 		objects_groups.array,
-		IF(LENGTH(`locations`.`style_override`) > 1, `locations`.`style_override`, IF(LENGTH(locations_types.attributes), locations_types.attributes, 'default#houseIcon')) AS attr,
+		IF(LENGTH(`locations`.`style_override`) > 1, `locations`.`style_override`, locations_types.attributes) AS attr,
 		IF(ISNULL(payments.paid) OR `payments`.`paid` = 0, 0, 1) AS `paid`
 		FROM
 		locations_types

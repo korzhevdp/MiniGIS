@@ -78,8 +78,12 @@ class Editor extends CI_Controller{
 	}
 
 	private function update_location() {
-		if (!$this->usefulmodel->check_owner($location_id)) {
-			$this->usefulmodel->insert_audit("При сохранении свойств объекта: #".$location_id." - владелец не совпадает");
+		if (!$this->usefulmodel->check_owner($this->input->post('ttl'))) {
+			$this->usefulmodel->insert_audit("При сохранении свойств объекта: #".$this->input->post('ttl')." - владелец не совпадает");
+			redirect('user/library');
+		}
+		if ($this->input->post('ttl') != $this->session->userdata("c_l")) {
+			$this->usefulmodel->insert_audit("При сохранении объекта: #".$this->input->post('ttl')." - подмена целевого объекта (".$this->session->userdata("c_l").")");
 			redirect('user/library');
 		}
 		$this->db->query("UPDATE
@@ -137,8 +141,8 @@ class Editor extends CI_Controller{
 		$this->db->query("DELETE
 		FROM `properties_assigned`
 		WHERE
-		`properties_assigned`.`location_id` = ? AND
-		`properties_assigned`.`property_id` IN (
+		`properties_assigned`.`location_id` = ?
+		AND `properties_assigned`.`property_id` IN (
 			SELECT locations_types.pl_num
 			FROM locations_types
 			WHERE
@@ -146,7 +150,8 @@ class Editor extends CI_Controller{
 				SELECT `locations_types`.`object_group`
 				FROM `locations_types`
 				WHERE `locations_types`.id = ?)
-			) AND `locations_types`.`pl_num`
+			)
+			AND `locations_types`.`pl_num`
 		)", array(
 			$this->input->post('ttl'),
 			$this->input->post("type")
@@ -156,7 +161,13 @@ class Editor extends CI_Controller{
 			`properties_assigned`.`location_id`,
 			`properties_assigned`.`property_id`,
 			`properties_assigned`.`value`
-		) VALUES (?, (SELECT locations_types.pl_num FROM locations_types where locations_types.id = ?), 1)", array(
+		) VALUES (?, (
+			SELECT 
+			locations_types.pl_num
+			FROM
+			locations_types
+			WHERE locations_types.id = ?
+		), 1)", array(
 			$this->input->post('ttl'),
 			$this->input->post("type")
 		));
@@ -165,24 +176,15 @@ class Editor extends CI_Controller{
 	public function saveobject() {
 		$location_id = $this->input->post('ttl');
 		if (!$this->checkdatafullness()){
-			//print 'console.log("Data is inconsistent. Operation was aborted.")';
 			return false;
 		}
-		if ($location_id == 0 && $location_id !== FALSE) {
-			$location_id = $this->create_location();
-			$this->insert_main_property($location_id);
-		} else {
-			if (!$this->usefulmodel->check_owner($location_id)) {
-				$this->usefulmodel->insert_audit("При сохранении объекта: #".$location_id." - владелец не совпадает");
-				redirect('user/library');
-			}
-			if ($location_id != $this->session->userdata("c_l")) {
-				$this->usefulmodel->insert_audit("При сохранении объекта: #".$location_id." - подмена целевого объекта (".$this->session->userdata("c_l").")");
-			}
+		if ($location_id) {
 			$this->update_location();
 			$this->update_main_property();
+		} else {
+			$location_id = $this->create_location();
+			$this->insert_main_property($location_id);
 		}
-
 		$this->load->model('cachemodel');
 		$this->cachemodel->cache_location($location_id);
 		$this->usefulmodel->insert_audit("Объект: #".$location_id." - успешно сохранён и кэширован");
@@ -190,14 +192,16 @@ class Editor extends CI_Controller{
 	}
 
 	public function saveprops() {
+		$location_id = $this->input->post('ttl');
 		if (!$this->checkdatafullness()){
 			return false;
 		}
-		$location_id = $this->input->post('ttl');
 		if ($location_id) {
 			$this->update_location();
+			$this->update_main_property();
 		} else {
-			$location_id = $this->createobject();
+			$location_id = $this->create_location();
+			$this->insert_main_property($location_id);
 		}
 		$output = array();
 		$ids    = array();
@@ -230,17 +234,21 @@ class Editor extends CI_Controller{
 				array_push($ids, $key);
 			}
 		}
-		$this->insert_properties($output, $ids);
+		$this->insert_properties($output, $ids, $location_id);
 		$this->load->model('cachemodel');
 		$this->cachemodel->cache_location($location_id);
 		$this->usefulmodel->insert_audit("Объект: #".$location_id." - успешно сохранён и кэширован");
 		print "data = { ttl : ".$location_id." }";
 	}
 
-	private function insert_properties($output, $ids) {
+	private function insert_properties($output, $ids, $location_id) {
 		if (sizeof($ids)) {
-			// page number of the property
-			$result = $this->db->query("SELECT DISTINCT `properties_list`.page FROM `properties_list` WHERE `properties_list`.`id` IN(".implode($ids, ",").")");
+			$result = $this->db->query("SELECT DISTINCT
+			`properties_list`.page
+			FROM 
+			`properties_list`
+			WHERE
+			`properties_list`.`id` IN(".implode($ids, ", ").")");
 			if($result->num_rows() === 1) {
 				$row = $result->row(0);
 				$this->db->query("DELETE FROM
@@ -250,10 +258,11 @@ class Editor extends CI_Controller{
 					SELECT properties_list.id FROM properties_list WHERE properties_list.page = ?
 				)
 				AND properties_assigned.location_id = ?", array($row->page, $location_id));
+				
 				$this->db->query("INSERT INTO properties_assigned (
-					properties_assigned.location_id,
-					properties_assigned.property_id,
-					properties_assigned.value
+				properties_assigned.location_id,
+				properties_assigned.property_id,
+				properties_assigned.value
 				) VALUES ".implode($output, ",\n"));
 				//print 'console.log("This save was successful")';
 			} else {
@@ -262,17 +271,18 @@ class Editor extends CI_Controller{
 			}
 		}
 	}
-
+	/*
 	public function geosemantics($mode=1) {
 		$this->usefulmodel->check_admin_status();
 		$output = $this->editormodel->geoeditor($this->config->item("geo_module_group"), $mode);
 		$this->load->view('editor/geoview', $output);
 	}
+	*/
 
 	####################################################
 	#AJAX-SECTION
 
-	public function get_property_page(){
+	public function get_property_page() {
 		if(!$this->session->userdata('user_id')){
 			print "Время работы в текущей сессии истекло.<br>Завершите работу и введите имя пользователя и пароль заново";
 			//exit;
@@ -285,12 +295,72 @@ class Editor extends CI_Controller{
 		print $this->editormodel->show_form_content($this->input->post("group"), $this->input->post("loc"), $this->input->post("page"));
 	}
 
-	public function get_shedule(){
+	public function get_shedule() {
 		$this->editormodel->get_schedule($this->input->post("location"));
 	}
 
-	public function get_context(){
-		$this->editormodel->get_context();
+	public function save_image_order() {
+		if(!is_array($this->input->post("order"))){
+			return false;
+		}
+		$limit = 0;
+		$input = array();
+		$ids   = array();
+		if($this->config->item("image_limit")) {
+			$limit  = $this->config->item("image_limit");
+			$result = $this->db->query("SELECT 
+			`payments`.id
+			FROM
+			`payments`
+			WHERE `payments`.`location_id` = ?
+			AND `payments`.`paid`", $this->session->userdata("c_l"));
+			if($result->num_rows()){
+				$limit = $this->config->item("image_paid_limit");
+			}
+		}
+		foreach($this->input->post("order") as $key=>$val) {
+			if (sizeof($input) < $limit) {
+				$string = "WHEN ".(integer) $val." THEN ".sizeof($input) * 10;
+				array_push($input, $string);
+				array_push($ids, (integer) $val);
+			}
+		}
+		$this->db->query("UPDATE images
+		SET `images`.`order` = (
+			CASE `images`.`id`
+				".implode($input, "\n")."
+			END)
+		WHERE images.id IN(".implode($ids, ", ").")
+		AND images.location_id = ?", array($this->session->userdata("c_l")));
+	}
+
+	public function delete_image() {
+		$lid   = $this->input->post("lid", true);
+		$image = $this->input->post("image", true);
+		if ($image === FALSE || $lid === FALSE) {
+			return false;
+		}
+		if( !$this->usefulmodel->check_owner($lid)
+			|| $lid != $this->session->userdata("c_l")
+		) {
+			return false;
+		}
+		$result = $this->db->query("SELECT 
+		`images`.filename
+		FROM
+		`images`
+		WHERE `images`.`hash` = ?", array($image));
+		if($result->num_rows()){
+			$row = $result->row(0);
+			unlink("./uploads/".$row->filename);
+			unlink("./uploads/small/".$lid."/".$row->filename);
+			unlink("./uploads/mid/".$lid."/".$row->filename);
+			unlink("./uploads/full/".$lid."/".$row->filename);
+			$this->db->query("DELETE
+			FROM
+			`images`
+			WHERE `images`.`hash` = ?", array($image));
+		}
 	}
 
 	public function save_shedule(){

@@ -8,7 +8,7 @@ class Editormodel extends CI_Model{
 		$output = array();
 		$result = $this->db->query("SELECT
 		`images`.`filename`,
-		`images`.`id`,
+		`images`.`hash`,
 		`images`.`small`
 		FROM
 		`images`
@@ -19,7 +19,7 @@ class Editormodel extends CI_Model{
 		if($result->num_rows()){
 			foreach($result->result() as $row){
 				$sizes = explode(",", $row->small);
-				$string = '<li class="locationImg" ref='.$row->id.'><img src="/uploads/small/'.$row->filename.'" height="'.$sizes[0].'" width="'.$sizes[0].'"></li>';
+				$string = '<li class="locationImg" ref='.$row->hash.'><img src="/uploads/small/'.$location."/".$row->filename.'" height="'.$sizes[0].'" width="'.$sizes[0].'"><i class="icon-remove icon-white"></i></li>';
 				array_push($output, $string);
 			}
 		}
@@ -44,7 +44,7 @@ class Editormodel extends CI_Model{
 					'content'			=> $this->load->view('editor/summary', $data, true),
 					'panel'				=> $this->load->view('editor/altcontrols', $data, true),
 					'baspointstypes'	=> $this->get_bas_points_types(),
-					'menu'				=> $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), TRUE) .$this->usefulmodel->rent_menu().$this->usefulmodel->admin_menu()
+					'menu'				=> $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true).$this->usefulmodel->admin_menu()
 				);
 			}
 			$this->session->set_userdata('c_l', $id);

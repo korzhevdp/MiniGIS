@@ -57,8 +57,8 @@ class Nodal extends CI_Controller{
 		print "bo = { ".implode($out, ",\n")."\n}";
 	}
 
-	function getimagelist($lid = 0) {
-		$lid = $this->input->post("picref");
+	function getimagelist() {
+		$lid = $this->input->post("loc");
 		$out = array();
 		$result=$this->db->query("SELECT 
 			`images`.filename as img,
@@ -73,7 +73,7 @@ class Nodal extends CI_Controller{
 				$dim    = explode(",", $row->full);
 				$act    = (!sizeof($out)) ? 'active' : '';
 				$string = '<div class="item '.$act.'">
-				<img src="/uploads/full/'.$row->img.'" width="'.$dim[0].'" height="'.$dim[1].'" alt=""/>
+				<img src="/uploads/full/'.$lid."/".$row->img.'" width="'.$dim[0].'" height="'.$dim[1].'" alt=""/>
 				<div class="carousel_annot">
 					<h5>'.$row->comment.'</h5>
 				</div>

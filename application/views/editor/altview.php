@@ -138,14 +138,7 @@
 </div>
 <script type="text/javascript">
 <!--
-	$(function() {
-	$( ".imageGallery" ).sortable({
-		stop: function( event, ui ) {
-			//alert(1)
-		}
-	});
-	$( ".imageGallery" ).disableSelection();
-});
+set_deleter();
 //-->
 </script>
 </body>
