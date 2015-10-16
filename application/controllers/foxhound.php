@@ -12,24 +12,8 @@ class Foxhound extends CI_Controller{
 		}
 	}
 
-	private function select_filtered_group($input, $mapset, $current){
-		$full         = array(); // массив в который будем складывать все пришедшие параметры в соответствии с алгоритмами :)
-		$list         = array(); // массив накопитель найденных объектов. Над ним проводятся операции
-		$result = $this->db->query("SELECT
-		`properties_list`.algoritm,
-		`properties_list`.id
-		FROM
-		`properties_list`
-		WHERE 
-		`properties_list`.id IN (".implode(array_keys($input), ",").")");
-		if($result->num_rows()){
-			foreach($result->result() as $row){
-				if (!isset($full[$row->algoritm])) {
-					$full[$row->algoritm] = array();
-				};
-				$full[$row->algoritm][$row->id] = $input[$row->id];
-			}
-		}
+	private function perform_tests($full){
+		$list = array(); // массив накопитель найденных объектов. Над ним проводятся операции
 		if(isset($full['u']) && sizeof($full['u'])) {
 			$list = $this->select_by_U_algorithm($full['u']);
 		}
@@ -48,13 +32,32 @@ class Foxhound extends CI_Controller{
 		if (isset($full['pr']) && sizeof($full['pr'])) {
 			$list = $this->test_search_array($list, $this->select_by_PRICE_algorithm($full['pr']));
 		}
+		return $list;
+	}
+
+	private function select_filtered_group($input, $mapset, $current){
+		$full         = array(); // массив в который будем складывать все пришедшие параметры в соответствии с алгоритмами :)
+		$result = $this->db->query("SELECT
+		`properties_list`.algoritm,
+		`properties_list`.id
+		FROM
+		`properties_list`
+		WHERE 
+		`properties_list`.id IN (".implode(array_keys($input), ",").")");
+		if($result->num_rows()){
+			foreach($result->result() as $row){
+				if (!isset($full[$row->algoritm])) {
+					$full[$row->algoritm] = array();
+				};
+				$full[$row->algoritm][$row->id] = $input[$row->id];
+			}
+		}
+		$list = $this->perform_tests($full);
 		if(sizeof($list)) {
 			print implode($list, ",");
-		} else {
-			//print "console.log('No Data')";
+			return true;
 		}
-
-		//$this->output->enable_profiler(TRUE);
+		print "console.log('No Data')";
 	}
 
 	private function test_search_array($list, $addition){
@@ -124,15 +127,16 @@ class Foxhound extends CI_Controller{
 		//echo "UD relevant: ".implode($ud_diff,",")."\n";
 	}
 
-	private function select_by_ME_algorithm($list) {
-		/*
-		$list   = array()
-		$output = array()
-		*/
+	private function make_test_array($result){
 		$output = array();
-		$string = implode(array_keys($list), ", ");
-		$count  = sizeof(array_keys($list));
-		$result = $this->db->query("SELECT
+		foreach($result->result() as $row){
+			$testarray[$row->lid][$row->pid] = $row->value;
+		}
+		return $output;
+	}
+
+	private function get_me_le_result($string, $count) {
+		return $this->db->query("SELECT
 		IF(properties_list.coef = 1, properties_assigned.value, (properties_assigned.value / properties_list.divider * properties_list.multiplier)) AS value,
 		properties_assigned.property_id as `pid`,
 		properties_assigned.location_id as `lid`
@@ -151,18 +155,25 @@ class Foxhound extends CI_Controller{
 		)
 		ORDER BY
 		properties_assigned.location_id", array($count));
+	}
+
+	private function select_by_ME_algorithm($list) {
+		/*
+		$list   = array()
+		$output = array()
+		*/
+		$output = array();
+		$string = implode(array_keys($list), ", ");
+		$count  = sizeof(array_keys($list));
+		$result = $this->get_me_le_result($string, $count);
 		if($result->num_rows()) {
-			$testarray = array();
-			foreach($result->result() as $row){
-				$testarray[$row->lid][$row->pid] = $row->value;
-			}
-			foreach ($testarray as $loc=>$val){
+			foreach ($this->make_test_array($result) as $loc=>$val){
 				$match     = 1;
 				$incounter = 0;
 				foreach($list as $prop=>$val2){
 					($val[$prop] < $val2) ? $match = 0 : $incounter++;
 				}
-				if((sizeof($list) - $incounter) === 0 && $match){
+				if((sizeof($list) === $incounter) && $match){
 					array_push($output, $loc);
 				}
 			}
@@ -172,54 +183,25 @@ class Foxhound extends CI_Controller{
 	}
 
 	private function select_by_LE_algorithm($list) {
-		/*
-		$list   = array()
-		$output = array()
-		*/
 		$output = array();
-			$string  = implode(array_keys($list));
-			$count   = sizeof($string);	
-			$result  = $this->db->query("SELECT
-			IF(properties_list.coef = 1, properties_assigned.value, (properties_assigned.value / properties_list.divider * properties_list.multiplier)) AS value,
-			properties_assigned.property_id as `pid`,
-			properties_assigned.location_id as `lid`
-			FROM
-			`properties_list`
-			INNER JOIN properties_assigned ON (`properties_list`.id = properties_assigned.property_id)
-			WHERE
-			properties_assigned.property_id IN (".$string.")
-			AND properties_assigned.location_id IN (
-				SELECT
-				properties_assigned.location_id
-				FROM
-				properties_assigned
-				WHERE
-				properties_assigned.property_id IN (".$string.")
-				GROUP BY properties_assigned.location_id
-				HAVING COUNT(*) = ?
-			)
-			ORDER BY
-			properties_assigned.location_id", array($count));
-			if($result->num_rows()){
-				$testarray = array();
-				foreach($result->result() as $row){
-					$testarray[$row->lid][$row->pid] = $row->value;
+		$string = implode(array_keys($list));
+		$count  = sizeof($string);
+		$result = $this->get_me_le_result($string, $count);
+		if($result->num_rows()){
+			foreach ($this->make_test_array($result) as $loc => $val){
+				$match = 1;
+				$incounter = 0;
+				foreach($list as $prop => $val2){
+					($val[$prop] > $val2) ? $match = 0 : $incounter++;
 				}
-				foreach ($testarray as $loc => $val){
-					$match = 1;
-					$incounter = 0;
-					foreach($list as $prop => $val2){
-						($val[$prop] > $val2) ? $match = 0 : $incounter++;
-					}
-					if((sizeof($list) - $incounter) === 0 && $match){
-						array_push($le_diff, $loc);
-					}
+				if((sizeof($list) === $incounter) && $match){
+					array_push($output, $loc);
 				}
-			}else{//если не найдено хотя бы что-то - дальнейший поиск не имеет смысла
-				return "console.log('No Data')";
 			}
+		}else{//если не найдено хотя бы что-то - дальнейший поиск не имеет смысла
+			return "console.log('No Data')";
+		}
 		return $output;
-		//echo "UD relevant: ".implode($ud_diff,",")."\n";
 	}
 
 	private function select_by_PRICE_algorithm($list) {
@@ -233,7 +215,6 @@ class Foxhound extends CI_Controller{
 		NOW() BETWEEN timers.start_point AND timers.end_point
 		AND `timers`.`type` = 'price'
 		AND `timers`.`price` <= ".implode($full['pr'], ""));
-		//echo mysql_num_rows($result)."price_order\n";
 		if($result->num_rows()){
 			foreach($result->result() as $row ) {
 				array_push($output, $row->location_id);
