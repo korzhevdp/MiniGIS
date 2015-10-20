@@ -47,6 +47,8 @@ class Cachemodel extends CI_Model{
 	private function make_UL($result, $lang){
 		$input = array();
 		$list  = array();
+		$this->config->load('translations_a', FALSE);
+		$articles = $this->config->item('articles');
 		foreach($result->result() as $row) {
 			$link      = (strlen($row->redirect)) ? $row->redirect : '/page/docs/'.$row->id;
 			$groupname = (isset($articles[$row->parent]) && strlen($articles[$row->parent][$lang]))    ? $articles[$row->parent][$lang]    : $row->topheader;
@@ -66,9 +68,7 @@ class Cachemodel extends CI_Model{
 	}
 
 	private function cache_docs($root = 1, $mode = 'file'){
-		$this->config->load('translations_a', FALSE);
 		$langs    = $this->config->item('lang');
-		$articles = $this->config->item('articles');
 		$result   = $this->db->query("SELECT
 		sheets.redirect,
 		sheets.parent,

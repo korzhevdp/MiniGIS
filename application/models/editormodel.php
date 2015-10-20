@@ -152,7 +152,7 @@ class Editormodel extends CI_Model{
 		FROM
 		`locations_types`
 		WHERE `locations_types`.`object_group` = ?
-		AND `locations_types`.pl_num <> 0", array($output['object_group']));
+		AND `locations_types`.pl_num <> 0", array($group));
 		if($result->num_rows()){
 			foreach($result->result() as $row){
 				$selected = ($own_type == $row->id) ? ' selected="selected"' : "";
@@ -185,7 +185,7 @@ class Editormodel extends CI_Model{
 		if ($type === "location") {
 			$output = $this->fill_in_location_mode($id);
 		}
-		$output['typelist'] = $this->get_object_types_of_group($group, $output['type']);
+		$output['typelist'] = $this->get_object_types_of_group($output['object_group'], $output['type']);
 		$pagelist     = array();
 		$pagelist_alt = array();
 		$result       = $this->db->query("SELECT 
