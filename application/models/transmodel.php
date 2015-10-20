@@ -7,55 +7,15 @@ class Transmodel extends CI_Model{
 	public function translations($mode = "groups"){
 		//$this->output->enable_profiler(TRUE);
 		$output = array();
-
-		if ($mode === "groups"){
-			$result = $this->db->query("SELECT
-			objects_groups.id,
-			objects_groups.name
-			FROM
-			objects_groups
-			ORDER BY objects_groups.name");
-		}
-		if ($mode === "categories"){
-			$result = $this->db->query("SELECT 
-			`locations_types`.name,
-			`locations_types`.id
-			FROM
-			`locations_types`
-			WHERE `locations_types`.pl_num > 0");
-		}
-		if ($mode === "properties"){
-			$result = $this->db->query("SELECT 
-			`properties_list`.selfname AS name,
-			`properties_list`.id
-			FROM
-			`properties_list`
-			WHERE LENGTH(`properties_list`.`selfname`)");
-		}
-		if ($mode === "labels"){
-			$result = $this->db->query("SELECT DISTINCT
-			`properties_list`.label AS id,
-			`properties_list`.label AS name
-			FROM
-			`properties_list`
-			ORDER BY `properties_list`.label");
-		}
-		if ($mode === "articles"){
-			$result = $result=$this->db->query("SELECT 
-			`sheets`.`id`,
-			`sheets`.`header` AS name
-			FROM
-			`sheets`
-			ORDER BY name ASC");
-		}
-		if ($mode === "maps"){
-			$result = $this->db->query("SELECT
-			`map_content`.name,
-			`map_content`.id
-			FROM
-			`map_content`
-			ORDER BY `map_content`.name ASC");
-		}
+		$queries = array(
+			"groups"		=> "SELECT objects_groups.id, objects_groups.name FROM objects_groups ORDER BY objects_groups.name",
+			"categories"	=> "SELECT `locations_types`.name, `locations_types`.id FROM `locations_types` WHERE `locations_types`.pl_num > 0",
+			"properties"	=> "SELECT `properties_list`.selfname AS name, `properties_list`.id FROM `properties_list` WHERE LENGTH(`properties_list`.`selfname`)",
+			"labels"		=> "SELECT DISTINCT `properties_list`.label AS id, `properties_list`.label AS name FROM `properties_list` ORDER BY `properties_list`.label",
+			"articles"		=> "SELECT `sheets`.`id`, `sheets`.`header` AS name FROM `sheets` ORDER BY name ASC",
+			"maps"			=> "SELECT `map_content`.name, `map_content`.id FROM `map_content` ORDER BY `map_content`.name ASC"
+		)
+		$result = $this->db->query($queries[$mode]);
 		$groups = $this->config->item($mode);
 		$table  = $this->get_translation_table($result, $groups, $mode);
 		$output['table'] = implode($table, "\n");
@@ -76,27 +36,19 @@ class Transmodel extends CI_Model{
 				$string = array();
 				$id = sizeof($table);
 				foreach($this->config->item("lang") as $key=>$val) {
-					$readonly = "";
-					if($key === $this->config->item("native_lang")){
-						$value = $row->name;
-						$readonly = ' readonly="readonly"';
-					} else {
-						$value = (isset($groups[$row->id][$key])) ? $groups[$row->id][$key] : '';
-					}
-					if($mode === 'labels'){
+					$readonly = ($key === $this->config->item("native_lang")) ? ' readonly="readonly"' : '';
+					$value = (isset($groups[$row->id][$key])) ? $groups[$row->id][$key] : '';
+					if ($mode === 'labels') {
 						$cell = "\t".'<td><input type="text" name="'.$mode.'['.$id.']['.$key.']" class="translation" ref="'.$row->id.'" lang="'.$key.'" value="'.$value.'" placeholder="Нет перевода"'.$readonly.'></td>';
-					}
-					else{
+					} else {
 						$cell = "\t".'<td><input type="text" name="'.$mode.'['.$row->id.']['.$key.']" class="translation" ref="'.$row->id.'" lang="'.$key.'" value="'.$value.'" placeholder="Нет перевода"'.$readonly.'></td>';
 					}
 					array_push($string, $cell);
-
 				}
 				if($mode === 'labels'){
 					$cell = "\t".'<td class="hide"><input type="hidden" name="'.$mode.'['.$id.'][original]" class="translation" ref="'.$row->id.'" lang="'.$key.'" value="'.$row->name.'" placeholder="Нет перевода"></td>';
 					array_push($string, $cell);
 				}
-
 				array_push($table, "<tr>\n".implode($string, "\n")."\n</tr>");
 			}
 		}
