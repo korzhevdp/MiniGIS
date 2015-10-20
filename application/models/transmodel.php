@@ -5,7 +5,6 @@ class Transmodel extends CI_Model{
 	}
 
 	public function translations($mode = "groups"){
-		//$this->output->enable_profiler(TRUE);
 		$output = array();
 		$queries = array(
 			"groups"		=> "SELECT objects_groups.id, objects_groups.name FROM objects_groups ORDER BY objects_groups.name",
@@ -56,7 +55,6 @@ class Transmodel extends CI_Model{
 	}
 
 	public function trans_save(){
-		//$this->output->enable_profiler(TRUE);
 		$output = array();
 		$files  = array(
 			'groups'		=> 'application/config/translations_g.php',
