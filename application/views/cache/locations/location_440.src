@@ -1,0 +1,29 @@
+<!-- <script type="text/javascript" src="http://api.korzhevdp.com/jscript/map_styles2.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/jscript/jquery.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/bootstrap/js/bootstrap.js"></script>
+<link href="http://api.korzhevdp.com/bootstrap/css/bootstrap.css" rel="stylesheet">
+<link href="http://api.korzhevdp.com/css/frontend.css" rel="stylesheet" media="screen" type="text/css"> -->
+
+
+<h3  class="stdView">Варавино-Фактория<small><i class="icon-tags"></i>Территориальный округ</small></h3>
+<div class="stdView">
+	<img src="http://static-maps.yandex.ru/1.x/?l=map&size=128,128&pl=c:ec473fFF,f:FF660020,w:3,MJpsArfx1wPRjgAANOX___h2AACx-P__9LYAALkBAAB9AQAABAAAAO7v__-WFwAA6____74EAABpBAAAl____ysWAAAM_v__YAEAALQCAAAdMwAATP7__9T2__9zGAAA8CUAADj8__9ODwAASQwAAJzx__8jFAAAAs3__88OAAAd0v__uv3__yj1__81AgAAXf___2P5__-dqv__awsAAJXO__8ZAAAAHtr__yEDAAAeAQAA3gQAADTh__-JAQAARPr__2MHAAAP6v__6vr__xTr__8jFAAAmeL__2EWAAC3EgAAsxIAAMH-___HBwAAm-b__34HAAB79f__PgYAAE30___rBAAAIfz__57-__-A1v__KvH__xPu__9w-f__Nv7__4H___9n4f__d_v__8oGAADT_P__Kvn__yH9__-85v__HPX__4z8__-D_v__yOv__0n3__-s-f__uP3__4z9__97_v__9P7__xz8__8R7f__-vb__xYSAACc4P__iRwAAC7a___ZBgAAE-b__w==" alt="миникарта">
+		<div class="address"><i class="icon-home"></i></div>
+	<div class="contacts"><i class="icon-envelope"></i></div>
+	<div class="coordinates"><i class="icon-map-marker"></i><span class="coord1"></span><br>
+	<span class="coord2">MJpsArfx1wPRjgAANOX___h2AACx-P__9LYAALkBAAB9AQAABAAAAO7v__-WFw...</span></div>
+</div>
+
+<div class="stdViewContent">
+	<div class="alert alert-danger">Приведённая здесь информация может быть неполной, некорректной и/или устаревшей</div>
+	<h4>Район города</h4><span class="line">Округ Варавино-Фактория</span><span class="line">Территориальный округ</span></div>
+
+<div class="navbar navbar-fixed-bottom" >
+	<div class="navbar-inner"><a class="brand"  style="margin-left:0px;" href="#">Minigis.NET</a>
+		<ul class="nav pull-right">
+			<li class="active">
+				<a href="#">korzhevdp.com</a>
+			</li>
+		</ul>
+	</div>
+</div>

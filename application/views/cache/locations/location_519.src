@@ -1,0 +1,32 @@
+<!-- <script type="text/javascript" src="http://api.korzhevdp.com/jscript/map_styles2.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/jscript/jquery.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/bootstrap/js/bootstrap.js"></script>
+<link href="http://api.korzhevdp.com/bootstrap/css/bootstrap.css" rel="stylesheet">
+<link href="http://api.korzhevdp.com/css/frontend.css" rel="stylesheet" media="screen" type="text/css"> -->
+
+
+<h3  class="stdView">Соломбальско-Варавинская линия<small><i class="icon-tags"></i>Ветка метро</small></h3>
+<div class="stdView">
+	<img src="http://static-maps.yandex.ru/1.x/?l=map&size=128,128&pl=sJhqApmW2gNm2f__G73__xoHAAAH7f__bQUAAFHu___89v__rPf__7H5___C-v__7fb__6z4___B9f__Rrv__1UGAAA4xP__9SQAAPKU___PkQAAd8n__1KpAAAEtf__e7oAANK1__-bqgAAmrr__w==" alt="миникарта">
+		<div class="address"><i class="icon-home"></i>25 лесозавод - Почтовый Тракт</div>
+	<div class="contacts"><i class="icon-envelope"></i></div>
+	<div class="coordinates"><i class="icon-map-marker"></i><span class="coord1">40.540336,64.657049,40.530454000000006,64.63992400000001,40.53...</span><br>
+	<span class="coord2">sJhqApmW2gNm2f__G73__xoHAAAH7f__bQUAAFHu___89v__rPf__7H5___C-v...</span></div>
+</div>
+
+<div class="stdViewContent">
+	<div class="alert alert-danger">Приведённая здесь информация может быть неполной, некорректной и/или устаревшей</div>
+	<h4>Маршруты</h4><span class="line">Ветка метро</span>
+<h4>Описание</h4><p class="line">Оранжевая ветка метро "Соломбальско-Варавинская линия" запущена в 2022 году. Соединяет заводские районы Архангельска с центром города в районе транспортного узла железнодорожного вокзала. </p><p>Северная наземная часть ветки соединяет станции: 25 лесозавод, Соломбала 1, Соломбала 2. Станция "Гидролизный завод" в настоящее время не функционирует и исключена из генерального плана метро. Поезда следуют по платформе без остановок</p><p>В центральной части города поезда следуют через станции "имени старшего брата Сибирцева", "Железнодорожный вокзал", "Майская горка" в полузаглубленных амортизированных туннелях. На станциях "имени старшего брата Сибирцева" сооружён переход на станции веток глубокого залегания "Сульфатско-Исакогорской" и "Кольцевой линий". По временной схеме (до ввода в строй первой очереди метро Завокзального района города) поезда оранжевой линии в перегоне "им. ст. Сибирцева - Железнодорожный вокзал" используют те же туннели, что и поезда "Кольцевой линии" метро.</p><p>Южная часть ветки метро, так же как и северная, - наземная. Соединяет центр с южными районами правого берега Архангельска станциями "Дачная" и "Фактория". В перспективном плане до 2035 года запланировано продление ветки тремя станциями до посёлка Уйма и Малых Карел.</p><p>Протяжённость: 21,9 км. </p><p>Количество станций: 8</p>
+<h4>Район города</h4><span class="line">Ломоносовский округ</span><span class="line">Маймаксанский округ</span><span class="line">Округ Варавино-Фактория</span><span class="line">Округ Майская Горка</span><span class="line">Октябрьский округ</span><span class="line">Соломбальский округ</span>
+<h4>Расположение</h4><p class="line">Подземное</p></div>
+
+<div class="navbar navbar-fixed-bottom" >
+	<div class="navbar-inner"><a class="brand"  style="margin-left:0px;" href="#">Minigis.NET</a>
+		<ul class="nav pull-right">
+			<li class="active">
+				<a href="#">korzhevdp.com</a>
+			</li>
+		</ul>
+	</div>
+</div>

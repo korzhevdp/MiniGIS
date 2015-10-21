@@ -1,0 +1,71 @@
+<!-- вырезать отсюда / cut from here -->
+<STYLE TYPE="text/css">
+.ymaps_balloon{
+	color: #000000;
+	width: 275px;
+	padding-bottom:15px;
+	font-size: 8pt;
+	font-family: Tahoma;
+	line-height:14px;
+}
+</STYLE>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script src="http://api-maps.yandex.ru/2.0/?coordorder=longlat&load=package.full&lang=ru-RU" type="text/javascript"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/jscript/map_styles2.js"></script>
+<script type="text/javascript">
+	ymaps.ready(display_locations);
+	function display_locations(){
+		map = new ymaps.Map("YMapsID", {
+			center: [40.62244029,64.59551285],
+			zoom: 11,
+			type: 'yandex#map',
+			behaviors: ["scrollZoom", "drag", "dblClickZoom"]
+		});
+		map.controls.add('mapTools').add('zoomControl');
+		for (a in userstyles){
+			ymaps.option.presetStorage.add(a, userstyles[a]);
+		}
+		ms = new ymaps.GeoObjectArray();
+		var genericBalloon = ymaps.templateLayoutFactory.createClass(
+			'<div class="ymaps_balloon">' +
+			'<b>Название:</b> $[properties.name|без имени]<br><b>Адрес:</b> $[properties.address|нет]<br>' +
+			'<b>Описание:</b> $[properties.description|без описания]' +
+			'</div></div>'
+		);
+		ymaps.layout.storage.add('generic#balloonLayout', genericBalloon);
+		ms.options.set({
+			balloonContentBodyLayout: 'generic#balloonLayout',
+			balloonMaxWidth: 300// Максимальная ширина балуна в пикселах
+		});
+		object = new ymaps.Placemark( {type: 'Point', coordinates: [40.71117267049267,64.59593244747447]}, {address: 'аэропорт Архангельск, 3', description: 'аэропорт Архангельск, 3', name: 'Ил-14', hasHint: 1, hintContent: 'Ил-14 аэропорт Архангельск, 3', link: 'https://ru.wikipedia.org/wiki/%D0%98%D0%BB-14' }, ymaps.option.presetStorage.get('twirl#darkgreenDotIcon') );
+ms.add(object);
+object = new ymaps.Placemark( {type: 'Point', coordinates: [40.71306417832079,64.59550691110871]}, {address: 'аэропорт Архангельск, 3', description: 'аэропорт Архангельск, 3', name: 'Пивной ресторан Braumeister', hasHint: 1, hintContent: 'Пивной ресторан Braumeister аэропорт Архангельск, 3', link: '' }, ymaps.option.presetStorage.get('twirl#restaurauntIcon') );
+ms.add(object);
+object = new ymaps.Placemark( {type: 'Point', coordinates: [40.709505350179235,64.59429663811983]}, {address: 'аэропорт Архангельск, 5к1', description: 'аэропорт Архангельск, 5к1', name: 'МиГ-31', hasHint: 1, hintContent: 'МиГ-31 аэропорт Архангельск, 5к1', link: 'https://ru.wikipedia.org/wiki/%D0%9C%D0%B8%D0%93-31' }, ymaps.option.presetStorage.get('twirl#greenIcon') );
+ms.add(object);
+object = new ymaps.Placemark( {type: 'Point', coordinates: [40.519753113637165,64.54803136095303]}, {address: 'Троицкий проспект, 118', description: 'Троицкий проспект, 118', name: 'Танк ИС-3М', hasHint: 1, hintContent: 'Танк ИС-3М Троицкий проспект, 118', link: 'https://ru.wikipedia.org/wiki/%D0%98%D0%A1-3' }, ymaps.option.presetStorage.get('twirl#greenIcon') );
+ms.add(object);
+object = new ymaps.Placemark( {type: 'Point', coordinates: [40.69816395677044,64.59595776210784]}, {address: 'Талажское шоссе, 34', description: 'Талажское шоссе, 34', name: 'Экспозиция музея авиации Севера под открытым небом', hasHint: 1, hintContent: 'Экспозиция музея авиации Севера под открытым небом Талажское шоссе, 34', link: '#' }, ymaps.option.presetStorage.get('twirl#darkgreenDotIcon') );
+ms.add(object);
+object = new ymaps.Placemark( {type: 'Point', coordinates: [40.51728011692541,64.54451542717257]}, {address: 'Троицкий проспект, 67/8', description: 'Троицкий проспект, 67/8', name: 'Британский танк Mk.V', hasHint: 1, hintContent: 'Британский танк Mk.V Троицкий проспект, 67/8', link: 'https://ru.wikipedia.org/wiki/%D0%91%D1%80%D0%B8%D1%82%D0%B0%D0%BD%D1%81%D0%BA%D0%B8%D0%B9_%D1%82%D0%B0%D0%BD%D0%BA_Mk.V_%28%D0%90%D1%80%D1%85%D0%B0%D0%BD%D0%B3%D0%B5%D0%BB%D1%8C%D1%81%D0%BA%29' }, ymaps.option.presetStorage.get('twirl#greenIcon') );
+ms.add(object);
+object = new ymaps.Placemark( {type: 'Point', coordinates: [40.52612496287432,64.53512346898222]}, {address: 'Поморская улица, 14', description: 'Поморская улица, 14', name: 'Зенитная пушка', hasHint: 1, hintContent: 'Зенитная пушка Поморская улица, 14', link: '#' }, ymaps.option.presetStorage.get('twirl#greenIcon') );
+ms.add(object);
+object = new ymaps.Placemark( {type: 'Point', coordinates: [40.7143323127122,64.59541464298819]}, {address: 'аэропорт Архангельск, 3', description: 'аэропорт Архангельск, 3', name: 'Як-18Т', hasHint: 1, hintContent: 'Як-18Т аэропорт Архангельск, 3', link: 'https://ru.wikipedia.org/wiki/%D0%AF%D0%BA-18%D0%A2' }, ymaps.option.presetStorage.get('twirl#darkgreenDotIcon') );
+ms.add(object);
+object = new ymaps.Polyline(new ymaps.geometry.LineString.fromEncodedCoordinates('ey1tAjui2QMjAAAAmQAAAEz___9pAAAA3dn__-0BAADp_v__X_v__2kCAAAO-f__tQEAAF3___9lAAAAuf___yQAAADE____'), {address: 'аэропорт Архангельск, 5к1', description: 'аэропорт Архангельск, 5к1', name: 'Самолёты ВВС СССР', hasHint: 1, hintContent: 'Самолёты ВВС СССР аэропорт Архангельск, 5к1', link: '#' }, ymaps.option.presetStorage.get('routes#bus'));
+ms.add(object);
+object = new ymaps.Placemark( {type: 'Point', coordinates: [40.62605331787767,64.38914303770495]}, {address: 'улица Стрельцова, 1', description: 'улица Стрельцова, 1', name: 'Ил-28', hasHint: 1, hintContent: 'Ил-28 улица Стрельцова, 1', link: 'https://ru.wikipedia.org/wiki/%D0%98%D0%BB-28' }, ymaps.option.presetStorage.get('twirl#greenIcon') );
+ms.add(object);
+object = new ymaps.Placemark( {type: 'Point', coordinates: [40.71057722009139,64.59374149180482]}, {address: 'аэропорт Архангельск, 5к1', description: 'аэропорт Архангельск, 5к1', name: 'Музей авиации Севера', hasHint: 1, hintContent: 'Музей авиации Севера аэропорт Архангельск, 5к1', link: '#' }, ymaps.option.presetStorage.get('twirl#darkgreenDotIcon') );
+ms.add(object);
+object = new ymaps.Placemark( {type: 'Point', coordinates: [40.4173603889514,64.69979617678035]}, {address: 'Стадионная улица, 4', description: 'Нет адреса', name: 'Новодвинская крепость (развалины)', hasHint: 1, hintContent: 'Новодвинская крепость (развалины) Нет адреса', link: 'https://ru.wikipedia.org/wiki/%D0%9D%D0%BE%D0%B2%D0%BE%D0%B4%D0%B2%D0%B8%D0%BD%D1%81%D0%BA%D0%B0%D1%8F_%D0%BA%D1%80%D0%B5%D0%BF%D0%BE%D1%81%D1%82%D1%8C' }, ymaps.option.presetStorage.get('user#tower') );
+ms.add(object);
+object = new ymaps.Placemark( {type: 'Point', coordinates: [40.70075765288788,64.5919796237623]}, {address: 'Авиационная улица, 11к1', description: 'Авиационная улица, 11к1', name: 'Су-11', hasHint: 1, hintContent: 'Су-11 Авиационная улица, 11к1', link: 'https://ru.wikipedia.org/wiki/%D0%A1%D1%83-11' }, ymaps.option.presetStorage.get('twirl#greenIcon') );
+ms.add(object);
+object = new ymaps.Polyline(new ymaps.geometry.LineString.fromEncodedCoordinates('MEhqAsLs2AOi_f__NQAAAGr4__8K8v__IPz__xr4__-j-v__0vf__7sKAADr_v__MQQAAHj8___MBAAAxPv__yUHAAA1_f__exIAAOn5___XAAAAkf3__z3-__-o____'), {address: 'Воскресенская улица, 5', description: 'Воскресенская улица, 5', name: 'Военные памятники центра', hasHint: 1, hintContent: 'Военные памятники центра Воскресенская улица, 5', link: '#' }, ymaps.option.presetStorage.get('routes#walk'));
+ms.add(object);		map.geoObjects.add(ms);
+	}
+</script>
+<div id="YMapsID" style="width:100%;height:98%;border:1px solid #FFFFFF;margin:0px;"></div>
+<!-- до сюда / till here -->

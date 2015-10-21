@@ -1,0 +1,1 @@
+<option value="80">комната</option><option value="81">1-комнатная</option><option value="82">2-комнатная</option><option value="83">3-комнатная</option><option value="84">4-комнатная</option>

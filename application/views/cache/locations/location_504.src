@@ -1,0 +1,30 @@
+<!-- <script type="text/javascript" src="http://api.korzhevdp.com/jscript/map_styles2.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/jscript/jquery.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/bootstrap/js/bootstrap.js"></script>
+<link href="http://api.korzhevdp.com/bootstrap/css/bootstrap.css" rel="stylesheet">
+<link href="http://api.korzhevdp.com/css/frontend.css" rel="stylesheet" media="screen" type="text/css"> -->
+
+
+<h3  class="stdView">Октябрьский округ<small><i class="icon-tags"></i>Территориальный округ</small></h3>
+<div class="stdView">
+	<img src="http://static-maps.yandex.ru/1.x/?l=map&size=128,128&pl=c:ec473fFF,f:FF660020,w:3,hFhpAsne2AOa-f__1P7__8Xp__-ZBgAAgtb__33z__-99___0-z___z6__8XAAAAu-7__yABAABLAwAAuAQAAMP9___VAAAApvL___cBAAAl_f__l_7__8L8__9v-___DPf___YAAACTAwAAuPX__6T4___uAAAAWuz__7QCAABoAQAAKAMAAMYCAADM____1f7___cBAABY7___LwIAACDz___MAAAAHvn__xv9__-t6v__jwIAAP_w__84BQAA5ev__5YKAAAu-___7v___wDo__9U____a_b__yIAAABG9v__IfP__97c__8W9P__8SEAADn0__95PwAA0-___xE2AADp9___WIgAAIQBAABZiAAAEQYAAEcsAADXCAAARBIAAK8IAAAVEAAANAYAAIgUAAAEBQAA1P___28AAABIAQAAvwAAAC8HAAB-AQAAWwwAAEgEAACVAgAAbQAAACIeAAAdBgAAiDQAALoKAAAPAQAAUwEAANoAAABuAAAAQAMAAMX____AAgAADwAAAPwUAAB-BAAAhBoAAH8FAACUAwAAxgIAAO0EAACE____CwQAACcAAAALHwAAlQYAAE8lAADNBwAAR____-MDAAC_AAAAKwEAAJoGAABjAQAAKfv__2UEAADcAQAAMgAAAMUFAAA-AQAA_QoAAOf1__8RBgAAg_n__zMEAAD4-___TQQAAHn7___xSQAAeg8AAI7wAABJLgAAEf____YDAAB5BwAATwMAANMKAABRCgAAh____ykNAACl____HwoAAJQTAADMAwAAYQoAAHACAAC29f__nggAAH76__-GBAAA_vf__08EAAC99f__6AIAAK7m__-CAwAAyvL__9QBAABM-___4wAAAOT8___OAAAAE_3__9b-__9d8P__Efz__279__-b____fWL___jn__8A9v__bf7__5T____3____gcP__9kDAABk9f__twAAAAYAAAADAAAAbPD__1oBAAC1_v__GwEAABMAAAA9AAAAwhAAANIFAACxAQAAqQAAAKkCAAAsAQAAKAIAAPYAAAB2AgAAKAEAADUCAAASAQAA-QEAAAsBAADKAgAAkAEAAKsCAACIAQAAUgEAAMIAAAAJAwAAqwEAAKsBAAD6AAAAzwEAAAwBAAAOAQAAHwAAAH4AAAAiAAAAFQEAAJ4AAAD4FgAATg0AAHQdAABPEQAABAUAAIYCAAB9AwAAAwIAAI4hAACRFAAAPwEAAMQAAADtAAAAnQAAAEIAAABuAAAA-f___0sAAACv____UgAAAEH___9bAAAAJP___xIAAAC1_P__u____xf____V____ZP___9____99____2____zj____L____JP___7P____6-v__iPz___j7__8-_v__q____9____91____4f___x3-__8BAAAA2_r__4cAAAB7____HQAAAODt__8yBAAAqP3__1MAAADV_v__bwAAAH3-___NAAAAbv7___cBAABw____fQEAAAQAAABVAQAAJwAAALQAAAD6____qAAAAOH___8YAQAA5P___xYBAADx____gwAAABsAAACgAAAACQAAAGgAAADcAgAAPg0AAIf4__9E8___n_v__2v2__-x9___lOz__1Lu__9p9f__pdz__2zy__8vrP__TOX__0rC___Y7___4bz__3Lr____zP__fOr__23x__9s8v__dL3__8zj__8yjP__gej__0bY__9D-f__" alt="миникарта">
+		<div class="address"><i class="icon-home"></i>администрация: 163002, г. Архангельск, пр. Троицкий, 61.</div>
+	<div class="contacts"><i class="icon-envelope"></i></div>
+	<div class="coordinates"><i class="icon-map-marker"></i><span class="coord1"></span><br>
+	<span class="coord2">hFhpAsne2AOa-f__1P7__8Xp__-ZBgAAgtb__33z__-99___0-z___z6__8XAA...</span></div>
+</div>
+
+<div class="stdViewContent">
+	<div class="alert alert-danger">Приведённая здесь информация может быть неполной, некорректной и/или устаревшей</div>
+	<h4>Описание</h4><p class="line">ОКТЯБРЬСКИЙ ОКРУГ</p><p>Адрес администрации: 163002, г. Архангельск, пр. Троицкий, 61.</p><p>Глава администрации – Сергей Аркадьевич Несмеянов. Прием граждан по личным вопросам – каждый вторник с 16 до 18 часов в администрации округа.</p><p></p><p>Численность населения (на 01.01.2008): 85000 человек</p><p>Строительство в округе (по состоянию на 18.06.2008 г.): многоэтажные жилые дома: проезд. Бадигина, 10; ул. Воскресенская - пр. Ломоносова; ул. Воскресенская между пр. Ломоносова и пр. Новгородский (122-й квартал); ул. Воскресенская между пр. Новгородский и пр. Сов. Космонавтов (121-й квартал); ул. Воскресенская между пр. Сов. Космонавтов и ул. Обводным каналом; ул. Гайдара, 2; ул. Гайдара – пр. Обводный канал; ул. Гагарина - ул. Розинга – пр. Бадигина; Гагарина – пр. Дзержинского; ул. Логинова – пр. Троицкий; ул. Попова – пр. Ломоносова (пр. Ломоносова, 207); Попова, 32 (пересечение ул. Попова – пр. Новгородский); ул. Свободы, 25; ул. Свободы – пр. Ломоносова; ул. Свободы между пр. Ломоносова и пр. Новгородским; ул. Шубина, 50 – пр. Советских Космонавтов, 174; ул. Свободы – пр. Новгородский; пр. Сов. Космонавтов, 175-177;</p><p>спортивный центр с универсальным игровым залом и плавательным бассейном (ул. Шубина – пр. Сов. Космонавтов).</p><p></p><p>На территории округа расположено 174 предприятия, из них наиболее крупные:</p><p>ОАО «Архстрой», ОАО «Строительно-монтажный трест №1», ЗАО «Строительно-монтажный трест №5», ОАО «Архангельскгражданреконструкция», ОАО «Гидрострой -558», МУП «Стройсервис», ЗАО «АКРиС», ОАО «Севтрансстрой», ОАО «Механический завод», ЗАО «Мостоотряд №9», ЗАО «Беломортранс», ЗАО «Аэрофлот-Норд», ОАО «Архэнерго», Архангельские городские тепловые сети ОАО «Архангельская генерирующая компания», ОАО «Архангельскоблгаз», ОАО «Алвиз».</p><p>На территории округа располагаются:</p><p>6 отделений связи;</p><p>учреждения здравоохранения: городская поликлиника № 1; Северный медицинский центр Росздрава им. Н.А. Семашко; Архангельская областная клиническая больница; Архангельский областной клинический онкологический диспансер; стоматологическая поликлиника №1; детская поликлиника №1 (стоматология); Приморская ЦРБ; Архангельский областной психоневрологический диспансер; военный госпиталь – войсковая часть 55438; 1-я городская клиническая больница скорой медицинской помощи; областная станция переливания крови; станция скорой помощи;</p><p>учреждения образования: средние общеобразовательные школы №№ 1, 2, 5, 10, 11, 12, 14, 23, 24, 45, 70, гимназии №№ 3 и 6, ДЮСШ №5 (шахматно-шашечная), детская художественная школа №1, детские дома №№ 2 и 6.</p>
+<h4>Район города</h4><span class="line">Октябрьский округ</span><span class="line">Территориальный округ</span></div>
+
+<div class="navbar navbar-fixed-bottom" >
+	<div class="navbar-inner"><a class="brand"  style="margin-left:0px;" href="#">Minigis.NET</a>
+		<ul class="nav pull-right">
+			<li class="active">
+				<a href="#">korzhevdp.com</a>
+			</li>
+		</ul>
+	</div>
+</div>

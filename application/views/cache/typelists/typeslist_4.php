@@ -1,0 +1,1 @@
+<option value="16">Музеи</option><option value="17">Исторические места</option><option value="18">Культовые места</option><option value="19">Парки</option>

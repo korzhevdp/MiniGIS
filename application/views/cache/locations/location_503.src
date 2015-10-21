@@ -1,0 +1,32 @@
+<!-- <script type="text/javascript" src="http://api.korzhevdp.com/jscript/map_styles2.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/jscript/jquery.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/bootstrap/js/bootstrap.js"></script>
+<link href="http://api.korzhevdp.com/bootstrap/css/bootstrap.css" rel="stylesheet">
+<link href="http://api.korzhevdp.com/css/frontend.css" rel="stylesheet" media="screen" type="text/css"> -->
+
+
+<h3  class="stdView">Исакогорка<small><i class="icon-tags"></i>Станция метро</small></h3>
+<div class="stdView">
+	<img src="http://static-maps.yandex.ru/1.x/?z=13&l=map&size=128,128&pt=40.60909231857483,64.42925870547757,vkbkm" alt="миникарта">
+		<div class="address"><i class="icon-home"></i>Привокзальная улица, 19</div>
+	<div class="contacts"><i class="icon-envelope"></i>Архметростройтрест - 1</div>
+	<div class="coordinates"><i class="icon-map-marker"></i><span class="coord1">64.42925870547757</span><br>
+	<span class="coord2">40.60909231857483</span></div>
+</div>
+
+<div class="stdViewContent">
+	<div class="alert alert-danger">Приведённая здесь информация может быть неполной, некорректной и/или устаревшей</div>
+	<h4>Описание</h4><p class="line">Базовая инфраструктурная станция метрополитена. Создана на базе Исакогорского транспортного узла и включает в себя тяговые подстанции, ремонтное депо и центр управления движением.</p>
+<h4>Район города</h4><span class="line">Исакогорский округ</span>
+<h4>Расположение</h4><p class="line">Подземное</p>
+<h4>Станции</h4><span class="line">Станция метро</span></div>
+
+<div class="navbar navbar-fixed-bottom" >
+	<div class="navbar-inner"><a class="brand"  style="margin-left:0px;" href="#">Minigis.NET</a>
+		<ul class="nav pull-right">
+			<li class="active">
+				<a href="#">korzhevdp.com</a>
+			</li>
+		</ul>
+	</div>
+</div>

@@ -1,0 +1,30 @@
+<!-- <script type="text/javascript" src="http://api.korzhevdp.com/jscript/map_styles2.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/jscript/jquery.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/bootstrap/js/bootstrap.js"></script>
+<link href="http://api.korzhevdp.com/bootstrap/css/bootstrap.css" rel="stylesheet">
+<link href="http://api.korzhevdp.com/css/frontend.css" rel="stylesheet" media="screen" type="text/css"> -->
+
+
+<h3  class="stdView">Район падения метеорита<small><i class="icon-tags"></i>Район большой аварии</small></h3>
+<div class="stdView">
+	<img src="http://static-maps.yandex.ru/1.x/?l=map&size=128,128&pl=c:ec473fFF,f:FF660020,w:3,7ydqAp3M2AN-GwAA9vv__04YAAAT-f__WxIAADD9___HGgAAe_r__7sSAAAU_f__-PL__1gHAABR9f__nAUAAEvq__8TCwAAOd7__08NAACK2___4fD__wAAAAABAAAA" alt="миникарта">
+		<div class="address"><i class="icon-home"></i>Воскресенская улица, 9</div>
+	<div class="contacts"><i class="icon-envelope"></i>Иван Лысогоров. 77-43-12-5</div>
+	<div class="coordinates"><i class="icon-map-marker"></i><span class="coord1">[[[40.511471,64.539805],[40.518509,64.538771],[40.524731,64.53...</span><br>
+	<span class="coord2">7ydqAp3M2AN-GwAA9vv__04YAAAT-f__WxIAADD9___HGgAAe_r__7sSAAAU_f...</span></div>
+</div>
+
+<div class="stdViewContent">
+	<div class="alert alert-danger">Приведённая здесь информация может быть неполной, некорректной и/или устаревшей</div>
+	<h4>Описание</h4><p class="line">метеорит упал 26 августа 2013 года оставив за собой шлейф обломков.</p><p>Дети плакали, прочие решили, что это Явление...</p>
+<h4>Район аварии</h4><span class="line">Район большой аварии</span></div>
+
+<div class="navbar navbar-fixed-bottom" >
+	<div class="navbar-inner"><a class="brand"  style="margin-left:0px;" href="#">Minigis.NET</a>
+		<ul class="nav pull-right">
+			<li class="active">
+				<a href="#">korzhevdp.com</a>
+			</li>
+		</ul>
+	</div>
+</div>

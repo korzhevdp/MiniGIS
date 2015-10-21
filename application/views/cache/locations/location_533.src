@@ -1,0 +1,29 @@
+<!-- <script type="text/javascript" src="http://api.korzhevdp.com/jscript/map_styles2.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/jscript/jquery.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/bootstrap/js/bootstrap.js"></script>
+<link href="http://api.korzhevdp.com/bootstrap/css/bootstrap.css" rel="stylesheet">
+<link href="http://api.korzhevdp.com/css/frontend.css" rel="stylesheet" media="screen" type="text/css"> -->
+
+
+<h3  class="stdView">Северный округ<small><i class="icon-tags"></i>Территориальный округ</small></h3>
+<div class="stdView">
+	<img src="http://static-maps.yandex.ru/1.x/?l=map&size=128,128&pl=c:ec473fFF,f:FF660020,w:3,2oFrAuaT2QNS7v__afX__6Xc__9s8v__Y8___6v4__8d5v__AAAAAMXg__9v_v__rfr___8DAAAeAwAAzgEAAO71__-ABAAAIvP___oGAACCBwAArAIAAMzb___cEQAA3fn__-oCAACqAQAAuwEAALoJAAAWCAAA4P___3EAAADp-v__5wIAAFT8__8uAQAARPj__28BAAD1_v__MwAAAPAAAADgAAAALgAAAFsBAACsAAAAJQEAABwDAADVAwAATAIAAAECAADEAwAAlwEAACAGAACQAQAAXAgAABMDAAA5BAAA9wEAAIkBAAB6AQAARAEAAB8EAAAd_P__uwMAAEr9__8XAQAATPz__4cCAAACAgAAWwoAAIr5__8JAgAAI_v__7AAAAC8-P__Lv7__-Xu___i_f__8Pf__7D-___x9___gQAAAI_8___GAAAAp_3__1kBAAB0____MAIAAHgAAAA_AQAAogUAAAwFAABbDAAASwkAAHYEAADOAQAArwwAAOYCAACLAgAA1wAAADIEAAA_AgAABgEAAFIBAACdAAAAtwEAAKv-__9QBAAAXf7__5YBAAAl-f__GwUAAF7z__9cCQAALPr__94GAAD4BQAA-____7oHAAA9AQAAUgoAAF8AAACwBQAAaAAAANxFAAAb_v__PgEAAPf___8VAAAAvf7__88BAAA65___iwAAAGb8__-sAAAAhvv__2wAAAAo_f__rgIAAC7u___aDgAAIf___28NAAA2____9wQAALb____aBQAAqgYAAOoGAADVBwAAfxkAABT8__9p-f__ufP__8IhAAAx_P__RAIAAGgDAADLAAAAEAIAAF4AAAB5AQAANwAAADkGAADe____0QAAAKsDAAChAAAAMv7__9oJAABV_v__awcAAI3____TAQAAUAAAAMYGAACo____KQMAALIDAAAJAAAANwAAALv___9gAwAAYwAAAGUAAABAAAAAAQAAAFwAAAAh____BAIAAGr___-VAAAAa_3__4oCAAB7_v__HwEAANL9___cAAAA6f3__5UAAAC3_v__LgAAAKv-__9iAAAAUf3__wkBAABl_P__owEAAKX-__-4AAAAU____wgBAAB7AAAAWQIAABcCAAC6AAAAjgEAAFcAAAAoAwAAYwAAAB4EAAA2AAAA-wMAAEgAAABRCAAAjQAAALAEAABVAAAApAIAAC8AAADqAQAAKgAAAOcAAAAzAAAA6QEAACYBAAC3BgAAmf3__0wDAADj_v__J_P__zD5__-d_f__BP3__wAAAAAf-v__Iv___5b6__-7AQAAUfb__zMBAADf_f__zAEAAND5__8yBAAA-Pz__2UFAACd_f__1Q4AABH8__81GQAAlPr__5nv__8S6f__h_j__0Tz__-f-___a_b__7H3__-U7P__" alt="миникарта">
+		<div class="address"><i class="icon-home"></i></div>
+	<div class="contacts"><i class="icon-envelope"></i></div>
+	<div class="coordinates"><i class="icon-map-marker"></i><span class="coord1"></span><br>
+	<span class="coord2">2oFrAuaT2QNS7v__afX__6Xc__9s8v__Y8___6v4__8d5v__AAAAAMXg__9v_v...</span></div>
+</div>
+
+<div class="stdViewContent">
+	<div class="alert alert-danger">Приведённая здесь информация может быть неполной, некорректной и/или устаревшей</div>
+	<h4>Район города</h4><span class="line">Северный округ</span><span class="line">Территориальный округ</span></div>
+
+<div class="navbar navbar-fixed-bottom" >
+	<div class="navbar-inner"><a class="brand"  style="margin-left:0px;" href="#">Minigis.NET</a>
+		<ul class="nav pull-right">
+			<li class="active">
+				<a href="#">korzhevdp.com</a>
+			</li>
+		</ul>
+	</div>
+</div>

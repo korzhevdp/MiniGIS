@@ -1,0 +1,31 @@
+<!-- <script type="text/javascript" src="http://api.korzhevdp.com/jscript/map_styles2.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/jscript/jquery.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/bootstrap/js/bootstrap.js"></script>
+<link href="http://api.korzhevdp.com/bootstrap/css/bootstrap.css" rel="stylesheet">
+<link href="http://api.korzhevdp.com/css/frontend.css" rel="stylesheet" media="screen" type="text/css"> -->
+
+
+<h3  class="stdView">Левый Берег<small><i class="icon-tags"></i>Станция метро</small></h3>
+<div class="stdView">
+	<img src="http://static-maps.yandex.ru/1.x/?z=13&l=map&size=128,128&pt=40.56029543121087,64.51625884366801,vkbkm" alt="миникарта">
+		<div class="address"><i class="icon-home"></i></div>
+	<div class="contacts"><i class="icon-envelope"></i></div>
+	<div class="coordinates"><i class="icon-map-marker"></i><span class="coord1">64.51625884366801</span><br>
+	<span class="coord2">40.56029543121087</span></div>
+</div>
+
+<div class="stdViewContent">
+	<div class="alert alert-danger">Приведённая здесь информация может быть неполной, некорректной и/или устаревшей</div>
+	<h4>Описание</h4><p class="line">Первая станция метро второй очереди строительства метрополитена. Сдача станции была задержана из-за высокой водоносности грунта и связанных с этим его подвижекудорожавших строительство. До времени пуска поезда следовали по станции без остановки. Длина перронов: 76 метров; глубина заложения 62 метра. Перегон между станцией Левый Берег и ст. ... является уникальным техническим сооружением - это единственный двухпутный туннель метро, проложенный под руслом реки на длину более 1 километра. Для обеспечения безопасности рядом с осноными путями проложены вспомогательные с подвижным составом на автономных источниках тяги.</p>
+<h4>Район города</h4><span class="line">Исакогорский округ</span>
+<h4>Станции</h4><span class="line">Станция метро</span></div>
+
+<div class="navbar navbar-fixed-bottom" >
+	<div class="navbar-inner"><a class="brand"  style="margin-left:0px;" href="#">Minigis.NET</a>
+		<ul class="nav pull-right">
+			<li class="active">
+				<a href="#">korzhevdp.com</a>
+			</li>
+		</ul>
+	</div>
+</div>

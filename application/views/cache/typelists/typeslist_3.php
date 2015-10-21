@@ -1,0 +1,1 @@
+<option value="7">Отель 4*</option><option value="8">Отель 2*</option><option value="9">Отель 5*</option><option value="10">Отель 3*</option><option value="13">Хостелы</option><option value="14">Мотели</option>

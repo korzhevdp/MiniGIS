@@ -1,0 +1,29 @@
+<!-- <script type="text/javascript" src="http://api.korzhevdp.com/jscript/map_styles2.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/jscript/jquery.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/bootstrap/js/bootstrap.js"></script>
+<link href="http://api.korzhevdp.com/bootstrap/css/bootstrap.css" rel="stylesheet">
+<link href="http://api.korzhevdp.com/css/frontend.css" rel="stylesheet" media="screen" type="text/css"> -->
+
+
+<h3  class="stdView">Майская горка<small><i class="icon-tags"></i>Территориальный округ</small></h3>
+<div class="stdView">
+	<img src="http://static-maps.yandex.ru/1.x/?l=map&size=128,128&pl=c:ec473fFF,f:FF660020,w:3,JBJtAoaY2AOA7P__MggAAO72__-TEgAAS_f__3QPAABO____5AQAAIX2__-K_v__3v___0oAAAA6_P__tQ0AADj9___nCQAAmer__xgAAAAK7v__BQAAAA3j__8VEAAAAeD__8URAAC_-___URIAAIf7___8EgAAcg___7fR__9UIQAAEfX___Dz__9I6v__pvf__-Tw__8z_v__dP___6_w___n5f__WPr__xz0__92____Vf___9r6___I9___1v3__wz-__8CDQAA0f7___j8__8c-v__vf___3T-___98___-_j__xDt__9m8P__AAUAAEPy___kCQAA4fX__61FAABIz___YEQAAG_Y__9ZSQAAGfL__21gAAAU-f__J_n__-0ZAAB34___0iUAAOrt__9kHwAA7xIAAAYJAAAMAQAA5AMAAHQCAACFAQAAVAYAAEgCAAA4FAAAtwgAAHQDAAB9AQAARBkAAOQKAADWBgAA3wIAADb5__8tAwAAmR4AAIkEAADKAQAAfwAAAO0RAACQBgAAgCkAANYOAADfAwAAYgEAAA==" alt="миникарта">
+		<div class="address"><i class="icon-home"></i></div>
+	<div class="contacts"><i class="icon-envelope"></i></div>
+	<div class="coordinates"><i class="icon-map-marker"></i><span class="coord1"></span><br>
+	<span class="coord2">JBJtAoaY2AOA7P__MggAAO72__-TEgAAS_f__3QPAABO____5AQAAIX2__-K_v...</span></div>
+</div>
+
+<div class="stdViewContent">
+	<div class="alert alert-danger">Приведённая здесь информация может быть неполной, некорректной и/или устаревшей</div>
+	<h4>Район города</h4><span class="line">Округ Майская Горка</span><span class="line">Территориальный округ</span></div>
+
+<div class="navbar navbar-fixed-bottom" >
+	<div class="navbar-inner"><a class="brand"  style="margin-left:0px;" href="#">Minigis.NET</a>
+		<ul class="nav pull-right">
+			<li class="active">
+				<a href="#">korzhevdp.com</a>
+			</li>
+		</ul>
+	</div>
+</div>

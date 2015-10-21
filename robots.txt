@@ -1,9 +1,0 @@
-User-agent: *
-Crawl-delay: 10
-Disallow: /gisicons/
-Disallow: /install/
-Disallow: /mapcache/
-Disallow: /scripts/
-Disallow: /freehandcache/
-Disallow: /cert/
-Disallow: /captcha/

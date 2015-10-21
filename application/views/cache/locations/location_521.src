@@ -1,0 +1,31 @@
+<!-- <script type="text/javascript" src="http://api.korzhevdp.com/jscript/map_styles2.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/jscript/jquery.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/bootstrap/js/bootstrap.js"></script>
+<link href="http://api.korzhevdp.com/bootstrap/css/bootstrap.css" rel="stylesheet">
+<link href="http://api.korzhevdp.com/css/frontend.css" rel="stylesheet" media="screen" type="text/css"> -->
+
+
+<h3  class="stdView">Сульфатско-Исакогорская линия<small><i class="icon-tags"></i>Ветка метро</small></h3>
+<div class="stdView">
+	<img src="http://static-maps.yandex.ru/1.x/?l=map&size=128,128&pl=e61rAhod1wOR1___Ug4AAF78__-xqQAAQq7__8lpAAD8tv__vTEAABDE__-CLwAAzh4AANolAADw-___6h4AAMLT__8xJwAAle7__5EiAABc4QAAnHoAAA==" alt="миникарта">
+		<div class="address"><i class="icon-home"></i>ул. Химиков, д. 21-а</div>
+	<div class="contacts"><i class="icon-envelope"></i>Архметростройтрест - 3</div>
+	<div class="coordinates"><i class="icon-map-marker"></i><span class="coord1">40.611195,64.429338,40.600844,64.433004,40.599914000000005,64....</span><br>
+	<span class="coord2">e61rAhod1wOR1___Ug4AAF78__-xqQAAQq7__8lpAAD8tv__vTEAABDE__-CLw...</span></div>
+</div>
+
+<div class="stdViewContent">
+	<div class="alert alert-danger">Приведённая здесь информация может быть неполной, некорректной и/или устаревшей</div>
+	<h4>Маршруты</h4><span class="line">Ветка метро</span>
+<h4>Описание</h4><p class="line">Ветка метро получившаяся на базе двух веток, изначально спроектированных для северных территорий</p>
+<h4>Район города</h4><span class="line">Исакогорский округ</span><span class="line">Ломоносовский округ</span><span class="line">Октябрьский округ</span><span class="line">Северный округ</span><span class="line">Соломбальский округ</span></div>
+
+<div class="navbar navbar-fixed-bottom" >
+	<div class="navbar-inner"><a class="brand"  style="margin-left:0px;" href="#">Minigis.NET</a>
+		<ul class="nav pull-right">
+			<li class="active">
+				<a href="#">korzhevdp.com</a>
+			</li>
+		</ul>
+	</div>
+</div>

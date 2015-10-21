@@ -1,0 +1,32 @@
+<!-- <script type="text/javascript" src="http://api.korzhevdp.com/jscript/map_styles2.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/jscript/jquery.js"></script>
+<script type="text/javascript" src="http://api.korzhevdp.com/bootstrap/js/bootstrap.js"></script>
+<link href="http://api.korzhevdp.com/bootstrap/css/bootstrap.css" rel="stylesheet">
+<link href="http://api.korzhevdp.com/css/frontend.css" rel="stylesheet" media="screen" type="text/css"> -->
+
+
+<h3  class="stdView">Дачная<small><i class="icon-tags"></i>Станция метро</small></h3>
+<div class="stdView">
+	<img src="http://static-maps.yandex.ru/1.x/?z=13&l=map&size=128,128&pt=40.66428651555618,64.51273895223318,vkbkm" alt="миникарта">
+		<div class="address"><i class="icon-home"></i>Холмогорская улица, 33к1</div>
+	<div class="contacts"><i class="icon-envelope"></i>Архметростройтрест - 4</div>
+	<div class="coordinates"><i class="icon-map-marker"></i><span class="coord1">64.51273895223318</span><br>
+	<span class="coord2">40.66428651555618</span></div>
+</div>
+
+<div class="stdViewContent">
+	<div class="alert alert-danger">Приведённая здесь информация может быть неполной, некорректной и/или устаревшей</div>
+	<h4>Описание</h4><p class="line">Станция возведена в рамках второй очереди строительства метрополитена. Глубина заложения станции 48 метров. Холл станции спроектирован студентами САФУ. Год ввода станции в строй 2034-й, длина перронов - 76 метров. В наземном холле станции расположены минимаркет, медпункт, а также оборудован мониторинговый центр южного направления метрополитена</p>
+<h4>Район города</h4><span class="line">Округ Варавино-Фактория</span>
+<h4>Расположение</h4><p class="line">Подземное</p>
+<h4>Станции</h4><span class="line">Станция метро</span></div>
+
+<div class="navbar navbar-fixed-bottom" >
+	<div class="navbar-inner"><a class="brand"  style="margin-left:0px;" href="#">Minigis.NET</a>
+		<ul class="nav pull-right">
+			<li class="active">
+				<a href="#">korzhevdp.com</a>
+			</li>
+		</ul>
+	</div>
+</div>
