@@ -92,7 +92,7 @@ class Editormodel extends CI_Model{
 		print "shedule = {\n".implode($schedule, ",\n")."\n}";
 	}
 
-	private	function fill_in_type_mode($type_id){
+	private function fill_in_type_mode($type_id) {
 		$output	= array();
 		$result	= $this->db->query("SELECT
 		locations_types.object_group,
@@ -116,7 +116,7 @@ class Editormodel extends CI_Model{
 		return $output;
 	}
 
-	private	function fill_in_location_mode($location_id) {
+	private function fill_in_location_mode($location_id) {
 		$output	= array();
 		$result	= $this->db->query("SELECT
 		locations.id,
@@ -142,7 +142,7 @@ class Editormodel extends CI_Model{
 		return $output;
 	}
 
-	private	function get_object_types_of_group($group, $own_type) {
+	private function get_object_types_of_group($group, $own_type) {
 		$output	= array();
 		$result	= $this->db->query("SELECT
 		`locations_types`.id,
@@ -163,8 +163,35 @@ class Editormodel extends CI_Model{
 		return implode($output,	"\n");
 	}
 
-	private	function get_summary($type = "type", $id = 0) {
-		$output	= array(
+	private function generate_buttons_lists($input) {
+		$output = array(
+			'pagelist'		=> array(),
+			'pagelist_alt'	=> array()
+		);
+		$result = $this->db->query("SELECT
+		MAX(`properties_list`.page) as `maxpage`
+		FROM
+		`properties_list`
+		WHERE `properties_list`.`object_group` = ?", array($input['object_group']));
+		if($result->num_rows()){
+			$row = $result->row(0);
+			for($page = 1; $page <= $row->maxpage; $page++) {
+				if ($page === 1) {
+					$button	= '<button type="button" class="btn	btn-info btn-small displayMain"	title="Перейти к началу">'.$page.'</button>';
+					$navtab	= '<li class="active displayMain"><a href="#YMapsID" data-toggle="tab">Карта</a></li>';
+				} else {
+					$button	= '<button type="button" class="btn	btn-info btn-small displayPage"	title="Перейти к странице '.$page.'" ref="'.implode(array($input['object_group'], $output['id'], $page), "/").'">'.$page.'</button>';
+					$navtab	= '<li class="displayPage" ref="'.implode(array($input['object_group'], $input['id'],	$page),	"/").'"><a href="#propPage"	data-toggle="tab" >Страница	'.$page.'</a></li>';
+				}
+				array_push($output['pagelist'], $button);
+				array_push($output['pagelist_alt'], $navtab);
+			}
+		}
+		return $output;
+	}
+
+	private function get_summary($type = "type", $id = 0) {
+		$output = array(
 			'id' =>	0,
 			'location_name'		=> 'Новое имя',
 			'contact_info'		=> 'Контактная информация',
@@ -180,38 +207,14 @@ class Editormodel extends CI_Model{
 			'comments'			=> 0
 		);
 		if ($type === "type") {
-			$output	= $this->fill_in_type_mode($id);
+			$output = $this->fill_in_type_mode($id);
 		}
 		if ($type === "location") {
-			$output	= $this->fill_in_location_mode($id);
+			$output = $this->fill_in_location_mode($id);
 		}
 		$output['typelist']	= $this->get_object_types_of_group($output['object_group'],	$output['type']);
-		$pagelist		= array();
-		$pagelist_alt	= array();
-		$result			= $this->db->query("SELECT
-		MAX(`properties_list`.page) as `maxpage`
-		FROM
-		`properties_list`
-		WHERE `properties_list`.`object_group` = ?", array($output['object_group']));
-		if($result->num_rows()){
-			$row  =	$result->row();
-			$page =	1;
-			while($page	<= $row->maxpage){
-				if ($page === 1) {
-					$button	= '<button type="button" class="btn	btn-info btn-small displayMain"	title="Перейти к началу">'.$page.'</button>';
-					$navtab	= '<li class="active displayMain"><a href="#YMapsID" data-toggle="tab">Карта</a></li>';
-				} else {
-					$button	= '<button type="button" class="btn	btn-info btn-small displayPage"	title="Перейти к странице '.$page.'" ref="'.implode(array($output['object_group'], $output['id'], $page), "/").'">'.$page.'</button>';
-					$navtab	= '<li class="displayPage" ref="'.implode(array($output['object_group'], $output['id'],	$page),	"/").'"><a href="#propPage"	data-toggle="tab" >Страница	'.$page.'</a></li>';
-				}
-				array_push($pagelist, $button);
-				array_push($pagelist_alt, $navtab);
-				$page++;
-			}
-		}
-		$output['pagelist']		= implode($pagelist, "&nbsp;");
-		$output['pagelist_alt']	= implode($pagelist_alt, "&nbsp;");
 		$output['liblink']		= implode(array($output['object_group'], $output['type']), "/");
+		$output = array_merge($output, $this->generate_buttons_lists($output));
 		return $output;
 	}
 
@@ -271,7 +274,6 @@ class Editormodel extends CI_Model{
 		return implode($output,	"\n");
 	}
 	
-
 	public function	get_objects_by_type() {
 		//$this->output->enable_profiler(TRUE);
 		$output	= array();
@@ -313,7 +315,7 @@ class Editormodel extends CI_Model{
 		return "data = { ".implode($output,	",")." }";
 	}
 
-	function get_assigned_properties($location_id) {
+	private function get_assigned_properties($location_id) {
 		$assigned =	array();
 		if($location_id){
 			$result	= $this->db->query("SELECT
@@ -343,7 +345,7 @@ class Editormodel extends CI_Model{
 		$output	  =	array();
 		$query	  =	$this->db->query('SELECT 
 		properties_list.id,
-		CONCAT(properties_list.page, properties_list.`row`,	properties_list.element) AS	marker,
+		CONCAT(properties_list.page, properties_list.`row`, properties_list.element) AS marker,
 		properties_list.label,
 		properties_list.selfname,
 		properties_list.fieldtype,
@@ -351,7 +353,7 @@ class Editormodel extends CI_Model{
 		properties_list.linked
 		FROM
 		`properties_bindings`
-		RIGHT OUTER	JOIN properties_list ON	(`properties_bindings`.property_id = properties_list.id)
+		RIGHT OUTER	JOIN properties_list ON (`properties_bindings`.property_id = properties_list.id)
 		WHERE
 		`properties_bindings`.`groups` = ?
 		AND	properties_list.active
@@ -474,7 +476,7 @@ class Editormodel extends CI_Model{
 		return implode($output,	"\n");
 	}
 
-	public function	save_shedule(){
+	public function save_shedule(){
 		$output	= array();
 		foreach	($this->input->post('shedule', true) as	$key =>	$val) {
 			if ($this->input->post("h24")) {
