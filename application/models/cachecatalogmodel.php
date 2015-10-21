@@ -65,9 +65,9 @@ class Cachecatalogmodel extends CI_Model{
 		$input  = array();
 		$output = array();
 		$result = $this->get_location_properties_result($location);
-		if($result->num_rows()){
+		if ($result->num_rows()) {
 			foreach($result->result() as $row){
-				if (!isset($input[$row->label])){
+				if (!isset($input[$row->label])) {
 					$input[$row->label] = array();
 				}
 				if ($row->fieldtype === "checkbox") {
@@ -83,7 +83,7 @@ class Cachecatalogmodel extends CI_Model{
 							$value = $value * $row->multiplier / $row-> divider;
 						}
 					}
-					$value = '<span class="line">'.$row->selfname.' '.$value.'</span><br>';
+					$value = '<span class="line">'.$value.' '.$row->selfname.'</span><br>';
 				}
 				if ($row->fieldtype === "select") {
 					$value = '<p class="line">'.$row->selfname.'</p>';
