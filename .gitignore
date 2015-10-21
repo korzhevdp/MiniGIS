@@ -2,7 +2,6 @@
 
 install/*
 cert/*
-gisicons/*
 application/cache/*
 application/cert/*
 !application/cache/index.html
@@ -15,9 +14,6 @@ application/logs/*
 system/*
 
 application/views/cache/*
-application/config/*
-!application/config/maps.php
-mapcache/*
 application/trashbin/*
 uploads/*
 freehandcache/*

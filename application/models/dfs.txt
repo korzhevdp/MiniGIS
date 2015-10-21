@@ -1,0 +1,117 @@
+SELECT
+		laz_sheets1.header,
+		laz_sheets1.redirect,
+		laz_sheets1.parent,
+		laz_sheets1.id,
+		COUNT(`laz_sheets3`.id) as child
+		FROM
+		laz_sheets laz_sheets1
+		LEFT OUTER JOIN laz_sheets ON (laz_sheets1.parent = laz_sheets.id)
+		LEFT OUTER JOIN `laz_sheets` `laz_sheets3` ON (laz_sheets1.id = `laz_sheets3`.parent)
+		WHERE
+		(laz_sheets.id = ?) AND
+		(laz_sheets1.active = 1)
+		GROUP BY
+		laz_sheets1.id
+		ORDER BY `laz_sheets`.`pageorder`
+
+			/*
+		private function get_context(){
+
+		возвращает js-объект с информацией о всех объектах, связанных в рамках карты-отображения с текущим
+		по итогам обработки этих данных составляется описание связей в пределах карты отображения.
+
+		
+		SELECT 
+		  `locations`.`type`
+		FROM
+		  `locations`
+		WHERE
+		`locations`.`id` = 511
+
+		SELECT
+		  `locations`.location_name,
+		  `locations`.`type`,
+		  `locations`.style_override,
+		  `locations`.coord_y,
+		  `locations`.coord_obj,
+		  `locations`.contact_info,
+		  `locations`.address
+		FROM
+		  `locations`
+		WHERE `locations`.`type` IN(
+				SELECT CONCAT_WS(',', `map_content`.`a_types`,`map_content`.`b_types`)
+				FROM `map_content`
+				WHERE `map_content`.`a_types` AND `map_content`.`b_types`
+		  )
+
+		
+		//список типов объектов на выходе
+		$output_types = array();
+		$location = ($this->input->post("id")) ? $this->input->post("id") : 511;
+		$result = $this->db->query("SELECT 
+		`locations_types`.object_group as og,
+		`locations`.`type`
+		FROM
+		`locations_types`
+		INNER JOIN `locations` ON (`locations_types`.id = `locations`.`type`)
+		WHERE `locations`.id = ?", array($location));
+		if($result->num_rows()){
+			$row2 = $result->row();
+		}
+
+		$result = $this->db->query("SELECT 
+		CONCAT_WS(',', map_content.a_types, map_content.b_types) AS typelist,
+		map_content.a_layers
+		FROM
+		map_content");
+		if($result->num_rows()){
+			foreach($result->result() as $row){
+				$types = explode(",", $row->typelist);
+				if(in_array($row2->type, $types)){
+					$output_types = array_merge($output_types, $types);
+				}
+				if($row->a_layers == $row2->og ){
+					$result = $this->db->query("SELECT 
+					CONCAT_WS(',', `locations_types`.`id`) 
+					FROM `locations_types` 
+					WHERE 
+					`locations_types`.`object_group`");
+					if($result->num_rows()){
+						foreach($result->result() as $row3){
+							$types = explode(",", $row->typelist);
+							$output_types = array_merge($output_types, $types);
+						}
+					}
+				}
+			}
+		}
+		$output = array();
+		$result = $this->db->query("SELECT 
+		locations.id,
+		locations.location_name,
+		locations.`type`,
+		locations.coord_y,
+		locations.coord_obj,
+		locations.contact_info,
+		locations.address,
+		`locations_types`.name,
+		`locations_types`.pr_type
+		FROM
+		locations
+		INNER JOIN `locations_types` ON (locations.`type` = `locations_types`.id)
+		WHERE
+		locations.`type` IN (".implode($output_types, ",").")");
+		if($result->num_rows()){
+			foreach($result->result() as $obj){
+				$coord = "[".$obj->coord_y."]";
+				if($obj->pr_type == 2 || $obj->pr_type == 3){
+					$coord = "'".$obj->coord_y."'";
+				}
+				$string = $obj->id.": { n: '".$obj->location_name."', typename: '".$obj->name."', type: ".$obj->type.", c: ".$coord.", co: [".$obj->coord_obj."], info: '".$obj->contact_info."', addr: '".$obj->address."'}";
+				array_push($output, $string);
+			}
+		}
+		print "{\n\t".implode($output, ",\n\t")."\n}";
+	}
+	*/
