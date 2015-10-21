@@ -106,11 +106,22 @@ class Editormodel extends CI_Model{
 		if($result->num_rows()){
 			$row = $result->row(0);
 			$output	= array(
-				'object_group'	 =>	$row->object_group,
-				'pr_type'		 =>	$row->pr_type,
-				'attributes'	 =>	$row->attributes,
-				'style_override' =>	$row->attributes,
-				'type'			 =>	$id
+				'object_group'	=> $row->object_group,
+				'pr_type'		=> $row->pr_type,
+				'attributes'	=> $row->attributes,
+				'style_override'=> $row->attributes,
+				'type'			=> $type_id,
+				'id'			=> 0,
+				'location_name'	=> 'Новое имя',
+				'contact_info'	=> 'Контактная информация',
+				'address'		=> 'Новый адрес',
+				'active'		=> 0,
+				'type'			=> 0,
+				'typelist'		=> 0,
+				'description'	=> 'Новое описание',
+				'coord_y'		=> 0,
+				'comments'		=> 0,
+				'images'		=> ''
 			);
 		}
 		return $output;
@@ -164,10 +175,8 @@ class Editormodel extends CI_Model{
 	}
 
 	private function generate_buttons_lists($input) {
-		$output = array(
-			'pagelist'		=> array(),
-			'pagelist_alt'	=> array()
-		);
+		$pagelist		= array();
+		$pagelist_alt	= array();
 		$result = $this->db->query("SELECT
 		MAX(`properties_list`.page) as `maxpage`
 		FROM
@@ -183,10 +192,14 @@ class Editormodel extends CI_Model{
 					$button	= '<button type="button" class="btn	btn-info btn-small displayPage"	title="Перейти к странице '.$page.'" ref="'.implode(array($input['object_group'], $output['id'], $page), "/").'">'.$page.'</button>';
 					$navtab	= '<li class="displayPage" ref="'.implode(array($input['object_group'], $input['id'],	$page),	"/").'"><a href="#propPage"	data-toggle="tab" >Страница	'.$page.'</a></li>';
 				}
-				array_push($output['pagelist'], $button);
-				array_push($output['pagelist_alt'], $navtab);
+				array_push($pagelist, $button);
+				array_push($pagelist_alt, $navtab);
 			}
 		}
+		$output = array(
+			'pagelist' => implode($pagelist, ""),
+			'pagelist_alt' => implode($pagelist_alt, "")
+		);
 		return $output;
 	}
 
@@ -214,7 +227,9 @@ class Editormodel extends CI_Model{
 		}
 		$output['typelist']	= $this->get_object_types_of_group($output['object_group'],	$output['type']);
 		$output['liblink']		= implode(array($output['object_group'], $output['type']), "/");
-		$output = array_merge($output, $this->generate_buttons_lists($output));
+		$buttons = $this->generate_buttons_lists($output);
+		$output['pagelist_alt'] = $buttons['pagelist_alt'];
+		$output['pagelist'] = $buttons['pagelist'];
 		return $output;
 	}
 
@@ -274,25 +289,9 @@ class Editormodel extends CI_Model{
 		return implode($output,	"\n");
 	}
 	
-	public function	get_objects_by_type() {
-		//$this->output->enable_profiler(TRUE);
-		$output	= array();
-		$run	= 0;
-		$points	= "";
-		$ids	= "";
-		if($this->input->post("points")	&& sizeof($this->input->post("points"))){
-			$points	= 'AND (locations.`type` IN	('.implode($this->input->post("points"), ",").'))';
-			$run++;
-		}
-		if($this->input->post("ids") &&	sizeof($this->input->post("ids"))){
-			$ids = ((!$run)	? "AND"	: "OR").' (locations.`id` IN ('.implode($this->input->post("ids"), ",").'))';
-			$run++;
-		}
-		
-		if(!$run){
-			return "data = {  }";
-		}
 
+	private function select_objects_by_type($points, $ids){
+		$output	= array();
 		$result	= $this->db->query("SELECT
 		locations.id,
 		locations_types.pr_type,
@@ -308,11 +307,30 @@ class Editormodel extends CI_Model{
 		.$ids);
 		if($result->num_rows()){
 			foreach($result->result() as $row){
-				$object	= $row->id.": {	coords:	'".$row->coord_y."', description: '".$row->loc_name."',	pr:	".$row->pr_type." ,	attributes:	'".$row->attributes."' }";
-				array_push($output,	$object);
+				$object = $row->id.": { coords: '".$row->coord_y."', description: '".$row->loc_name."', pr: ".$row->pr_type." , attributes: '".$row->attributes."' }";
+				array_push($output, $object);
 			}
 		}
-		return "data = { ".implode($output,	",")." }";
+		return "data = { ".implode($output, ",")." }";
+	}
+
+	public function	get_objects_by_type() {
+		$run	= 0;
+		$points	= "";
+		$ids	= "";
+		if($this->input->post("points") && sizeof($this->input->post("points"))){
+			$points	= 'AND (locations.`type` IN ('.implode($this->input->post("points"), ",").'))';
+			$run++;
+		}
+		if($this->input->post("ids") &&	sizeof($this->input->post("ids"))){
+			$ids = ((!$run) ? "AND" : "OR").' (locations.`id` IN ('.implode($this->input->post("ids"), ",").'))';
+			$run++;
+		}
+		
+		if(!$run){
+			return "data = {  }";
+		}
+		return $this->select_objects_by_type($points, $ids);
 	}
 
 	private function get_assigned_properties($location_id) {
@@ -338,7 +356,7 @@ class Editormodel extends CI_Model{
 		return $assigned;
 	}
 
-	function show_form_content($object_group = 1, $location_id = 0,	$page =	1, $columns	= 2) {
+	function show_form_content($object_group = 1, $location_id = 0, $page = 1, $columns = 2) {
 		//print	$location_id;
 		//$this->load->helper('array');
 		$assigned =	($location_id) ? $this->get_assigned_properties($location_id) :	array();
