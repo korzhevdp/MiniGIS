@@ -11,7 +11,7 @@ class Transmodel extends CI_Model{
 			"categories"	=> "SELECT `locations_types`.name, `locations_types`.id FROM `locations_types` WHERE `locations_types`.pl_num > 0",
 			"properties"	=> "SELECT `properties_list`.selfname AS name, `properties_list`.id FROM `properties_list` WHERE LENGTH(`properties_list`.`selfname`)",
 			"labels"		=> "SELECT DISTINCT `properties_list`.label AS id, `properties_list`.label AS name FROM `properties_list` ORDER BY `properties_list`.label",
-			"articles"		=> "SELECT `sheets`.`id`, `sheets`.`header` AS name FROM `sheets` ORDER BY name ASC"
+			"articles"		=> "SELECT `sheets`.`id`, `sheets`.`header` AS name FROM `sheets` ORDER BY name ASC",
 			"maps"			=> "SELECT `map_content`.name, `map_content`.id FROM `map_content` ORDER BY `map_content`.name ASC"
 		}
 		);
