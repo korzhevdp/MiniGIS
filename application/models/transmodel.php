@@ -13,7 +13,6 @@ class Transmodel extends CI_Model{
 			"labels"		=> "SELECT DISTINCT `properties_list`.label AS id, `properties_list`.label AS name FROM `properties_list` ORDER BY `properties_list`.label",
 			"articles"		=> "SELECT `sheets`.`id`, `sheets`.`header` AS name FROM `sheets` ORDER BY name ASC",
 			"maps"			=> "SELECT `map_content`.name, `map_content`.id FROM `map_content` ORDER BY `map_content`.name ASC"
-		}
 		);
 		$groups = $this->config->item($mode);
 		$table  = $this->get_translation_table($this->db->query($queries[$mode]), $groups, $mode);
