@@ -185,8 +185,8 @@ class Editor extends CI_Controller{
 			$location_id = $this->create_location();
 			$this->insert_main_property($location_id);
 		}
-		$this->load->model('cachemodel');
-		$this->cachemodel->cache_location($location_id);
+		$this->load->model('cachecatalogmodel');
+		$this->cachecatalogmodel->cache_location($location_id);
 		$this->usefulmodel->insert_audit("Объект: #".$location_id." - успешно сохранён и кэширован");
 		print "data = { ttl : ".$location_id." }";
 	}
@@ -235,8 +235,8 @@ class Editor extends CI_Controller{
 			}
 		}
 		$this->insert_properties($output, $ids, $location_id);
-		$this->load->model('cachemodel');
-		$this->cachemodel->cache_location($location_id);
+		$this->load->model('cachecatalogmodel');
+		$this->cachecatalogmodel->cache_location($location_id);
 		$this->usefulmodel->insert_audit("Объект: #".$location_id." - успешно сохранён и кэширован");
 		print "data = { ttl : ".$location_id." }";
 	}
