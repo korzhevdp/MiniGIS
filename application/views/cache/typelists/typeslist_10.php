@@ -1,1 +1,0 @@
-<option value="36">Солярии</option><option value="50">Парикмахерские</option><option value="51">Салоны красоты</option><option value="52">Доставка</option><option value="53">Гиды</option><option value="54">Туризм</option><option value="55">Перевод</option>

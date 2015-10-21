@@ -1,1 +1,0 @@
-<option value="56">Авария</option><option value="57">Район большой аварии</option><option value="60">Район аварии</option><option value="61">Выкос полей инопланетянами</option><option value="62">Бассейн</option>
