@@ -77,4 +77,4 @@ class Uploadmodel extends CI_Model{
 }
 	#
 /* End of file uploadmodel.php */
-/* Location: .
+/* Location: .application/models/uploadmodel.php */

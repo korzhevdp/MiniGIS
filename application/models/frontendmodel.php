@@ -28,14 +28,14 @@ class Frontendmodel extends CI_Model{
 
 	public function get_cached_content($location_id){
 		//$this->output->enable_profiler(TRUE);
-		$this->load->model('cachemodel');
-		$output = "";
-		$cachefile = "/var/www/html/minigis/application/views/cache/locations/location_".$location_id.".src";
-		if(file_exists($cachefile)){
-			$output = file_get_contents($cachefile);
-		}else{
-			$output = $this->cachemodel->cache_location($location_id, 1);
+		$this->load->model('cachecatalogmodel');
+		$this->load->helper('file');
+		$filename = 'application/views/cache/locations/location_'.$location_id.'.src';
+		$output = read_file($filename);
+		if($output === false) {
+			$output = $this->cachecatalogmodel->cache_location($location_id, 1);
 		}
+		$output .= $this->load->view("shared/site_footer", array(), true);
 		return $output;
 	}
 

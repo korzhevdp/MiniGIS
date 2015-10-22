@@ -83,7 +83,11 @@ class Cachecatalogmodel extends CI_Model{
 							$value = $value * $row->multiplier / $row-> divider;
 						}
 					}
-					$value = '<span class="line">'.$value.' '.$row->selfname.'</span><br>';
+					if(strlen($value)){
+						$value = '<span class="line">'.$row->selfname.' '.$value.'</span><br>';
+					}else{
+						$value = '';
+					}
 				}
 				if ($row->fieldtype === "select") {
 					$value = '<p class="line">'.$row->selfname.'</p>';
@@ -130,7 +134,7 @@ class Cachecatalogmodel extends CI_Model{
 		}
 		
 		if($with_output){
-			$this->load->view('ru/frontend/std_view', $act, true);
+			return $this->load->view('ru/frontend/std_view', $act, true);
 		}
 	}
 }

@@ -224,6 +224,7 @@ class Semanticsmodel extends CI_Model{
 			$this->input->post('divider'),
 			$this->input->post('property')
 		));
+		return $this->input->post('property');
 	}
 
 	private function create_semantics() {
@@ -242,32 +243,33 @@ class Semanticsmodel extends CI_Model{
 		`properties_list`.`linked`,
 		`properties_list`.`multiplier`,
 		`properties_list`.`divider`
-		) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )",
+		) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )",
 		array(
-			$this->input->post('row'),
-			$this->input->post('element'),
-			$this->input->post('label'),
-			$this->input->post('selfname'),
-			$this->input->post('page'),
-			$this->input->post('parameters'),
-			$this->input->post('property_group'),
-			$this->input->post('fieldtype'),
-			$this->input->post('cat'),
-			$this->input->post('algoritm'),
-			$this->input->post('linked'),
-			$this->input->post('multiplier'),
-			$this->input->post('divider')
+			$this->input->post('row', true),
+			$this->input->post('element', true),
+			$this->input->post('label', true),
+			$this->input->post('selfname', true),
+			$this->input->post('page', true),
+			$this->input->post('parameters', true),
+			$this->input->post('property_group', true),
+			$this->input->post('fieldtype', true),
+			$this->input->post('cat', true),
+			$this->input->post('algoritm', true),
+			$this->input->post('linked', true),
+			(strlen($this->input->post('multiplier', true))) ? $this->input->post('multiplier', true) : 1,
+			(strlen($this->input->post('divider', true)))    ? $this->input->post('divider', true)    : 1
 		));
+		return $this->db->insert_id();
 	}
 
-	private function set_semantics_bindings() {
+	private function set_semantics_bindings($property) {
 		$groups   = $this->input->post('group', true);
 		$ingroups = array();
 		foreach($groups as $val) {
-			$string = '('.$this->input->post('property').', '.$val.', 1)';
+			$string = '('.$property.', '.$val.', 1)';
 			array_push($ingroups, $string);
 		}
-		$this->db->query("DELETE FROM `properties_bindings` WHERE `properties_bindings`.property_id = ?", array($this->input->post('property', true)));
+		$this->db->query("DELETE FROM `properties_bindings` WHERE `properties_bindings`.property_id = ?", array($property));
 		$this->db->query("INSERT INTO `properties_bindings` (
 			`properties_bindings`.property_id,
 			`properties_bindings`.groups,
@@ -275,8 +277,8 @@ class Semanticsmodel extends CI_Model{
 		) VALUES ".implode($ingroups, ",\n"));
 	}
 
-	private function set_semantics_linkage() {
-		$data = array($this->input->post('linked'), $this->input->post('property'));
+	private function set_semantics_linkage($property) {
+		$data = array($this->input->post('linked'), $property);
 		$this->db->query("DELETE
 		FROM
 		`properties_assigned`
@@ -293,20 +295,19 @@ class Semanticsmodel extends CI_Model{
 
 	public function save_semantics() {
 		//$this->output->enable_profiler(TRUE);
-		//return false;
 		$mode    = $this->input->post('mode');
 		$group   = $this->input->post('object_group'); // для редиректа :)
 		if ($mode === "save") {
-			$this->update_semantics();
+			$property = $this->update_semantics();
 		}
 		if ($mode === "new") {
-			$this->create_semantics();
+			$property = $this->create_semantics();
 		}
-		$this->set_semantics_bindings();
+		$this->set_semantics_bindings($property);
 		if ($this->input->post('linked')) {
-			$this->set_semantics_linkage();
+			$this->set_semantics_linkage($property);
 		}
-		redirect('admin/library/'.$group."/0/".$this->input->post('property')."/2");
+		redirect('admin/library/'.$group."/0/".$property."/2");
 	}
 }
 

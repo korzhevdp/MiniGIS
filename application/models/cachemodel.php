@@ -5,8 +5,22 @@ class Cachemodel extends CI_Model{
 		$this->load->helper('file');
 	}
 
+	private function write_gis_menu($row, $lang, $groups, $categories){
+		$gis_tree      = array();
+		foreach ($result->result() as $row) {
+			$groupname = (isset($groups[$row->group_id]) && strlen($groups[$row->group_id][$lang]))       ? $groups[$row->group_id][$lang]    : $row->groupname;
+			$itemname  = (isset($categories[$row->type_id]) && strlen($categories[$row->type_id][$lang])) ? $categories[$row->type_id][$lang] : $row->itemname;
+			$grouplink = '<a href="#"><i class="icon-tags"></i>&nbsp;&nbsp;'.$groupname."</a>";
+			$itemlink  = '<a href="/map/type/'.$row->type_id.'"><i class="icon-tag"></i>&nbsp;&nbsp;'.$itemname."</a>";
+			if (!isset($gis_tree[$grouplink])) {
+				$gis_tree[$grouplink] = array();
+			}
+			array_push($gis_tree[$grouplink], $itemlink);
+		}
+		write_file('application/views/cache/menus/src/menu_'.$lang.'.php', ul($gis_tree, array('class' => 'dropdown-menu')));
+	}
+
 	private function cache_gis_part($gisroot = 0) {
-		$langs  = $this->config->item('lang');
 		$result = $this->db->query("SELECT
 		locations_types.id   AS type_id,
 		objects_groups.id    AS group_id,
@@ -22,30 +36,17 @@ class Cachemodel extends CI_Model{
 		if ($result->num_rows()) {
 			$this->config->load('translations_g');
 			$this->config->load('translations_c');
-			$this->config->load('translations_p');
-			$this->config->load('translations_l');
-			$groups     = $this->config->item("groups");
-			$categories = $this->config->item("categories");
-			// включаем переводчик
-			foreach ($langs as $key => $val) {
-				$gis_tree      = array();
-				foreach ($result->result() as $row) {
-					$groupname = (isset($groups[$row->group_id]) && strlen($groups[$row->group_id][$key]))       ? $groups[$row->group_id][$key]    : $row->groupname;
-					$itemname  = (isset($categories[$row->type_id]) && strlen($categories[$row->type_id][$key])) ? $categories[$row->type_id][$key] : $row->itemname;
-					$grouplink = '<a href="#"><i class="icon-tags"></i>&nbsp;&nbsp;'.$groupname."</a>";
-					$itemlink  = '<a href="/map/type/'.$row->type_id.'"><i class="icon-tag"></i>&nbsp;&nbsp;'.$itemname."</a>";
-					if (!isset($gis_tree[$grouplink])) {
-						$gis_tree[$grouplink] = array();
-					}
-					array_push($gis_tree[$grouplink], $itemlink);
-				}
-				write_file('application/views/cache/menus/src/menu_'.$key.'.php', ul($gis_tree, array('class' => 'dropdown-menu')));
+			$groups        = $this->config->item("groups");
+			$categories    = $this->config->item("categories");
+			$langs  = $this->config->item('lang');
+			foreach ($langs as $lang => $lang_name) {
+				$this->write_gis_menu($row, $lang, $groups, $categories);
 			}
 		}
 	}
 
 	private function cache_docs($root = 1, $mode = 'file'){
-		$this->config->load('translations_a', FALSE);
+		$this->config->load('translations_a', false);
 		$langs    = $this->config->item('lang');
 		$articles = $this->config->item('articles');
 		$result   = $this->db->query("SELECT

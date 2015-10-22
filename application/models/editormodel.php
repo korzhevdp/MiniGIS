@@ -2,6 +2,7 @@
 class Editormodel extends CI_Model{
 	function __construct(){
 		parent::__construct();
+		//$this->output->enable_profiler(TRUE);
 	}
 	
 	private	function get_images($location){
@@ -27,24 +28,24 @@ class Editormodel extends CI_Model{
 	}
 
 	public function	starteditor($mode =	"edit",	$id	= 0) {
-		//$this->output->enable_profiler(TRUE);
+		
 		if ($mode == "edit") {
 			if ($id) {
 				if(!$this->usefulmodel->check_owner($id)){
 					$this->load->helper("url");
 					redirect("admin/library");
 				}
-				$data =	$this->get_summary("location", $id);
-				$output	= array(
+				$data = $this->get_summary("location", $id);
+				$output = array(
 					'images'			=> $this->get_images($id),
-					'lid'				 =>	$id,
-					'keywords'			  => '',
-					'shedule'			 =>	$this->load->view("editor/shedule",	array(), true),
-					'pr_type'			 =>	$data['pr_type'],
-					'content'			 =>	$this->load->view('editor/summary',	$data, true),
-					'panel'				   => $this->load->view('editor/altcontrols', $data, true),
+					'lid'				=> $id,
+					'keywords'			=> '',
+					'shedule'			=> $this->load->view("editor/shedule",	array(), true),
+					'pr_type'			=> $data['pr_type'],
+					'content'			=> $this->load->view('editor/summary',	$data, true),
+					'panel'				=> $this->load->view('editor/altcontrols', $data, true),
 					'baspointstypes'	=> $this->get_bas_points_types(),
-					'menu'				  => $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true).$this->usefulmodel->admin_menu()
+					'menu'				=> $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true).$this->usefulmodel->admin_menu()
 				);
 			}
 			$this->session->set_userdata('c_l',	$id);
@@ -52,14 +53,14 @@ class Editormodel extends CI_Model{
 		if ($mode == "add")	{
 			$data =	$this->get_summary("type", $id);
 			$output	= array(
-				'lid'				 =>	0,
-				'keywords'			  => '',
-				'shedule'			 =>	$this->load->view("editor/shedule",	array(), true),
-				'pr_type'			 =>	$data['pr_type'],
-				'content'			 =>	$this->load->view('editor/summary',	$data, true),
-				'panel'				   => $this->load->view('editor/altcontrols', $data, true),
+				'lid'				=> 0,
+				'keywords'			=> '',
+				'shedule'			=> $this->load->view("editor/shedule", array(), true),
+				'pr_type'			=> $data['pr_type'],
+				'content'			=> $this->load->view('editor/summary', $data, true),
+				'panel'				=> $this->load->view('editor/altcontrols', $data, true),
 				'baspointstypes'	=> $this->get_bas_points_types(),
-				'menu'				  => $this->load->view('admin/menu', array(), true)
+				'menu'				=> $this->load->view('admin/menu', array(), true)
 			);
 		}
 		return $output;
@@ -116,7 +117,6 @@ class Editormodel extends CI_Model{
 				'contact_info'	=> 'Контактная информация',
 				'address'		=> 'Новый адрес',
 				'active'		=> 0,
-				'type'			=> 0,
 				'typelist'		=> 0,
 				'description'	=> 'Новое описание',
 				'coord_y'		=> 0,
@@ -138,7 +138,7 @@ class Editormodel extends CI_Model{
 		locations.coord_y,
 		locations.contact_info,
 		`locations_types`.name AS `description`,
-		IF(LENGTH(locations.style_override)	> 0, locations.style_override,`locations_types`.attributes)	AS attributes,
+		IF(LENGTH(locations.style_override) > 0, locations.style_override,`locations_types`.attributes)	AS attributes,
 		`locations_types`.pr_type,
 		`locations_types`.object_group,
 		`locations`.comments
@@ -148,8 +148,9 @@ class Editormodel extends CI_Model{
 		WHERE
 		(locations.id =	?)", array($location_id));
 		if($result->num_rows()){
-			$output	= $result->row_array();
+			$output = $result->row_array();
 		}
+		//print_r($output);
 		return $output;
 	}
 
@@ -181,19 +182,28 @@ class Editormodel extends CI_Model{
 		MAX(`properties_list`.page) as `maxpage`
 		FROM
 		`properties_list`
-		WHERE `properties_list`.`object_group` = ?", array($input['object_group']));
+		WHERE `properties_list`.id IN(
+			SELECT 
+			`properties_bindings`.property_id
+			FROM
+			`properties_bindings`
+			WHERE
+			`properties_bindings`.`groups` = ?
+		)", array($input['object_group']));
 		if($result->num_rows()){
 			$row = $result->row(0);
-			for($page = 1; $page <= $row->maxpage; $page++) {
+			$page = 1;
+			while($page <= $row->maxpage) {
 				if ($page === 1) {
 					$button	= '<button type="button" class="btn	btn-info btn-small displayMain"	title="Перейти к началу">'.$page.'</button>';
 					$navtab	= '<li class="active displayMain"><a href="#YMapsID" data-toggle="tab">Карта</a></li>';
 				} else {
-					$button	= '<button type="button" class="btn	btn-info btn-small displayPage"	title="Перейти к странице '.$page.'" ref="'.implode(array($input['object_group'], $output['id'], $page), "/").'">'.$page.'</button>';
-					$navtab	= '<li class="displayPage" ref="'.implode(array($input['object_group'], $input['id'],	$page),	"/").'"><a href="#propPage"	data-toggle="tab" >Страница	'.$page.'</a></li>';
+					$button	= '<button type="button" class="btn	btn-info btn-small displayPage"	title="Перейти к странице '.$page.'" ref="'.implode(array($input['object_group'], $input['id'], $page), "/").'">'.$page.'</button>';
+					$navtab	= '<li class="displayPage" ref="'.implode(array($input['object_group'], $input['id'],	$page),	"/").'"><a href="#propPage"	data-toggle="tab" >Страница '.$page.'</a></li>';
 				}
 				array_push($pagelist, $button);
 				array_push($pagelist_alt, $navtab);
+				$page++;
 			}
 		}
 		$output = array(
