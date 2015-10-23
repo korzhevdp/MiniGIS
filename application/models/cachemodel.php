@@ -19,7 +19,7 @@ class Cachemodel extends CI_Model{
 		}
 		write_file('application/views/cache/menus/src/menu_'.$lang.'.php', ul($gis_tree, array('class' => 'dropdown-menu')));
 	}
-
+	
 	private function cache_gis_part($gisroot = 0) {
 		$result = $this->db->query("SELECT
 		locations_types.id   AS type_id,
@@ -81,12 +81,11 @@ class Cachemodel extends CI_Model{
 					$list = $input[$key];
 					break;
 				}
-				//print_r($list);
-				if($mode === 'file') {
+				//if($mode === 'file') {
 					write_file('application/views/cache/menus/docs_'.$lang.'.php', ul($list, array('class' => 'dropdown-menu')));
-				} else {
-					print '<link href="http://api.korzhevdp.com/css/frontend.css" rel="stylesheet" media="screen" type="text/css">'.ul($list, array('class' => 'dropdown-menu'))."<hr>";
-				}
+				//} else {
+				//	print '<link href="http://api.korzhevdp.com/css/frontend.css" rel="stylesheet" media="screen" type="text/css">'.ul($list, array('class' => 'dropdown-menu'))."<hr>";
+				//}
 			}
 		}
 	}
@@ -282,6 +281,35 @@ class Cachemodel extends CI_Model{
 		}
 	}
 	//кэширование навигатора
+
+	private function generate_selector_content($val, $map, $mode) {
+		$output     = array();
+		$refgroups  = array();
+		if($val[0] == "0" && strlen($val[1]) && $val[1] != 0){
+			$result = $this->db->query("SELECT DISTINCT
+			`locations_types`.object_group
+			FROM
+			`locations_types`
+			WHERE `locations_types`.`id` IN (".$val[1].")");
+			if($result->num_rows()){
+				foreach($result->result() as $row){
+					array_push($refgroups, $row->object_group);
+				}
+			}
+		}
+		if(strlen($val[0]) && $val[0] != 0){
+			$output = $this->cache_selector_layers($val[0]);
+		}
+		if(strlen($val[1]) && $val[1] != 0){
+			$output = array_merge($output, $this->cache_selector_types($val[1]));
+		}
+		if($val[0] == "0" && strlen($val[1]) && $val[1] != 0){
+			$output = array_merge($output, $this->cache_selector_properties(implode($refgroups, ",")));
+		}
+		$this->generate_selector($output, $map, $mode);
+		$this->generate_switches($output, $map, $mode);
+	}
+
 	public function cache_selector_content($mode = "file") {
 		$output      = array();
 		$table       = array();
@@ -298,31 +326,7 @@ class Cachemodel extends CI_Model{
 			}
 		}
 		foreach($map_content as $map => $val) {
-			$output     = array();
-			$refgroups  = array();
-			if($val[0] == "0" && strlen($val[1]) && $val[1] != 0){
-				$result = $this->db->query("SELECT DISTINCT
-				`locations_types`.object_group
-				FROM
-				`locations_types`
-				WHERE `locations_types`.`id` IN (".$val[1].")");
-				if($result->num_rows()){
-					foreach($result->result() as $row){
-						array_push($refgroups, $row->object_group);
-					}
-				}
-			}
-			if(strlen($val[0]) && $val[0] != 0){
-				$output = $this->cache_selector_layers($val[0]);
-			}
-			if(strlen($val[1]) && $val[1] != 0){
-				$output = array_merge($output, $this->cache_selector_types($val[1]));
-			}
-			if($val[0] == "0" && strlen($val[1]) && $val[1] != 0){
-				$output = array_merge($output, $this->cache_selector_properties(implode($refgroups, ",")));
-			}
-			$this->generate_selector($output, $map, $mode);
-			$this->generate_switches($output, $map, $mode);
+			$this->generate_selector_content($val, $map, $mode);
 		}
 	}
 
