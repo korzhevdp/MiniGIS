@@ -188,7 +188,7 @@ class Mcmodel extends CI_Model{
 			$this->input->post('mapset_name')
 		));
 		$map_id = $this->db->insert_id();
-		$this->usefulmodel->insert_audit("Администратором ".$this->session->userdata("user_name")." создана карта #".$map_id." - al: ".$a_layers.", at: ".$a_types.", bl: ".$b_layers.", bt: ".$b_types." с именем: ".$this->input->post('mapset_name'));
+		//$this->usefulmodel->insert_audit("Администратором ".$this->session->userdata("user_name")." создана карта #".$map_id." - al: ".$a_layers.", at: ".$a_types.", bl: ".$b_layers.", bt: ".$b_types." с именем: ".$this->input->post('mapset_name'));
 		return $map_id;
 	}
 
@@ -210,7 +210,7 @@ class Mcmodel extends CI_Model{
 			$this->input->post('mapset_name'),
 			$this->input->post('mapset')
 		));
-		$this->usefulmodel->insert_audit("Администратором ".$this->session->userdata("user_name")." сохранена карта #".$this->input->post('mapset')." - al: ".$a_layers.", at: ".$a_types.", bl: ".$b_layers.", bt: ".$b_types." с именем: ".$this->input->post('mapset_name'));
+		//$this->usefulmodel->insert_audit("Администратором ".$this->session->userdata("user_name")." сохранена карта #".$this->input->post('mapset')." - al: ".$a_layers.", at: ".$a_types.", bl: ".$b_layers.", bt: ".$b_types." с именем: ".$this->input->post('mapset_name'));
 	}
 }
 
