@@ -2,7 +2,6 @@
 class Editormodel extends CI_Model{
 	function __construct(){
 		parent::__construct();
-		//$this->output->enable_profiler(TRUE);
 	}
 	
 	private	function get_images($location){
@@ -28,7 +27,6 @@ class Editormodel extends CI_Model{
 	}
 
 	public function	starteditor($mode =	"edit",	$id	= 0) {
-		
 		if ($mode == "edit") {
 			if ($id) {
 				if(!$this->usefulmodel->check_owner($id)){
@@ -106,7 +104,7 @@ class Editormodel extends CI_Model{
 		LIMIT 1", array($type_id));
 		if($result->num_rows()){
 			$row = $result->row(0);
-			$output	= array(
+			$output = array(
 				'object_group'	=> $row->object_group,
 				'pr_type'		=> $row->pr_type,
 				'attributes'	=> $row->attributes,
@@ -129,8 +127,8 @@ class Editormodel extends CI_Model{
 
 	private function fill_in_location_mode($location_id) {
 		$output	= array();
-		$result	= $this->db->query("SELECT
-		locations.id,
+		$result	= $this->db->query("SELECT 
+		locations.id, 
 		locations.location_name,
 		locations.address,
 		locations.active,
@@ -144,13 +142,12 @@ class Editormodel extends CI_Model{
 		`locations`.comments
 		FROM
 		`locations_types`
-		INNER JOIN locations ON	(`locations_types`.id =	locations.`type`)
+		INNER JOIN locations ON (`locations_types`.id = locations.`type`)
 		WHERE
-		(locations.id =	?)", array($location_id));
+		(locations.id = ?)", array($location_id));
 		if($result->num_rows()){
 			$output = $result->row_array();
 		}
-		//print_r($output);
 		return $output;
 	}
 
@@ -164,7 +161,7 @@ class Editormodel extends CI_Model{
 		FROM
 		`locations_types`
 		WHERE `locations_types`.`object_group` = ?
-		AND	`locations_types`.pl_num <>	0",	array($group));
+		AND `locations_types`.pl_num <> 0", array($group));
 		if($result->num_rows()){
 			foreach($result->result() as $row){
 				$selected =	($own_type == $row->id)	? '	selected="selected"' : "";
@@ -182,14 +179,7 @@ class Editormodel extends CI_Model{
 		MAX(`properties_list`.page) as `maxpage`
 		FROM
 		`properties_list`
-		WHERE `properties_list`.id IN(
-			SELECT 
-			`properties_bindings`.property_id
-			FROM
-			`properties_bindings`
-			WHERE
-			`properties_bindings`.`groups` = ?
-		)", array($input['object_group']));
+		WHERE `properties_list`.id IN ( SELECT `properties_bindings`.property_id FROM `properties_bindings` WHERE `properties_bindings`.`groups` = ? )", array($input['object_group']));
 		if ($result->num_rows()) {
 			$row  = $result->row(0);
 			$page = 1;
@@ -283,12 +273,7 @@ class Editormodel extends CI_Model{
 
 	public function	get_object_list_by_type() {
 		$output	= array();
-		$result	= $this->db->query("SELECT
-		`locations`.id,
-		`locations`.location_name
-		FROM
-		`locations`
-		WHERE `locations`.`type` = ?", array($this->input->post("type")));
+		$result	= $this->db->query("SELECT `locations`.id, `locations`.location_name FROM `locations` WHERE `locations`.`type` = ?", array($this->input->post("type")));
 		if($result->num_rows()){
 			foreach($result->result() as $row){
 				$string	= '<tr><td colspan="5" style="background-color:	#f6fff6;padding-left:42px;"><label><input type="checkbox" style="margin-top:-4px;" class="selectedObjects" value="'.$row->id.'">'.$row->location_name.'</label></td></tr>';
@@ -298,7 +283,6 @@ class Editormodel extends CI_Model{
 		return implode($output,	"\n");
 	}
 	
-
 	private function select_objects_by_type($points, $ids){
 		$output	= array();
 		$result	= $this->db->query("SELECT
@@ -462,11 +446,10 @@ class Editormodel extends CI_Model{
 		return $output;
 	}
 
-	private	function get_unbound_objects($object_group,	$mode =	1) {
-		//$this->output->enable_profiler(TRUE);
-		$output	= array();
-		$mode	= ($mode ==	2) ? "NOT" : "";
-		$result	= $this->db->query("SELECT
+	private	function get_unbound_objects($object_group, $mode = 1) {
+		$output = array();
+		$mode   = ($mode === 2) ? "NOT" : "";
+		$result = $this->db->query("SELECT
 		`locations`.id,
 		`locations`.location_name,
 		IF(LENGTH(`locations`.style_override), `locations`.style_override, `locations_types`.attributes) AS	attr,
