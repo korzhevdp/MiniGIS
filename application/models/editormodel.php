@@ -184,22 +184,14 @@ class Editormodel extends CI_Model{
 			$row  = $result->row(0);
 			$page = 1;
 			while($page <= $row->maxpage) {
-				$button = ($page === 1)
-					? '<button type="button" class="btn btn-info btn-small displayMain" title="Перейти к началу">'.$page.'</button>'
-					: $button = '<button type="button" class="btn btn-info btn-small displayPage" title="Перейти к странице '.$page.'" ref="'.implode(array($input['object_group'], $input['id'], $page), "/").'">'.$page.'</button>';
 				$navtab = ($page === 1)
 					? '<li class="active displayMain"><a href="#YMapsID" data-toggle="tab">Карта</a></li>'
 					: '<li class="displayPage" ref="'.implode(array($input['object_group'], $input['id'], $page), "/").'"><a href="#propPage"	data-toggle="tab" >Страница '.$page.'</a></li>';
-				array_push($pagelist, $button);
 				array_push($pagelist_alt, $navtab);
 				$page++;
 			}
 		}
-		$output = array(
-			'pagelist' => implode($pagelist, ""),
-			'pagelist_alt' => implode($pagelist_alt, "")
-		);
-		return $output;
+		return array( 'pagelist_alt' => implode($pagelist_alt, ""));
 	}
 
 	private function get_summary($type = "type", $id = 0) {
@@ -224,11 +216,11 @@ class Editormodel extends CI_Model{
 		if ($type === "location") {
 			$output = $this->fill_in_location_mode($id);
 		}
-		$output['typelist']	= $this->get_object_types_of_group($output['object_group'],	$output['type']);
-		$output['liblink']		= implode(array($output['object_group'], $output['type']), "/");
-		$buttons = $this->generate_buttons_lists($output);
+		$output['typelist']     = $this->get_object_types_of_group($output['object_group'],	$output['type']);
+		$output['liblink']      = implode(array($output['object_group'], $output['type']), "/");
+		$buttons                = $this->generate_buttons_lists($output);
 		$output['pagelist_alt'] = $buttons['pagelist_alt'];
-		$output['pagelist'] = $buttons['pagelist'];
+		$output['pagelist']     = $buttons['pagelist_alt'];
 		return $output;
 	}
 
