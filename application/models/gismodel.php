@@ -3,11 +3,9 @@ class Gismodel extends CI_Model{
 	function __construct(){
 		parent::__construct();
 	}
-
 	#######################################################################
 	### объекты ГИС VERIFIED
 	#######################################################################
-
 	private function get_object_groups_list($object_group){
 		$output = array('<option value="0">Выберите группу объектов</option>');
 		$result = $this->db->query("SELECT 
@@ -51,7 +49,33 @@ class Gismodel extends CI_Model{
 		return $pics[$type];
 	}
 
-	function gis_objects_show($obj = 0) {
+	private function get_gis_property_table() {
+		$output = array();
+		$result = $this->db->query("SELECT
+		locations_types.id,
+		locations_types.has_child,
+		locations_types.name,
+		locations_types.attributes,
+		locations_types.object_group,
+		locations_types.pl_num,
+		locations_types.pr_type,
+		objects_groups.name AS object_group_name
+		FROM
+		objects_groups
+		RIGHT OUTER JOIN locations_types ON (objects_groups.id = locations_types.object_group)
+		ORDER BY
+		locations_types.object_group,
+		locations_types.name");
+		if($result->num_rows()){
+			foreach ($result->result_array() as $row){
+				$row = array_merge($row, $this->get_images($row['pr_type']));
+				array_push($output, $this->load->view('admin/parameterline2', $row, true));
+			}
+		}
+		return implode($output, "\n");
+	}
+
+	public function gis_objects_show($obj = 0) {
 		$object = array(
 			'id'			=> 0,
 			'has_child'		=> 0,
@@ -81,36 +105,13 @@ class Gismodel extends CI_Model{
 				$object = $result->row_array();
 			}
 		}
-		// группы объектов для формы редактирования
+		// дополнительные поля
 		$object['obj_group'] = $this->get_object_groups_list($object['object_group']);
-		//для таблицы свойств
-		$result=$this->db->query("SELECT
-		locations_types.id,
-		locations_types.has_child,
-		locations_types.name,
-		locations_types.attributes,
-		locations_types.object_group,
-		locations_types.pl_num,
-		locations_types.pr_type,
-		objects_groups.name AS object_group_name
-		FROM
-		objects_groups
-		RIGHT OUTER JOIN locations_types ON (objects_groups.id = locations_types.object_group)
-		ORDER BY
-		locations_types.object_group,
-		locations_types.name");
-		$table2 = array();
-		if($result->num_rows()){
-			foreach ($result->result_array() as $row){
-				$row = array_merge($row, $this->get_images($row['pr_type']));
-				array_push($table2, $this->load->view('admin/parameterline2', $row, true));
-			}
-			$object['table2'] = implode($table2, "\n");
-		}
+		$object['table2'] = $this->get_gis_property_table();
 		return $this->load->view('admin/object_types_control_table', $object, true);
 	}
 
-	private function insert_object_main_property(){
+	private function insert_object_main_property() {
 		$this->db->query("INSERT INTO
 		`properties_list` (
 			`properties_list`.`row`,
@@ -146,7 +147,7 @@ class Gismodel extends CI_Model{
 		return $this->db->insert_id();
 	}
 
-	private function insert_object_type(){
+	private function insert_object_type() {
 		$insert_id = $this->insert_object_main_property();
 		$this->db->query("INSERT INTO
 		locations_types(
@@ -208,7 +209,7 @@ class Gismodel extends CI_Model{
 		}
 	}
 
-	function groups_show($group = 0){
+	function groups_show($group = 0) {
 		$groups = array();
 		$output = array(
 			'coord'  => $this->session->userdata("map_center"),
@@ -218,7 +219,6 @@ class Gismodel extends CI_Model{
 			'id'     => 0,
 			'active' => '<input type="checkbox" value="1" name="active">'
 		);
-
 		$result = $this->db->query("SELECT 
 		`objects_groups`.id,
 		`objects_groups`.name,
@@ -231,15 +231,9 @@ class Gismodel extends CI_Model{
 		ORDER BY `objects_groups`.active DESC, `objects_groups`.name ASC");
 		if($result->num_rows()){
 			foreach($result->result() as $row){
-				if($row->active) {
-					$checked  = 'checked="checked"';
-					$checkbox = "Да";
-					$class    = ' class="success"';
-				} else {
-					$checked  = '' ;
-					$checkbox = "Нет";
-					$class    = '';
-				}
+				$checked  = ($row->active) ? 'checked="checked"' : '';
+				$checkbox = ($row->active) ? "Да"                : "Нет";
+				$class    = ($row->active) ? ' class="success"'  : '';
 				$string = '<tr'.$class.'>
 					<td>'.$row->name.'</td>
 					<td>'.$row->icon.'</td>
@@ -248,7 +242,8 @@ class Gismodel extends CI_Model{
 					<td>'.$checkbox.'</td>
 					<td><a href="/admin/groupmanager/'.$row->id.'" class="btn btn-small btn-primary">Редактировать</a></td>
 				</tr>';
-				if($row->id == $group) {
+				array_push($groups, $string);
+				if ($row->id == $group) {
 					$output = array(
 						'coord'  => (strlen($row->refcoord) ? $row->refcoord : $this->session->userdata("map_center")),
 						'zoom'   => (strlen($row->refzoom)  ? $row->refzoom  : $this->session->userdata("map_zoom")),
@@ -258,14 +253,13 @@ class Gismodel extends CI_Model{
 						'active' => '<input type="checkbox" value="1" name="active" '.$checked.'>'
 					);
 				}
-				array_push($groups, $string);
 			}
 		}
 		$output['table'] = implode($groups, "\n");
 		return $this->load->view("admin/groupmanager", $output, true);
 	}
 
-	function group_save(){
+	function group_save() {
 		//$this->output->enable_profiler(TRUE);
 		//return false;
 		$groupid = $this->input->post('id', true);
