@@ -124,13 +124,13 @@ class Admin extends CI_Controller{
 		redirect("/admin/usermanager/".$this->input->post('id'));
 	}
 	####################################################
-	public function groupmanager($id=0){
-		$this->usefulmodel->check_admin_status();
+	public function groupmanager( $id = 0 ) {
 		$this->load->model('gismodel');
+		$this->usefulmodel->check_admin_status();
 		$output = array(
+			'content'      => $this->gismodel->groups_show($id),
 			'menu'         => $this->load->view('admin/menu', array(), true)
-						     .$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true),
-			'content'      => $this->gismodel->groups_show($id)
+						     .$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true)
 		);
 		$this->load->view('admin/view', $output);
 	}
@@ -138,8 +138,8 @@ class Admin extends CI_Controller{
 	public function group_save(){
 		$this->usefulmodel->check_admin_status();
 		$this->load->model('gismodel');
-		$id = $this->gismodel->group_save();
-		redirect('admin/groupmanager/'.$id);
+		$group_id = $this->gismodel->group_save();
+		redirect('admin/groupmanager/'.$group_id);
 	}
 	####################################################
 	public function swpropsearch($group = 1, $type = 0, $prop = 0, $page){
