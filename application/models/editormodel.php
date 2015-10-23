@@ -476,7 +476,7 @@ class Editormodel extends CI_Model{
 
 	public function save_shedule(){
 		$output = array();
-		foreach ($this->input->post('shedule', true) as	$key =>	$val) {
+		foreach ($this->input->post('shedule', true) as $key => $val) {
 			if ($this->input->post("h24")) {
 				$val = array( '00:00:00','12:00:00','12:00:00','23:59:59' );
 			}
