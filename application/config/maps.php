@@ -10,7 +10,7 @@
 	$config['map_def_loc']  = "Архангельск";	#Умолчательное описание расположения
 	$config['map_label']    = "Объекты ";		# Ярлык карты начинается с:
 	$config['api']          = "http://api.korzhevdp.com";
-	$config['native_lang'] = 'ru';
+	$config['native_lang']  = 'ru';
 	$config['lang']         = array(
 		"ru" => 'Русский',
 		"en" => 'English',
@@ -18,6 +18,15 @@
 		"es" => 'Español'
 	);
 	$config['brand'] = '<a class="brand" href="/">ПРОЕКТ&nbsp;&nbsp;<small>Minigis.NET <img src="'.$config['api'].'/images/minigis24.png" alt="MiniGIS" title="MiniGis Project"></a>';
+	$config['image_limit'] = 3;
+	$config['image_paid_limit'] = 7;
+	$config['upload_dir'] = './uploads/';
+	$config['img_sizes'] = array(
+		'small' => array('max_dim' => 32,  'quality' => 85, 'dir' => $config['upload_dir'].'small/'),
+		'mid'   => array('max_dim' => 128, 'quality' => 50, 'dir' => $config['upload_dir'].'mid/'),
+		'full'  => array('max_dim' => 400, 'quality' => 50, 'dir' => $config['upload_dir'].'full/')
+	);
+	$config['rise_correctness_alert'] = false;
 	$config['admin_can_edit_user_locations'] = true;
 ############
 ############ параметры вызовов модулей
@@ -25,10 +34,7 @@
 
 	## группа объектов "жильё" //врем
 	$config['mod_housing']  = 4;
-	## модуль с поиском по типам и (или без оных) наборам данных. Ну например гис по типам объектов [реализуется классом map]
-	## группа объектов инфраструктуры, где находится хранилище объектов
 	$config['mod_gis']      = 1;
-
 	##############
 	##############
 	# номер страницы, к которой прикреплены дочерние объекты - данные структуры модуля "Жильё"
