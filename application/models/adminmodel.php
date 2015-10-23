@@ -240,7 +240,7 @@ class Adminmodel extends CI_Model{
 			$admin,
 			$this->input->post('id')
 		));
-		$this->usefulmodel->insert_audit("Администратором ".$this->session->userdata("user_name")." изменены характеристики пользователя #".$this->input->post('id').": active: ".$this->input->post('active', true).", valid: ".$this->input->post('valid' , true).", rating: ".$this->input->post('rating' , true).", class: ".$admin.", access: ".implode($this->input->post('groups', true), ", ");
+		$this->usefulmodel->insert_audit("Администратором ".$this->session->userdata("user_name")." изменены характеристики пользователя #".$this->input->post('id').": active: ".$this->input->post('active', true).", valid: ".$this->input->post('valid' , true).", rating: ".$this->input->post('rating' , true).", class: ".$admin.", access: ".implode($this->input->post('groups', true), ", "));
 	}
 }
 /* End of file adminmodel.php */

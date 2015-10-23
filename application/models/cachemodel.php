@@ -5,7 +5,7 @@ class Cachemodel extends CI_Model{
 		$this->load->helper('file');
 	}
 
-	private function write_gis_menu($row, $lang, $groups, $categories){
+	private function write_gis_menu($result, $lang, $groups, $categories){
 		$gis_tree      = array();
 		foreach ($result->result() as $row) {
 			$groupname = (isset($groups[$row->group_id]) && strlen($groups[$row->group_id][$lang]))       ? $groups[$row->group_id][$lang]    : $row->groupname;
@@ -40,7 +40,7 @@ class Cachemodel extends CI_Model{
 			$categories    = $this->config->item("categories");
 			$langs  = $this->config->item('lang');
 			foreach ($langs as $lang => $lang_name) {
-				$this->write_gis_menu($row, $lang, $groups, $categories);
+				$this->write_gis_menu($result, $lang, $groups, $categories);
 			}
 		}
 	}
