@@ -190,17 +190,16 @@ class Editormodel extends CI_Model{
 			WHERE
 			`properties_bindings`.`groups` = ?
 		)", array($input['object_group']));
-		if($result->num_rows()){
-			$row = $result->row(0);
+		if ($result->num_rows()) {
+			$row  = $result->row(0);
 			$page = 1;
 			while($page <= $row->maxpage) {
-				if ($page === 1) {
-					$button	= '<button type="button" class="btn	btn-info btn-small displayMain"	title="Перейти к началу">'.$page.'</button>';
-					$navtab	= '<li class="active displayMain"><a href="#YMapsID" data-toggle="tab">Карта</a></li>';
-				} else {
-					$button	= '<button type="button" class="btn	btn-info btn-small displayPage"	title="Перейти к странице '.$page.'" ref="'.implode(array($input['object_group'], $input['id'], $page), "/").'">'.$page.'</button>';
-					$navtab	= '<li class="displayPage" ref="'.implode(array($input['object_group'], $input['id'],	$page),	"/").'"><a href="#propPage"	data-toggle="tab" >Страница '.$page.'</a></li>';
-				}
+				$button = ($page === 1)
+					? '<button type="button" class="btn btn-info btn-small displayMain" title="Перейти к началу">'.$page.'</button>'
+					: $button = '<button type="button" class="btn btn-info btn-small displayPage" title="Перейти к странице '.$page.'" ref="'.implode(array($input['object_group'], $input['id'], $page), "/").'">'.$page.'</button>';
+				$navtab = ($page === 1)
+					? '<li class="active displayMain"><a href="#YMapsID" data-toggle="tab">Карта</a></li>'
+					: '<li class="displayPage" ref="'.implode(array($input['object_group'], $input['id'], $page), "/").'"><a href="#propPage"	data-toggle="tab" >Страница '.$page.'</a></li>';
 				array_push($pagelist, $button);
 				array_push($pagelist_alt, $navtab);
 				$page++;
@@ -400,47 +399,39 @@ class Editormodel extends CI_Model{
 				);
 			}
 		}
-		//print_r($output);
 		$table = $this->generate_form_content($output, $assigned);
 		return implode($table,"\n");
 	}
 
-	private	function generate_form_content($input, $assigned) {
-		$output	= array();
-		foreach	($input	as $label => $controls)	{
+	private function generate_form_content($input, $assigned) {
+		$output = array();
+		foreach ($input as $label => $controls) {
 			$element		= array();
-			$elementarray	 = array();
-			$values			   = array();//	исключительно для случая, если элемент типа	select
+			$elementarray	= array();
+			$values			= array();//	исключительно для случая, если элемент типа	select
 			$options		= array();
 			$backcounter	= sizeof($controls);
-			$linked			   = 0;
-			foreach	($controls as $object => $data)	{
-				$value	  =	"";
-				$checked  =	"";
-				$selected =	"";
-				if(isset($assigned[$object])){
-					$value	  =	$assigned[$object];
-					$checked  =	' checked="checked"';
-					$selected =	' selected="selected"';
-				}
-				if($data['linked'] != 0){
-					$linked	= $data['linked'];
-				}
+			$linked			= 0;
+			foreach ($controls as $object => $data) {
+				$value    = (isset($assigned[$object])) ? $assigned[$object]     : "";
+				$checked  = (isset($assigned[$object])) ? ' checked="checked"'   : "";
+				$selected = (isset($assigned[$object])) ? ' selected="selected"' : "";
+				$linked   = ($data['linked'] != 0)      ? $data['linked']        : 0;
 				switch ($data['fieldtype']){
 					case 'text':
-						$string		= '<div><div class="input-prepend"><label class="add-on" for="param_'.$object.'">'.$data['name'].'</label><input type="text" id="ogp4" ref="'.$object.'" id="param_'.$object.'"	'.$data['parameters'].'	value="'.$value.'"></div></div>';
+						$string = '<div><div class="input-prepend"><label class="add-on" for="param_'.$object.'">'.$data['name'].'</label><input type="text" id="ogp4" ref="'.$object.'" id="param_'.$object.'" '.$data['parameters'].'	value="'.$value.'"></div></div>';
 						array_push($element, $string);
 					break;
 					case 'textarea':
-						$string		= $data['name'].'<textarea ref="'.$object.'" id="param_'.$object.'"	'.$data['parameters'].'	rows="5" cols="20">'.(strlen($value) ? $value :	'').'</textarea>';
+						$string = $data['name'].'<textarea ref="'.$object.'" id="param_'.$object.'"	'.$data['parameters'].' rows="5" cols="20">'.(strlen($value) ? $value :	'').'</textarea>';
 						array_push($element, $string);
 					break;
 					case 'select':
-						array_push($values,	'<option value="'.$object.'"'.$selected.'>'.$data['name'].'</option>');
+						array_push($values, '<option value="'.$object.'"'.$selected.'>'.$data['name'].'</option>');
 						--$backcounter;
 						if(!$backcounter){
-							array_unshift($values, '<option	value="0"> - - - </option>');
-							$string	= '<select ref="'.$object.'" name="sel_'.$object.'"	id="sel_'.$object.'">'.implode($values,"\n").'</select>';
+							array_unshift($values, '<option value="0"> - - - </option>');
+							$string = '<select ref="'.$object.'" name="sel_'.$object.'"	id="sel_'.$object.'">'.implode($values,"\n").'</select>';
 							array_push($element, $string);
 						}
 					break;
@@ -454,12 +445,8 @@ class Editormodel extends CI_Model{
 					break;
 				}
 			}
-			$checkLinks	= ($linked)	? '<button type="button" class="btn	btn-small map_calc pull-right" title="Запрос расчёта локации">Расчёт зависимостей</button>'	: "";
-			array_push($output,	'<fieldset>
-			<legend>
-				'.$label.$checkLinks.
-			'</legend>'.implode($element, "\n").
-			'</fieldset>');
+			$checkLinks = ($linked) ? '<button type="button" class="btn btn-small map_calc pull-right" title="Запрос расчёта локации">Расчёт зависимостей</button>' : "";
+			array_push($output, '<fieldset><legend>'.$label.$checkLinks.'</legend>'.implode($element, "\n").'</fieldset>');
 		}
 		return $output;
 	}
@@ -505,17 +492,16 @@ class Editormodel extends CI_Model{
 	}
 
 	public function save_shedule(){
-		$output	= array();
-		foreach	($this->input->post('shedule', true) as	$key =>	$val) {
+		$output = array();
+		foreach ($this->input->post('shedule', true) as	$key =>	$val) {
 			if ($this->input->post("h24")) {
 				$val = array( '00:00:00','12:00:00','12:00:00','23:59:59' );
 			}
-		   $string = "('".$this->db->escape_str($val[0])."', '".$this->db->escape_str($val[1])."', '".$this->db->escape_str($this->input->post("lid", true))."', ".$this->db->escape_str($key)."),\n('".$this->db->escape_str($val[2])."', '".$this->db->escape_str($val[3])."', '".$this->db->escape_str($this->input->post("lid",	true))."', ".$this->db->escape_str($key).")";
+			$string = "('".$this->db->escape_str($val[0])."', '".$this->db->escape_str($val[1])."', '".$this->db->escape_str($this->input->post("lid", true))."', ".$this->db->escape_str($key)."),\n('".$this->db->escape_str($val[2])."', '".$this->db->escape_str($val[3])."', '".$this->db->escape_str($this->input->post("lid",	true))."', ".$this->db->escape_str($key).")";
 			array_push($output,	$string);
 		}
-		//print	implode($output, ",\n");
-		$this->db->query("DELETE FROM timers_week WHERE	timers_week.location_id	= ?", array($this->input->post("lid", true)));
-		$result	= $this->db->query("INSERT INTO
+		$this->db->query("DELETE FROM timers_week WHERE timers_week.location_id = ?", array($this->input->post("lid", true)));
+		$result = $this->db->query("INSERT INTO
 		`timers_week`(
 			`timers_week`.`start`,
 			`timers_week`.`end`,

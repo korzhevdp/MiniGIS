@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <head>
 <title>Sammlung von Geodaten: <?=$title;?></title>
+<meta name='yandex-verification' content='74872298f6a53977' />
 <?=$this->load->view("shared/shared_js_css");?>
 </head>
 <body>
 <!-- навигацыя -->
 	<div class="navbar navbar-inverse">
 		<div class="navbar-inner">
-			<a class="brand" href="http://maps.korzhevdp.com">die Entwicklung&nbsp;&nbsp;<small>Minigis.NET</small>&nbsp;&nbsp;<img src="<?=$this->config->item('api')?>/images/minigis24.png" style="width:24px;height:24px;border:none;margin-top:-6px;" alt=""></a>
-			<?=$menu;?>
+			<?=$brand.$menu;?>
 		</div>
 	</div>
 	<div class="well span4 map_name"><?=$map_header;?></div>

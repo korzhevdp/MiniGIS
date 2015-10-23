@@ -17,7 +17,12 @@
 		"de" => 'Deutsch',
 		"es" => 'Español'
 	);
-	$config['brand'] = '<a class="brand" href="/">ПРОЕКТ&nbsp;&nbsp;<small>Minigis.NET <img src="'.$config['api'].'/images/minigis24.png" alt="MiniGIS" title="MiniGis Project"></a>';
+	$config['brand'] = array(
+		'ru' =>'<a class="brand" href="/">ПРОЕКТ&nbsp;&nbsp;Minigis.NET <img src="'.$config['api'].'/images/minigis24.png" alt="MiniGIS" title="MiniGIS Project"></a>',
+		'en' =>'<a class="brand" href="/">The PROJECT&nbsp;&nbsp;<img src="'.$config['api'].'/images/minigis24.png" alt="MiniGIS" title="MiniGIS Project"></a>',
+		'de' =>'<a class="brand" href="/">die Entwicklung&nbsp;&nbsp;Minigis.NET&nbsp;&nbsp;<img src="'.$config['api'].'/images/minigis24.png" alt="MiniGIS" title="MiniGis Project"></a>',
+		'es' =>'<a class="brand" href="/">El PROYECTO&nbsp;&nbsp;Minigis.NET <img src="'.$config['api'].'/images/minigis24.png" alt="MiniGIS" title="MiniGIS Project"></a>'
+	);
 	$config['image_limit'] = 3;
 	$config['image_paid_limit'] = 7;
 	$config['upload_dir'] = './uploads/';

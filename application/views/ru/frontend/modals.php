@@ -32,10 +32,10 @@
 	</div>
 	<div class="modal-body">
 		<form method=post action="/map/set_language">
-			<button type="submit" class="btn btn-large langSubmitter" value="ru" title="Русский язык"><img src="http://api.korzhevdp.com/images/flag_ru.png" width="32" height="32" border="0" alt=""></button>
-			<button type="submit" class="btn btn-large langSubmitter" value="en" title="Английский язык"><img src="http://api.korzhevdp.com/images/flag_en.png" width="32" height="32" border="0" alt=""></button>
-			<button type="submit" class="btn btn-large langSubmitter" value="de" title="Немецкий язык"><img src="http://api.korzhevdp.com/images/flag_de.png" width="32" height="32" border="0" alt=""></button>
-			<button type="submit" class="btn btn-large langSubmitter" value="es" title="Испанский язык"><img src="http://api.korzhevdp.com/images/flag_es.png" width="32" height="32" border="0" alt=""></button>
+			<button type="submit" class="btn btn-large langSubmitter" name="lang" value="ru" title="Russian"><img src="http://api.korzhevdp.com/images/flag_ru.png" width="32" height="32" border="0" alt=""></button>
+			<button type="submit" class="btn btn-large langSubmitter" name="lang" value="en" title="English"><img src="http://api.korzhevdp.com/images/flag_en.png" width="32" height="32" border="0" alt=""></button>
+			<button type="submit" class="btn btn-large langSubmitter" name="lang" value="de" title="German"><img src="http://api.korzhevdp.com/images/flag_de.png" width="32" height="32" border="0" alt=""></button>
+			<button type="submit" class="btn btn-large langSubmitter" name="lang" value="es" title="Spanish"><img src="http://api.korzhevdp.com/images/flag_es.png" width="32" height="32" border="0" alt=""></button>
 			<input type="hidden" name="redirect" value="<?=$this->uri->uri_string()?>">
 		</form>
 	</div>

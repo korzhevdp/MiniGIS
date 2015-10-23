@@ -13,8 +13,10 @@ class Page extends CI_Controller {
 	}
 
 	function index(){
+		$brands = $this->config->item("brand");
 		$act = array(
 			'userid'     => $this->session->userdata('common_user'),
+			'brand'      => $brands[$this->session->userdata("lang")],
 			'comment'    => '',
 			'keywords'   => $this->config->item('maps_keywords'),
 			'title'      => $this->config->item('site_title_start'),
@@ -37,8 +39,10 @@ class Page extends CI_Controller {
 		if($result->num_rows()){
 			$row = $result->row();
 		}
+		$brands = $this->config->item("brand");
 		$act = array(
 			'map_header' => $row->name,
+			'brand'      => $brands[$this->session->userdata("lang")],
 			'content'    => "",
 			'mapset'     => $mapset,
 			'map_center' => $this->config->item('map_center'),
@@ -56,9 +60,11 @@ class Page extends CI_Controller {
 		//$this->output->enable_profiler(TRUE);
 		$this->load->model('frontendmodel');
 		$props = $this->frontendmodel->get_properties($location_id);
+		$brands = $this->config->item("brand");
 		$act = array(
 			'comment'  => ($props['comments']) ? $this->frontendmodel->comments_show($location_id) : "",
 			'title'    => $this->config->item('site_title_start')." ГИС",
+			'brand'    => $brands[$this->session->userdata("lang")],
 			'keywords' => $this->config->item('maps_keywords').','.$props['name'],
 			'content'  => $this->frontendmodel->get_cached_content($location_id),
 			'header'   => '',//$this->load->view($this->session->userdata('lang').'/frontend/page_header',	array(), TRUE),
@@ -83,9 +89,11 @@ class Page extends CI_Controller {
 
 	function docs($docid = 1){
 		$this->load->model('frontendmodel');
+		$brands = $this->config->item("brand");
 		$act = array(
 			'footer'		=> $this->load->view('shared/page_footer', array(), true),
 			'mapset'		=> 0,
+			'brand'			=> $brands[$this->session->userdata("lang")],
 			'menu'			=> $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true),
 			'keywords'		=> $this->config->item('map_keywords'),
 			'map_header'	=> "Объекты по типам",

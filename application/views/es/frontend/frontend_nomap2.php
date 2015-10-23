@@ -36,8 +36,7 @@
 	<!-- menu -->
 	<div class="navbar navbar-inverse">
 		<div class="navbar-inner">
-			<a class="brand" href="http://maps.korzhevdp.com">El PROYECTO&nbsp;&nbsp;<small>Minigis.NET</small>&nbsp;&nbsp;<img src="<?=$this->config->item('api')?>/images/minigis24.png" style="width:24px;height:24px;border:none;margin-top:-6px;" alt=""></a>
-			<?=$menu;?>
+			<?=$brand.$menu;?>
 		</div>
 	</div>
 	<!-- menu -->

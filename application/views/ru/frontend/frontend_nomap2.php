@@ -36,8 +36,7 @@
 	<!-- menu -->
 	<div class="navbar navbar-inverse">
 		<div class="navbar-inner">
-			<?=$this->config->item('brand');?>
-			<?=$menu;?>
+			<?=$brand.$menu;?>
 		</div>
 	</div>
 	<!-- menu -->
