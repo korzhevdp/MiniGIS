@@ -282,8 +282,7 @@ class Cachemodel extends CI_Model{
 	}
 	//кэширование навигатора
 
-	private function generate_selector_content($val, $map, $mode) {
-		$output     = array();
+	private function return_refgroups($val) {
 		$refgroups  = array();
 		if($val[0] == "0" && strlen($val[1]) && $val[1] != 0){
 			$result = $this->db->query("SELECT DISTINCT
@@ -297,14 +296,20 @@ class Cachemodel extends CI_Model{
 				}
 			}
 		}
-		if(strlen($val[0]) && $val[0] != 0){
+		return implode($refgroups, ",");
+	}
+
+	private function generate_selector_content($val, $map, $mode) {
+		$output     = array();
+		$refgroups  = $this->return_refgroups($val);
+		if (strlen($val[0]) && $val[0] != 0) {
 			$output = $this->cache_selector_layers($val[0]);
 		}
-		if(strlen($val[1]) && $val[1] != 0){
+		if (strlen($val[1]) && $val[1] != 0) {
 			$output = array_merge($output, $this->cache_selector_types($val[1]));
 		}
-		if($val[0] == "0" && strlen($val[1]) && $val[1] != 0){
-			$output = array_merge($output, $this->cache_selector_properties(implode($refgroups, ",")));
+		if ($val[0] == "0" && strlen($val[1]) && $val[1] != 0) {
+			$output = array_merge($output, $this->cache_selector_properties($refgroups));
 		}
 		$this->generate_selector($output, $map, $mode);
 		$this->generate_switches($output, $map, $mode);
