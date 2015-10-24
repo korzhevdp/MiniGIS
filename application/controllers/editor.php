@@ -295,10 +295,6 @@ class Editor extends CI_Controller{
 		print $this->editormodel->show_form_content($this->input->post("group"), $this->input->post("loc"), $this->input->post("page"));
 	}
 
-	public function get_shedule() {
-		$this->editormodel->get_schedule($this->input->post("location"));
-	}
-
 	public function save_image_order() {
 		if(!is_array($this->input->post("order"))){
 			return false;
@@ -361,11 +357,6 @@ class Editor extends CI_Controller{
 			`images`
 			WHERE `images`.`hash` = ?", array($image));
 		}
-	}
-
-	public function save_shedule(){
-		//$this->output->enable_profiler(TRUE);
-		$this->editormodel->save_shedule();
 	}
 }
 /* End of file editor.php */

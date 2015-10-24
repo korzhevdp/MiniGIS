@@ -4,7 +4,7 @@ class Editormodel extends CI_Model{
 		parent::__construct();
 	}
 	
-	private	function get_images($location){
+	private function get_images($location) {
 		$output	= array();
 		$result	= $this->db->query("SELECT
 		`images`.`filename`,
@@ -24,71 +24,6 @@ class Editormodel extends CI_Model{
 			}
 		}
 		return implode($output,	"\n");
-	}
-
-	public function	starteditor($mode =	"edit",	$id	= 0) {
-		if ($mode == "edit") {
-			if ($id) {
-				if(!$this->usefulmodel->check_owner($id)){
-					$this->load->helper("url");
-					redirect("admin/library");
-				}
-				$data = $this->get_summary("location", $id);
-				$output = array(
-					'images'			=> $this->get_images($id),
-					'lid'				=> $id,
-					'keywords'			=> '',
-					'shedule'			=> $this->load->view("editor/shedule",	array(), true),
-					'pr_type'			=> $data['pr_type'],
-					'content'			=> $this->load->view('editor/summary',	$data, true),
-					'panel'				=> $this->load->view('editor/altcontrols', $data, true),
-					'baspointstypes'	=> $this->get_bas_points_types(),
-					'menu'				=> $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true).$this->usefulmodel->admin_menu()
-				);
-			}
-			$this->session->set_userdata('c_l',	$id);
-		}
-		if ($mode == "add")	{
-			$data =	$this->get_summary("type", $id);
-			$output	= array(
-				'lid'				=> 0,
-				'keywords'			=> '',
-				'shedule'			=> $this->load->view("editor/shedule", array(), true),
-				'pr_type'			=> $data['pr_type'],
-				'content'			=> $this->load->view('editor/summary', $data, true),
-				'panel'				=> $this->load->view('editor/altcontrols', $data, true),
-				'baspointstypes'	=> $this->get_bas_points_types(),
-				'menu'				=> $this->load->view('admin/menu', array(), true)
-			);
-		}
-		return $output;
-	}
-	
-	public function	get_schedule() {
-		$input = array();
-		$schedule =	array();
-		$result	= $this->db->query("SELECT
-		DATE_FORMAT(`timers_week`.`start`, '%H:%i')	as start,
-		DATE_FORMAT(`timers_week`.`end`, '%H:%i') as end,
-		`timers_week`.`location_id`,
-		`timers_week`.`day`
-		FROM
-		`timers_week`
-		WHERE `timers_week`.`location_id` =	?
-		ORDER BY `timers_week`.`day`, `timers_week`.`start`", array($this->input->post('lid')));
-		if ($result->num_rows()) {
-			foreach($result->result() as $row) {
-				if (!isset($input[$row->day])) {
-					$input[$row->day] =	array();
-				}
-				array_push($input[$row->day], "'".$row->start."'");
-				array_push($input[$row->day], "'".$row->end."'");
-			}
-			foreach	($input	as $key=>$val) {
-				array_push($schedule, "\t".$key." :	[ ".implode($val, ", ")." ]");
-			}
-		}
-		print "shedule = {\n".implode($schedule, ",\n")."\n}";
 	}
 
 	private function fill_in_type_mode($type_id) {
@@ -224,7 +159,45 @@ class Editormodel extends CI_Model{
 		return $output;
 	}
 
-	public function	get_bas_points_types() {
+	public function starteditor($mode = "edit", $id = 0) {
+		if ($mode == "edit") {
+			if ($id) {
+				if(!$this->usefulmodel->check_owner($id)){
+					$this->load->helper("url");
+					redirect("admin/library");
+				}
+				$data = $this->get_summary("location", $id);
+				$output = array(
+					'images'			=> $this->get_images($id),
+					'lid'				=> $id,
+					'keywords'			=> '',
+					'shedule'			=> $this->load->view("editor/shedule",	array(), true),
+					'pr_type'			=> $data['pr_type'],
+					'content'			=> $this->load->view('editor/summary',	$data, true),
+					'panel'				=> $this->load->view('editor/altcontrols', $data, true),
+					'baspointstypes'	=> $this->get_bas_points_types(),
+					'menu'				=> $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true).$this->usefulmodel->admin_menu()
+				);
+			}
+			$this->session->set_userdata('c_l',	$id);
+		}
+		if ($mode == "add")	{
+			$data =	$this->get_summary("type", $id);
+			$output	= array(
+				'lid'				=> 0,
+				'keywords'			=> '',
+				'shedule'			=> $this->load->view("editor/shedule", array(), true),
+				'pr_type'			=> $data['pr_type'],
+				'content'			=> $this->load->view('editor/summary', $data, true),
+				'panel'				=> $this->load->view('editor/altcontrols', $data, true),
+				'baspointstypes'	=> $this->get_bas_points_types(),
+				'menu'				=> $this->load->view('admin/menu', array(), true)
+			);
+		}
+		return $output;
+	}
+	
+	public function get_bas_points_types() {
 		$output	= array();
 		$result	= $this->db->query("SELECT 
 		locations_types.id,
@@ -263,7 +236,7 @@ class Editormodel extends CI_Model{
 		return implode($output,"\n");
 	}
 
-	public function	get_object_list_by_type() {
+	public function get_object_list_by_type() {
 		$output	= array();
 		$result	= $this->db->query("SELECT `locations`.id, `locations`.location_name FROM `locations` WHERE `locations`.`type` = ?", array($this->input->post("type")));
 		if($result->num_rows()){
@@ -275,7 +248,7 @@ class Editormodel extends CI_Model{
 		return implode($output,	"\n");
 	}
 	
-	private function select_objects_by_type($points, $ids){
+	private function select_objects_by_type($points, $ids) {
 		$output	= array();
 		$result	= $this->db->query("SELECT
 		locations.id,
@@ -299,7 +272,7 @@ class Editormodel extends CI_Model{
 		return "data = { ".implode($output, ",")." }";
 	}
 
-	public function	get_objects_by_type() {
+	public function get_objects_by_type() {
 		$run	= 0;
 		$points	= "";
 		$ids	= "";
@@ -341,9 +314,7 @@ class Editormodel extends CI_Model{
 		return $assigned;
 	}
 
-	function show_form_content($object_group = 1, $location_id = 0, $page = 1, $columns = 2) {
-		//print	$location_id;
-		//$this->load->helper('array');
+	public function show_form_content($object_group = 1, $location_id = 0, $page = 1, $columns = 2) {
 		$assigned =	($location_id) ? $this->get_assigned_properties($location_id) :	array();
 		$output	  =	array();
 		$query	  =	$this->db->query('SELECT 
@@ -366,7 +337,9 @@ class Editormodel extends CI_Model{
 		properties_list.selfname', array($object_group,	$page));
 		if ($query->num_rows() ){
 			foreach	($query->result() as $row){
-				if(!isset($output[$row->label])){ $output[$row->label] = array(); }
+				if(!isset($output[$row->label])){ 
+					$output[$row->label] = array();
+				}
 				$output[$row->label][$row->id] = array(
 					'name'		 =>	$row->selfname,
 					'fieldtype'	 =>	$row->fieldtype,
@@ -427,7 +400,7 @@ class Editormodel extends CI_Model{
 		return $output;
 	}
 
-	private	function geoeditor($object_group, $mode	= 1) {
+	private function geoeditor($object_group, $mode = 1) {
 		$data =	array();
 		$output	= array(
 			'objects'		 =>	$this->get_unbound_objects($object_group, $mode),
@@ -438,7 +411,7 @@ class Editormodel extends CI_Model{
 		return $output;
 	}
 
-	private	function get_unbound_objects($object_group, $mode = 1) {
+	private function get_unbound_objects($object_group, $mode = 1) {
 		$output = array();
 		$mode   = ($mode === 2) ? "NOT" : "";
 		$result = $this->db->query("SELECT
@@ -464,26 +437,6 @@ class Editormodel extends CI_Model{
 			}
 		}
 		return implode($output,	"\n");
-	}
-
-	public function save_shedule(){
-		$output = array();
-		foreach ($this->input->post('shedule', true) as $key => $val) {
-			if ($this->input->post("h24")) {
-				$val = array( '00:00:00','12:00:00','12:00:00','23:59:59' );
-			}
-			$string = "('".$this->db->escape_str($val[0])."', '".$this->db->escape_str($val[1])."', '".$this->db->escape_str($this->input->post("lid", true))."', ".$this->db->escape_str($key)."),\n('".$this->db->escape_str($val[2])."', '".$this->db->escape_str($val[3])."', '".$this->db->escape_str($this->input->post("lid",	true))."', ".$this->db->escape_str($key).")";
-			array_push($output,	$string);
-		}
-		$this->db->query("DELETE FROM timers_week WHERE timers_week.location_id = ?", array($this->input->post("lid", true)));
-		$result = $this->db->query("INSERT INTO
-		`timers_week`(
-			`timers_week`.`start`,
-			`timers_week`.`end`,
-			`timers_week`.`location_id`,
-			`timers_week`.`day`
-		)
-		VALUES ".implode($output, ",\n"));
 	}
 }
 /* End of file editormodel.php */

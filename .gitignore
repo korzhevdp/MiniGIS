@@ -3,6 +3,8 @@
 install/*
 cert/*
 application/cache/*
+application/config/*
+!application/config/maps.php
 application/cert/*
 !application/cache/index.html
 !application/cache/.htaccess

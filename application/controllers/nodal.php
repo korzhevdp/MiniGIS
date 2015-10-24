@@ -118,5 +118,5 @@ class Nodal extends CI_Controller{
 	}
 }
 
-/* End of file ajax.php */
-/* Location: ./system/application/controllers/ajax.php */
+/* End of file nodal.php */
+/* Location: ./system/application/controllers/nodal.php */
