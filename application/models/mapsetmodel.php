@@ -165,6 +165,10 @@ class Mapsetmodel extends CI_Model{
 			}
 		}
 		$this->check_directories();
+		$this->write_mapset_cache();
+	}
+
+	private function write_mapset_cache() {
 		$this->load->helper("file");
 		foreach ($a_output as $lang=>$data) {
 			$content = (isset($a_output[$lang])) ? implode($a_output[$lang], ",\n") : "";
@@ -181,32 +185,53 @@ class Mapsetmodel extends CI_Model{
 		}
 	}
 
-	public function cache_type($type) {
-		$output = array();
-		$output = $this->cache_types($type, $output);
+	private function write_cache($output, $filename) {
 		$this->load->helper("file");
 		$this->check_directories();
 		foreach ($output as $lang=>$data) {
 			$output_file = "data = {\n".implode($data, ",\n")."\n};";
-			write_file("application/views/cache/mapsets/type".$type."_".$lang.".src", $output_file);
+			write_file("application/views/cache/mapsets/".$filename."_".$lang.".src", $output_file);
 		}
+	}
+
+	public function cache_type($type) {
+		$output = array();
+		$output = $this->cache_types($type, $output);
+		$this->write_cache($output, "type".$type);
 	}
 
 	public function cache_group($group) {
 		$output = array();
 		$output = $this->cache_layers($group, $output);
-		$this->load->helper("file");
-		$this->check_directories();
-		foreach ($output as $lang=>$data) {
-			$output_file = "data = {\n".implode($data, ",\n")."\n};";
-			write_file("application/views/cache/mapsets/group".$group."_".$lang.".src", $output_file);
+		$this->write_cache($output, "group".$group);
+	}
+
+	private function cache_affected_mapsets($group, $type) {
+		$result = $this->db->query("SELECT
+		`map_content`.id,
+		`map_content`.a_layers,
+		`map_content`.a_types,
+		`map_content`.b_layers,
+		`map_content`.b_types
+		FROM
+		`map_content`");
+		if ($result->num_rows()) {
+			foreach ($result->result() as $row) {
+				$a_layers = explode(",", $row->a_layers);
+				$a_types  = explode(",", $row->a_types);
+				$b_layers = explode(",", $row->a_layers);
+				$b_types  = explode(",", $row->b_types);
+				if (in_array($group, $a_layers) || in_array($group, $b_layers) || in_array($type, $a_types) || in_array($type, $b_types)) {
+					$this->cache_mapset($row->id);
+				}
+			}
 		}
 	}
-	
+
 	public function recache_datasets($location) {
 		$layer = 0;
 		$type  = 0;
-		$result = $this->db->query("SELECT 
+		$result = $this->db->query("SELECT
 		`locations`.`type`,
 		`locations_types`.object_group
 		FROM
@@ -226,25 +251,7 @@ class Mapsetmodel extends CI_Model{
 		if ($group) {
 			$this->cache_group($group);
 		}
-		$result = $this->db->query("SELECT 
-		`map_content`.id,
-		`map_content`.a_layers,
-		`map_content`.a_types,
-		`map_content`.b_layers,
-		`map_content`.b_types
-		FROM
-		`map_content`");
-		if ($result->num_rows()) {
-			foreach ($result->result() as $row) {
-				$a_layers = explode(",", $row->a_layers);
-				$a_types  = explode(",", $row->a_types);
-				$b_layers = explode(",", $row->a_layers);
-				$b_types  = explode(",", $row->b_types);
-				if (in_array($group, $a_layers) || in_array($group, $b_layers) || in_array($type, $a_types) || in_array($type, $b_types)) {
-					$this->cache_mapset($row->id);
-				}
-			}
-		}
+		$this->cache_affected_mapsets($group, $type);
 	}
 }
 #
