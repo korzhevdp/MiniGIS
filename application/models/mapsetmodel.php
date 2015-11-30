@@ -5,11 +5,21 @@ class Mapsetmodel extends CI_Model{
 		$this->load->helper('file');
 	}
 
-	public function cache_layers($layers, $output = array()) {
+
+	private function make_common_caching($result, $output) {
+		$input = array();
 		if(!is_array($output)){
 			$output = array();
 		}
-		$input = array();
+		if($result->num_rows()){
+			foreach($result->result() as $row){
+				array_push($input, $row->id);
+			}
+		}
+		return $this->pack_results($input, $output);
+	}
+
+	public function cache_layers($layers, $output = array()) {
 		$result = $this->db->query("SELECT
 		locations.id
 		FROM
@@ -20,19 +30,10 @@ class Mapsetmodel extends CI_Model{
 		AND locations.active
 		AND (locations_types.pr_type IS NOT NULL)
 		AND (locations_types.object_group IN (".$layers."))");
-		if($result->num_rows()){
-			foreach($result->result() as $row){
-				array_push($input, $row->id);
-			}
-		}
-		return $this->pack_results($input, $output);
+		$this->make_common_caching($result, $output);
 	}
 
 	public function cache_types($types, $output) {
-		if (!is_array($output)) {
-			$output = array();
-		}
-		$input = array();
 		$result = $this->db->query("SELECT 
 		locations.id
 		FROM
@@ -41,19 +42,10 @@ class Mapsetmodel extends CI_Model{
 		LENGTH(locations.coord_y)
 		AND locations.active
 		AND (locations.`type` IN (".$types."))");
-		if($result->num_rows()){
-			foreach($result->result() as $row){
-				array_push($input, $row->id);
-			}
-		}
-		return $this->pack_results($input, $output);
+		$this->make_common_caching($result, $output);
 	}
 
 	public function cache_objects($objects, $output) {
-		if (!is_array($output)) {
-			$output = array();
-		}
-		$input = array();
 		$result = $this->db->query("SELECT
 		locations.id
 		FROM
@@ -62,12 +54,7 @@ class Mapsetmodel extends CI_Model{
 		LENGTH(locations.coord_y)
 		AND locations.active
 		AND (locations.id IN (".$objects."))");
-		if($result->num_rows()){
-			foreach($result->result() as $row){
-				array_push($input, $row->id);
-			}
-		}
-		return $this->pack_results($input, $output);
+		$this->make_common_caching($result, $output);
 	}
 
 	private function add_child_nodes($input) {
@@ -177,60 +164,42 @@ class Mapsetmodel extends CI_Model{
 				}
 			}
 		}
+		$this->check_directories();
+		$this->load->helper("file");
 		foreach ($a_output as $lang=>$data) {
 			$content = (isset($a_output[$lang])) ? implode($a_output[$lang], ",\n") : "";
-			$ac = "ac = {\n".$content."\n};\n";
+			$ac_filepart = "ac = {\n".$content."\n};\n";
 			$content = (isset($b_output[$lang])) ? implode($b_output[$lang], ",\n") : "";
-			$bg = "bg = {\n".$content."\n}";
-			//print getcwd()."<br>";
-			if (!file_exists(getcwd()."/application/views/cache/mapsets")) {
-				//print "directory not exists<br>Trying to create: ".getcwd()."/views/cache/mapsets<br>";
-				if (mkdir( getcwd()."/application/views/cache/mapsets", 0775, true )) {
-					//print "directory created<br>";
-				}
-			}
-			$this->load->helper("file");
-			if ( write_file("application/views/cache/mapsets/mapset".$mapset."_".$lang.".src", $ac.$bg)) {
-				//print "file written<br>";
-			}
+			$bg_filepart = "bg = {\n".$content."\n}";
+			write_file("application/views/cache/mapsets/mapset".$mapset."_".$lang.".src", $ac_filepart.$bg_filepart);
+		}
+	}
+
+	private function check_directories() {
+		if (!file_exists(getcwd()."/application/views/cache/mapsets")) {
+			mkdir( getcwd()."/application/views/cache/mapsets", 0775, true);
 		}
 	}
 
 	public function cache_type($type) {
 		$output = array();
 		$output = $this->cache_types($type, $output);
+		$this->load->helper("file");
+		$this->check_directories();
 		foreach ($output as $lang=>$data) {
 			$output_file = "data = {\n".implode($data, ",\n")."\n};";
-			//print getcwd()."<br>";
-			if (!file_exists(getcwd()."/application/views/cache/mapsets")) {
-				//print "directory not exists<br>Trying to create: ".getcwd()."/views/cache/mapsets<br>";
-				if (mkdir( getcwd()."/application/views/cache/mapsets", 0775, true )) {
-					//print "directory created<br>";
-				}
-			}
-			$this->load->helper("file");
-			if ( write_file("application/views/cache/mapsets/type".$type."_".$lang.".src", $output_file)) {
-				//print "file written<br>";
-			}
+			write_file("application/views/cache/mapsets/type".$type."_".$lang.".src", $output_file);
 		}
 	}
 
 	public function cache_group($group) {
 		$output = array();
 		$output = $this->cache_layers($group, $output);
+		$this->load->helper("file");
+		$this->check_directories();
 		foreach ($output as $lang=>$data) {
 			$output_file = "data = {\n".implode($data, ",\n")."\n};";
-			//print getcwd()."<br>";
-			if (!file_exists(getcwd()."/application/views/cache/mapsets")) {
-				//print "directory not exists<br>Trying to create: ".getcwd()."/views/cache/mapsets<br>";
-				if (mkdir( getcwd()."/application/views/cache/mapsets", 0775, true )) {
-					//print "directory created<br>";
-				}
-			}
-			$this->load->helper("file");
-			if ( write_file("application/views/cache/mapsets/group".$group."_".$lang.".src", $output_file)) {
-				//print "file written<br>";
-			}
+			write_file("application/views/cache/mapsets/group".$group."_".$lang.".src", $output_file);
 		}
 	}
 	
@@ -276,7 +245,6 @@ class Mapsetmodel extends CI_Model{
 				}
 			}
 		}
-
 	}
 }
 #
