@@ -4,25 +4,8 @@ class Docmodel extends CI_Model{
 		parent::__construct();
 	}
 
-	public function find_initial_sheet($root = 1) {
-		$out = $root;
-		$result = $this->db->query("SELECT 
-		sheets.id
-		FROM
-		sheets
-		WHERE
-		sheets.`root` = ?
-		ORDER BY `id`
-		LIMIT 1",array($root));
-		if($result->num_rows()){
-			$row = $result->row();
-			$out = $row->id;
-		}
-		return $out;
-	}
-	
-	private function sheet_tree($root = 1, $sheet_id = 1) {
-		$tree = "";
+	private function doc_tree($root = 1, $sheet_id = 1) {
+		$tree   = "";
 		$result = $this->db->query("SELECT
 		`sheets`.`id`,
 		`sheets`.`parent`,
@@ -48,7 +31,7 @@ class Docmodel extends CI_Model{
 				if (!strlen($tree)) {
 					$tree .=  "\..--".$row->parent."--";
 				}
-				$tree  = str_replace("--".$row->parent."--", '<a href="/admin/sheets/edit/'.$row->id.'"><div class="menu_item" class="'.implode($style, ";").'">'.$row->id.". ".$row->header.' ('.$row->root.')</div></a><div class="menu_item_container">--'.$row->id.'--</div>--'.$row->parent.'--', $tree);
+				$tree  = str_replace("--".$row->parent."--", '<a href="/admin/docs/'.$row->id.'"><div class="menu_item '.implode($style, " ").'">'.$row->id.". ".$row->header.' ('.$row->root.')</div></a><div class="menu_item_container">--'.$row->id.'--</div>--'.$row->parent.'--', $tree);
 			}
 		}
 		$tree = preg_replace("/(\-\-)(\d+)(\-\-)/", "", $tree);
@@ -85,7 +68,7 @@ class Docmodel extends CI_Model{
 		return $pageorder;
 	}
 
-	public function sheet_edit($sheet_id, $root = 1){
+	public function doc_edit($sheet_id, $root = 1) {
 		$redirect = array('<option value="">Не перенаправляется</option>');
 		$act = array(
 			'id'         => 1,
@@ -102,7 +85,7 @@ class Docmodel extends CI_Model{
 			'parent'     => 0,
 			'pageorder'  => 0,
 			'comment'    => 0,
-			'sheet_tree' => ''
+			'doc_tree' => ''
 		);
 		$result = $this->db->query("SELECT 
 		`sheets`.`id`,
@@ -123,63 +106,76 @@ class Docmodel extends CI_Model{
 		LIMIT 1", array($sheet_id));
 		if($result->num_rows()){
 			$act = $result->row_array();
-			$act['sheet_id']   = $sheet_id;
-			$act['sheet_tree'] = $this->sheet_tree($root, $sheet_id);
+			$act['doc_id']   = $sheet_id;
+			$act['doc_tree'] = $this->doc_tree($root, $sheet_id);
 			$act['is_active']  = ($act['active']) ? 'checked="checked"' : "";
 		}
 		$act['redirect'] = $this->get_redirects($act['redirect']);
 		return $this->load->view('doc/doc_editor', $act, true);
 	}
 	
-	public function sheet_save($sheet_id){
-		$pageorder = $this->get_pageorder($sheet_id);
+	private function insert_doc($doc_id) {
+		$pageorder = $this->get_pageorder($doc_id);
+		$active    = ($this->input->post('is_active')) ? 1 : 0;
+		$this->db->query("INSERT INTO `sheets`(
+			`sheets`.`text`,
+			`sheets`.`root`,
+			`sheets`.`date`,
+			`sheets`.`header`,
+			`sheets`.`pageorder`,
+			`sheets`.active,
+			`sheets`.parent,
+			`sheets`.redirect,
+			`sheets`.comment ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )", array(
+			preg_replace("/'/", '&quot;', $this->input->post('sheet_text',     TRUE)),
+			$this->input->post('sheet_root',     TRUE),
+			date("Y-m-d"),
+			preg_replace("/'/", '&quot;', $this->input->post('sheet_header',   TRUE)),
+			$pageorder,
+			$active,
+			$doc_id,
+			$this->input->post('sheet_redirect', TRUE),
+			preg_replace("/'/", '&quot;', $this->input->post('sheet_comment',  TRUE))
+		));
+	}
+
+	private function update_doc($doc_id) {
+		//$this->output->enable_profiler(TRUE);
+		//return false;
+		$active = ($this->input->post('is_active')) ? 1 : 0;
+		$this->db->query("UPDATE `sheets` SET
+			`sheets`.`ts`        = NOW(),
+			`sheets`.`text`      = ?,
+			`sheets`.`header`    = ?,
+			`sheets`.`pageorder` = ?,
+			`sheets`.`active`    = ?,
+			`sheets`.`parent`    = ?,
+			`sheets`.`redirect`  = ?,
+			`sheets`.`comment`   = ?,
+			`sheets`.`root`      = ?
+		WHERE `sheets`.`id`        = ?", array(
+			preg_replace("/'/", '&quot;', $this->input->post('sheet_text',     TRUE)),
+			preg_replace("/'/", '&quot;', $this->input->post('sheet_header',   TRUE)),
+			$this->input->post('pageorder',      TRUE),
+			$active,
+			$this->input->post('sheet_parent',   TRUE),
+			$this->input->post('sheet_redirect', TRUE),
+			preg_replace("/'/", '&quot;', $this->input->post('sheet_comment',  TRUE)),
+			$this->input->post('sheet_root',     TRUE),
+			$doc_id
+		));
+	}
+
+	public function doc_save($doc_id) {
 		if ($this->input->post('save_new')) {
-			$this->db->query("INSERT INTO `sheets`(
-				`sheets`.`text`,
-				`sheets`.`root`,
-				`sheets`.`date`,
-				`sheets`.`header`,
-				`sheets`.`pageorder`,
-				`sheets`.active,
-				`sheets`.parent,
-				`sheets`.redirect,
-				`sheets`.comment ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )", array(
-				$this->input->post('sheet_text',     TRUE),
-				$this->input->post('sheet_root',     TRUE),
-				date("Y-m-d"),
-				$this->input->post('sheet_header',   TRUE),
-				$pageorder,
-				$this->input->post('is_active')) ? 1 : 0,
-				$sheet_id,
-				$this->input->post('sheet_redirect', TRUE),
-				$this->input->post('sheet_comment',  TRUE)
-			);
+			$this->insert_doc($doc_id);
 		} else {
-			$this->db->query("UPDATE `sheets` SET
-				`sheets`.`ts`        = NOW(),
-				`sheets`.`text`      = ?,
-				`sheets`.`header`    = ?,
-				`sheets`.`pageorder` = ?,
-				`sheets`.`active`    = ?,
-				`sheets`.`parent`    = ?,
-				`sheets`.`redirect`  = ?,
-				`sheets`.`comment`   = ?,
-				`sheets`.`root`      = ?
-			WHERE `sheets`.`id`        = ?", array(
-				$this->input->post('sheet_text',     TRUE),
-				$this->input->post('sheet_header',   TRUE),
-				$this->input->post('pageorder',      TRUE),
-				$this->input->post('is_active')) ? 1 : 0,
-				$this->input->post('sheet_parent',   TRUE),
-				$this->input->post('sheet_redirect', TRUE),
-				$this->input->post('sheet_comment',  TRUE),
-				$this->input->post('sheet_root',     TRUE),
-				$sheet_id
-			);
+			$this->update_doc($doc_id);
 		}
 		$this->load->model('cachemodel');
 		$this->cachemodel->menu_build(1, 0, 'file');
 	}
+
 	// comments
 	function comments_show($user_id = 0) {
 		$data  = array();
@@ -222,7 +218,7 @@ class Docmodel extends CI_Model{
 		return $this->load->view('admin/comments', $act, true);
 	}
 
-	function addcomment(){
+	function addcomment() {
 		$location_id = $this->input->post('location_id', true);
 		$this->load->helper('url');
 		if ( (string) $this->session->userdata('cpt') !== (string) md5(strtolower($this->input->post('cpt')))){
@@ -247,7 +243,7 @@ class Docmodel extends CI_Model{
 		if($counter === 3){
 			redirect("/page/show/".$location_id);
 		}
-		$result = $this->db->query("INSERT INTO comments (
+		$this->db->query("INSERT INTO comments (
 			comments.auth_name,
 			comments.contact_info,
 			comments.text,

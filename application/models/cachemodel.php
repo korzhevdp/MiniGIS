@@ -10,7 +10,7 @@ class Cachemodel extends CI_Model{
 		foreach ($result->result() as $row) {
 			$groupname = (isset($groups[$row->group_id]) && strlen($groups[$row->group_id][$lang]))       ? $groups[$row->group_id][$lang]    : $row->groupname;
 			$itemname  = (isset($categories[$row->type_id]) && strlen($categories[$row->type_id][$lang])) ? $categories[$row->type_id][$lang] : $row->itemname;
-			$grouplink = '<a href="#"><i class="icon-tags"></i>&nbsp;&nbsp;'.$groupname."</a>";
+			$grouplink = '<a href="/map/group/'.$row->group_id.'"><i class="icon-tags"></i>&nbsp;&nbsp;'.$groupname."</a>";
 			$itemlink  = '<a href="/map/type/'.$row->type_id.'"><i class="icon-tag"></i>&nbsp;&nbsp;'.$itemname."</a>";
 			if (!isset($gis_tree[$grouplink])) {
 				$gis_tree[$grouplink] = array();

@@ -30,19 +30,22 @@ class Admin extends CI_Controller{
 		$this->load->view('admin/view', $output);
 	}
 
-	public function sheets($mode, $sheet_id="0") {
+	public function docs($sheet_id="0") {
 		$this->usefulmodel->check_admin_status();
-
 		$this->load->model('docmodel');
-		if ($mode === 'save') {
-			$this->docmodel->sheet_save($sheet_id);
-		}
 		$output = array(
 			'menu'    => $this->load->view('admin/menu', array(), true)
 						.$this->load->view('admin/supermenu', $this->usefulmodel->semantics_supermenu(), true),
-			'content' => $this->docmodel->sheet_edit($sheet_id)
+			'content' => $this->docmodel->doc_edit($sheet_id)
 		);
 		$this->load->view('admin/view', $output);
+	}
+
+	public function doc_save($doc_id){
+		$this->load->model('docmodel');
+		$this->docmodel->doc_save($doc_id);
+		$this->load->helper("url");
+		redirect("admin/docs/".$doc_id);
 	}
 
 	public function maps(){

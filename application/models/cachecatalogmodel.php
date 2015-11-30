@@ -6,7 +6,6 @@ class Cachecatalogmodel extends CI_Model{
 	}
 	private function get_statmap($type = 1, $coords = "0,0"){
 		$output = array();
-		
 		$maps   = array(
 			1 => "http://static-maps.yandex.ru/1.x/?z=13&l=map&size=128,128&pt=".$coords.",vkbkm",
 			2 => "http://static-maps.yandex.ru/1.x/?l=map&size=128,128&pl=".$coords,

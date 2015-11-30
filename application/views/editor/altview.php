@@ -3,12 +3,9 @@
 <head>
 	<title>Административная консоль - редактор объектов</title>
 	<?=$this->load->view("shared/shared_js_css");?>
-	<link href="<?=$this->config->item('api');?>/css/editor.css" rel="stylesheet">
-	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/maps2.js"></script>
-	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/map_calc.js"></script>
-	<script type="text/javascript" src="<?=$this->config->item('api');?>/jqueryui/js/jqueryui.js"></script>
-	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/dragndrop.js"></script>
+
 	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/yandex_styles.js"></script>
+	<link href="<?=$this->config->item('api');?>/css/editor.css" rel="stylesheet">
 </head>
 
 <body class="altEditor">
@@ -34,7 +31,7 @@
 		</h4>
 		<ul class="nav nav-tabs">
 			<?=$pagelist_alt;?>
-			<li class="shedule"><a href="#shedule" data-toggle="tab">Расписание</a></li>
+			<li class="schedule"><a href="#schedule" data-toggle="tab">Расписание</a></li>
 		</ul>
 	</td>
 </tr>
@@ -54,14 +51,13 @@
 		</div>
 		<table class="table">
 		<tr>
-			<td>
+			<td id="dropZone" title="Drag and drop your images here">
+				<txt></txt>
+				<input type="hidden" name="lid" value="<?=$lid?>" id="uploadLID">
 				<ul class="imageGallery">
 					<?=$images;?>
 				</ul>
 			</td>
-		</tr>
-		<tr>
-			<td><button type="button" class="btn btn-block btn-primary" id="loadImage" title="Загрузка изображений">Загрузить изображение</button></td>
 		</tr>
 		</table>
 		<?=$panel;?>
@@ -76,7 +72,7 @@
 	<td class="rightColumn tab-content">
 		<div class="tab-pane active"   id="YMapsID"></div>
 		<div class="tab-pane propPage" id="propPage"></div>
-		<div class="tab-pane"          id="shedule"><?=$shedule;?></div>
+		<div class="tab-pane"          id="schedule"><?=$schedule;?></div>
 	</td>
 </tr>
 </table>
@@ -105,25 +101,21 @@
 	</div>
 </div>
 
-<div id="imageLoader" class="modal hide fade" style="width:700px;">
+<!-- <div id="imageLoader" class="modal hide fade" style="width:700px;">
 	<div class="modal-header">
 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 		<h3>Выберите изображения</h3>
 	</div>
 	<div class="modal-body" style="height:400px;overflow:auto;">
-		<form action="/upload.php" enctype="multipart/form-data">
-			<div id="dropZone" name="userfile">Для загрузки, перетащите файл сюда.</div>
-			<input type="hidden" name="lid" value="<?=$lid?>" id="uploadLID">
-		</form>
 		<ul class="imageGallery">
 			<?=$images;?>
 		</ul>
 	</div>
 	<div class="modal-footer">
 		<a href="#" data-dismiss="modal" class="btn">Закрыть</a>
-		<!-- <a href="#" id="loadSelectedObjects" class="btn btn-primary">Загрузить</a> -->
+		<a href="#" id="loadSelectedObjects" class="btn btn-primary">Загрузить</a> 
 	</div>
-</div>
+</div> -->
 
 <div id="nodeExport" class="modal hide fade" style="width:700px;">
 	<div class="modal-header">
@@ -136,10 +128,11 @@
 		<a href="#" id="loadSelectedObjects" class="btn btn-primary">Загрузить точки</a>
 	</div>
 </div>
-<script type="text/javascript">
-<!--
-set_deleter();
-//-->
-</script>
+	
+<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/objecteditor/maps2.js"></script>
+<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/objecteditor/editorui.js"></script>
+<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/objecteditor/dragndrop.js"></script>
+<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/objecteditor/schedule.js"></script>
+<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/objecteditor/nodal.js"></script>
 </body>
 </html>

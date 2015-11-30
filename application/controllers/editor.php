@@ -44,7 +44,38 @@ class Editor extends CI_Controller{
 		return false;
 	}
 
+	private function check_aux_points(){
+		$data      = array();
+		$auxpoints = explode(",", $this->input->post('coords_aux'));
+		$contour   = explode(";", $this->input->post('coords_array'));
+		$output    = array();
+		$result    = $this->db->query("SELECT 
+		`locations`.id,
+		`locations`.coord_y
+		FROM
+		`locations`
+		WHERE `locations`.`id` IN (".$this->input->post('coords_aux').")");
+		if($result->num_rows()){
+			foreach($result->result() as $row){
+				$data[$row->id] = $row->coord_y;
+			}
+		}
+		foreach ($auxpoints as $val){
+			if(in_array($data[$val], $contour)) {
+				$output[$val] = $val;;
+			}
+		}
+		return implode($output, ",");
+	}
+
 	private function create_location() {
+		$address   = str_replace("'", "&quot;", $this->input->post('address'));
+		$name      = str_replace("'", "&quot;", $this->input->post('name'));
+		$contact   = str_replace("'", "&quot;", $this->input->post('contact'));
+		$attr      = str_replace("'", "&quot;", $this->input->post('attr'));
+		$type      = preg_replace("[^0-9]", "", $this->input->post('type'));
+		$type      = (strlen($type)) ? $type : 1;
+		$auxpoints = $this->check_aux_points();
 		$this->db->query("INSERT INTO
 		`locations`(
 			`locations`.location_name,
@@ -61,20 +92,23 @@ class Editor extends CI_Controller{
 			`locations`.active,
 			`locations`.comments
 		) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ? )", array(
-			$this->input->post('name'),
+			$name,
 			$this->session->userdata("user_id"),
-			$this->input->post('type'),
-			$this->input->post('attr'),
-			$this->input->post('contact'),
-			$this->input->post('address'),
+			$type,
+			$attr,
+			$contact,
+			$address,
 			$this->input->post('coords'),
 			$this->input->post('coords_array'),
-			$this->input->post('coords_aux'),
+			$auxpoints,
 			0,
 			$this->input->post('active'),
 			$this->input->post('comments')
 		));
-		return $this->db->insert_id();
+		$ttl = $this->db->insert_id();
+		$this->insert_composites($this->input->post('ttl'), $auxpoints);
+		$this->recache_datasets();
+		return $ttl;
 	}
 
 	private function update_location() {
@@ -86,6 +120,13 @@ class Editor extends CI_Controller{
 			$this->usefulmodel->insert_audit("При сохранении объекта: #".$this->input->post('ttl')." - подмена целевого объекта (".$this->session->userdata("c_l").")");
 			redirect('user/library');
 		}
+		$address = str_replace("'", "&quot;", $this->input->post('address'));
+		$name    = str_replace("'", "&quot;", $this->input->post('name'));
+		$contact = str_replace("'", "&quot;", $this->input->post('contact'));
+		$attr    = str_replace("'", "&quot;", $this->input->post('attr'));
+		$type    = preg_replace("[^0-9]", "", $this->input->post('type'));
+		$type    = (strlen($type)) ? $type : 1;
+		$auxpoints = $this->check_aux_points();
 		$this->db->query("UPDATE
 		`locations` 
 		SET
@@ -102,19 +143,33 @@ class Editor extends CI_Controller{
 		`locations`.comments       = ?
 		WHERE
 		`locations`.id = ?", array(
-			$this->input->post('name'),
-			$this->input->post('type'),
-			$this->input->post('attr'),
-			$this->input->post('contact'),
-			$this->input->post('address'),
+			$name,
+			$type,
+			$attr,
+			$contact,
+			$address,
 			$this->input->post('coords'),
 			$this->input->post('coords_array'),
-			$this->input->post('coords_aux'),
+			$auxpoints,
 			0,
 			$this->input->post('active'),
 			$this->input->post('comments'),
 			$this->input->post('ttl')
 		));
+		$this->insert_composites($this->input->post('ttl'), $auxpoints);
+	}
+
+	private function insert_composites($source, $data) {
+		$obj_nodes = explode(",", $data);
+		$composites = array();
+		foreach($obj_nodes as $obj){
+			array_push($composites, "(".$source.", ".$obj.")");
+		}
+		$this->db->query("DELETE FROM composites WHERE `composites`.parent = ?", array($source));
+		$this->db->query("INSERT INTO `composites`( 
+			`composites`.parent,
+			`composites`.location
+		) VALUES ".implode($composites, ",\n"));
 	}
 
 	private function insert_main_property($location_id) {
@@ -187,6 +242,8 @@ class Editor extends CI_Controller{
 		}
 		$this->load->model('cachecatalogmodel');
 		$this->cachecatalogmodel->cache_location($location_id);
+		$this->load->model('mapsetmodel');
+		$this->mapsetmodel->recache_datasets($location_id);
 		$this->usefulmodel->insert_audit("Объект: #".$location_id." - успешно сохранён и кэширован");
 		print "data = { ttl : ".$location_id." }";
 	}
@@ -237,6 +294,8 @@ class Editor extends CI_Controller{
 		$this->insert_properties($output, $ids, $location_id);
 		$this->load->model('cachecatalogmodel');
 		$this->cachecatalogmodel->cache_location($location_id);
+		$this->load->model('mapsetmodel');
+		$this->mapsetmodel->recache_datasets($location_id);
 		$this->usefulmodel->insert_audit("Объект: #".$location_id." - успешно сохранён и кэширован");
 		print "data = { ttl : ".$location_id." }";
 	}

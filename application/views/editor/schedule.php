@@ -1,4 +1,4 @@
-<table class="table table-condensed table-bordered table-striped" id="sheduleTable">
+<table class="table table-condensed table-bordered table-striped" id="scheduleTable">
 <tr>
 	<th class="lc">День недели</th>
 	<th class="rc">Режим работы</th>
@@ -6,7 +6,7 @@
 <tr class="info">
 <tr>
 	<th></th>
-	<th><label><input type="checkbox" id="h24">Круглосуточно</label></th>
+	<th><label><input type="checkbox" id="h24">Круглосуточно&nbsp;&nbsp;&nbsp;<span id="h724" class="hide">7/24</span></label></th>
 </tr>
 <tr class="info">
 	<th>Вс.</th>

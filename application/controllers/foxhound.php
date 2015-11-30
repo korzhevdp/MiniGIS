@@ -4,9 +4,9 @@ class Foxhound extends CI_Controller{
 		parent::__construct();
 	}
 
-	public function	search() {
+	public function search() {
 		if ( $this->input->post('mapset') != 0 ) {
-			$this->select_filtered_group($this->input->post('sc'), $this->input->post('mapset'), $current =	0);
+			$this->select_filtered_group($this->input->post('sc'), $this->input->post('mapset'), $current = 0);
 		} else {
 			print "all";
 		}
@@ -37,8 +37,8 @@ class Foxhound extends CI_Controller{
 	}
 
 	private	function select_filtered_group($input, $mapset,	$current){
-		$full		  =	array(); //	массив в который будем складывать все пришедшие	параметры в	соответствии с алгоритмами :)
-		$result	= $this->db->query("SELECT
+		$full   = array(); //массив в который будем складывать все пришедшие параметры в соответствии с алгоритмами :)
+		$result = $this->db->query("SELECT
 		`properties_list`.algoritm,
 		`properties_list`.id
 		FROM
@@ -48,20 +48,20 @@ class Foxhound extends CI_Controller{
 		if($result->num_rows()){
 			foreach($result->result() as $row){
 				if (!isset($full[$row->algoritm])) {
-					$full[$row->algoritm] =	array();
+					$full[$row->algoritm] = array();
 				};
-				$full[$row->algoritm][$row->id]	= $input[$row->id];
+				$full[$row->algoritm][$row->id] = $input[$row->id];
 			}
 		}
-		$list =	$this->perform_tests($full);
+		$list = $this->perform_tests($full);
 		if(sizeof($list)) {
-			print implode($list, ",");
+			print implode(array_unique($list), ",");
 			return true;
 		}
-		print "console.log('No Data')";
+		print "";
 	}
 
-	private	function test_search_array($list, $addition){
+	private function test_search_array($list, $addition){
 		if(sizeof($addition)) {
 			if (sizeof($list)) {
 				$list =	array_intersect($list, $addition);
@@ -72,7 +72,7 @@ class Foxhound extends CI_Controller{
 		return $list;
 	}
 
-	private	function send_warning($text){
+	private function send_warning($text){
 		return true;
 	}
 
@@ -247,8 +247,6 @@ class Foxhound extends CI_Controller{
 		}
 		return $output;
 	}
-
-
 }
 
 /* End of file ajax.php	*/

@@ -1,12 +1,12 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 $config['properties'] = array(
-	107 => array( 'ru' => 'Остановка автобуса','en' => '1111','de' => '','es' => '' ),
+	107 => array( 'ru' => 'Остановка автобуса','en' => 'bus stop','de' => '','es' => '' ),
 	108 => array( 'ru' => 'Ж/Д станция','en' => 'railroad','de' => '','es' => '' ),
-	109 => array( 'ru' => 'Кинотеатр','en' => '','de' => '','es' => '' ),
-	110 => array( 'ru' => 'Парк','en' => '','de' => '','es' => '' ),
-	111 => array( 'ru' => 'Причал','en' => '','de' => '','es' => '' ),
-	112 => array( 'ru' => 'Магазин 24','en' => '','de' => '','es' => '' ),
-	113 => array( 'ru' => 'Баня','en' => '','de' => '','es' => '' ),
+	109 => array( 'ru' => 'Кинотеатр','en' => 'cinema','de' => '','es' => '' ),
+	110 => array( 'ru' => 'Парк','en' => 'Park','de' => '','es' => '' ),
+	111 => array( 'ru' => 'Причал','en' => 'Quay','de' => '','es' => '' ),
+	112 => array( 'ru' => 'Магазин 24','en' => 'Shop 24','de' => '','es' => '' ),
+	113 => array( 'ru' => 'Баня','en' => 'Baths','de' => '','es' => '' ),
 	114 => array( 'ru' => 'Больница','en' => '','de' => '','es' => '' ),
 	115 => array( 'ru' => 'Поликлиника','en' => '','de' => '','es' => '' ),
 	119 => array( 'ru' => 'Медицинские учреждения','en' => '','de' => '','es' => '' ),
@@ -101,9 +101,9 @@ $config['properties'] = array(
 	252 => array( 'ru' => 'Страны','en' => '','de' => '','es' => '' ),
 	253 => array( 'ru' => 'Метродепо','en' => '','de' => '','es' => '' ),
 	254 => array( 'ru' => 'Электроподстанция метро','en' => '','de' => '','es' => '' ),
-	255 => array( 'ru' => 'Надземное','en' => '','de' => '','es' => '' ),
-	256 => array( 'ru' => 'Подземное','en' => '','de' => '','es' => '' ),
-	257 => array( 'ru' => 'Заглублённое','en' => '','de' => '','es' => '' )
+	255 => array( 'ru' => 'Надземное','en' => 'surface','de' => 'surface','es' => 'surface' ),
+	256 => array( 'ru' => 'Подземное','en' => 'subterranean','de' => 'subterranean','es' => 'subterranean' ),
+	257 => array( 'ru' => 'Заглублённое','en' => 'lowered','de' => 'lowered','es' => 'lowered' )
 );
 /* End of file translations_g.php */
 /* Location: ./application/config/translations_g.php */

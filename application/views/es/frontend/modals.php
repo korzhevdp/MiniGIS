@@ -1,7 +1,7 @@
 <div class="modal hide fade" id="modal_pics" style="width:440px;">
 	<div class="modal-header" style="cursor:move;background-color: #d6d6d6">
 		<button type="button" class="close" data-dismiss="modal"><i class="icon-remove"></i></button>
-		<h4>Picture for the object</h4>
+		<h4>La imagen de un objeto</h4>
 	</div>
 	<div class="modal-body" style="height:300px;overflow:hidden;vertical-align:middle">
 		<div id="car_0" class="carousel slide" data-interval=5000 data-pause="hover">
@@ -15,9 +15,9 @@
 	</div>
 	<div class="modal-footer">
 		<form method="post" action="/upload/loadimage" enctype="multipart/form-data" class="form-inline row-fluid">
-			<input type="file" placeholder="File..." class="span8" size="46" name="userfile" id="userfile" />
-			<input type="text" name="comment" placeholder="Caption for the picture..." class="span12" id="upload_cmnt" maxlength="200" title="The photo caption. Can be edited in the Photos." />
-			<button type="submit" class="btn btn-primary span12" style="margin-left:0px;margin-top:10px;">Upload</button>
+			<input type="file" placeholder="El archivo..." class="span8" size="46" name="userfile" id="userfile" />
+			<input type="text" name="comment" placeholder="En la imagen de la firma..." class="span12" id="upload_cmnt" maxlength="200" title="La leyenda de la foto. Puede ser editado en la sección de Fotos" />
+			<button type="submit" class="btn btn-primary span12" style="margin-left:0px;margin-top:10px;">Descargar</button>
 			<input type="hidden" name="upload_user" value="frontend_user" />
 			<input type="hidden" name="upload_from" value="page/map/<?=$mapset?>" />
 			<input type="hidden" name="upload_to_location" id="upl_loc" value="" />

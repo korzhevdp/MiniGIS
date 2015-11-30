@@ -14,9 +14,9 @@ var prop = {
 	contact      : '<?=$contact_info;?>',
 	type         : <?=$type;?>,
 	pr           : <?=$pr_type;?>,
-	coords       : '<?=$coord_y;?>',
-	coords_array : '',
-	coords_aux   : '',
+	coords       : <?=$coord_y;?>,
+	coords_array : '<?=$coord_array;?>',
+	coords_aux   : [<?=$coord_obj;?>],
 	comments     : <?=$comments?>
 },
 mp = { lang: '<?=$this->session->userdata("lang");?>'}

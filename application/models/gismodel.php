@@ -147,7 +147,7 @@ class Gismodel extends CI_Model{
 		return $this->db->insert_id();
 	}
 
-	private function insert_object_type() {
+	private function insert_object_type($haschild) {
 		$insert_id = $this->insert_object_main_property();
 		$this->db->query("INSERT INTO
 		locations_types(
@@ -172,7 +172,7 @@ class Gismodel extends CI_Model{
 	function gis_save() {
 		$haschild = ($this->input->post('has_child')) ? 1 : 0;
 		if(!$this->input->post('obj')){
-			$this->insert_object_type();
+			$this->insert_object_type($haschild);
 		}else{
 			$this->db->query("UPDATE
 			locations_types

@@ -160,7 +160,7 @@ class Adminmodel extends CI_Model{
 	}
 
 	function users_show($id = 0) {
-		$access = "";
+		$access = 1;
 		$users  = array();
 		$output = array( 'admin'  => '', 'valid'  => '', 'active' => '', 'rating' => '', 'name'   => '', 'id'     => $id );
 		$result = $this->db->query("SELECT
@@ -193,7 +193,7 @@ class Adminmodel extends CI_Model{
 				array_push($users, $string);
 			}
 		}
-		$output['layers'] = $this->get_access_layers();
+		$output['layers'] = $this->get_access_layers($access);
 		$output['table']  = implode($users,  "\n");
 		return $this->load->view("admin/usermanager", $output, true);
 	}

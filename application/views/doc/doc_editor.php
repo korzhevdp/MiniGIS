@@ -1,17 +1,17 @@
 <STYLE TYPE="text/css">
-	#sheets_tree{
+	#sheets_tree {
 		vertical-align: top;
 		width:150px;
 		padding:2px;
 	}
-	#sheets_tree_header{
+	#sheets_tree_header {
 		background-color: #666666;
 		color:#FFFF99;
 		width:150px;
 		border-right: #D6D6D6;
 		font-size: 10pt;
 	}
-	#tree_container{
+	#tree_container {
 		background-color:#F0F0F0;
 		overflow:auto;
 		width:90%;
@@ -21,7 +21,7 @@
 		padding:5px;
 		font-size: 8pt;
 	}
-	.menu_item{
+	.menu_item {
 		padding-top: 2px;
 		padding-bottom: 2px;
 		margin-bottom: 2px;
@@ -29,34 +29,33 @@
 		font-size: 8pt;
 		cursor:pointer;
 	}
-	.menu_item_container{
+	.menu_item_container {
 		margin-left: 10px;
 		background-color: #FFFFFF;
 		font-size: 8pt;
 	}
-	#cke_contents_editor{
+	#cke_contents_editor {
 		padding-left:6px;
-		
 	}
 </style>
 
 	<h3>Cтраницы сайта <small>Дерево документов</small></h3>
-	<div id="tree_container"><?=$sheet_tree;?></div>
+	<div id="tree_container"><?=$doc_tree;?></div>
 
-	<form method=post action="/admin/sheets/save/<?=$sheet_id;?>" class="form-horizontal" style="margin-bottom:60px;">
+	<form method=post action="/admin/doc_save/<?=$doc_id;?>" class="form-horizontal" style="margin-bottom:60px;">
 	<fieldset>
 		<legend><?=$header?> <small>- Редактирование страницы</small></legend>
 		<div class="control-group" style="margin-bottom:3px;">
 			<label class="control-label span2" for="sheet_header">Заголовок:</label>
 			<div class="controls">
-				<input type="text" name="sheet_header" id="sheet_header" class="span6" value="<?=$header?>">
+				<input type="text" name="sheet_header" id="sheet_header" class="span6" value='<?=$header?>'>
 			</div>
 		</div>
 
 		<div class="control-group" style="margin-bottom:3px;">
 			<label for="save_new" class="control-label span2">&nbsp;</label>
 			<div class="controls">
-				<label for="save_new" class="checkbox"><input type="checkbox" name="save_new" id="save_new">Сохранить как новый документ в текущем разделе</label>		
+				<label for="save_new" class="checkbox"><input type="checkbox" name="save_new" id="save_new">Сохранить как новый документ в текущем разделе</label>
 			</div>
 		</div>
 
@@ -82,7 +81,7 @@
 		<div class="control-group" style="margin-bottom:3px;">
 			<label for="sheet_redirect" class="control-label span2">Комментарий:</label>
 			<div class="controls">
-				<input type="text" name="sheet_comment" id="sheet_comment" class="span6" value="<?=$comment?>">
+				<input type="text" name="sheet_comment" id="sheet_comment" class="span6" value='<?=$comment?>'>
 			</div>
 		</div>
 	
@@ -94,7 +93,7 @@
 		<label for="is_active">&nbsp;</label>
 		<div class="controls">
 			<label for="is_active" class="checkbox">
-				<input type="checkbox" name="is_active" id="is_active" value="on" <?=$is_active;?>>&nbsp;&nbsp;Опубликована
+				<input type="checkbox" name="is_active" id="is_active" value="1" <?=$is_active;?>>&nbsp;&nbsp;Опубликована
 			</label>
 		</div>
 	</div>

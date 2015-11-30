@@ -7,7 +7,7 @@
 	<link href="<?=$this->config->item('api');?>/bootstrap/css/bootstrap.css" rel="stylesheet">
 	<link href="<?=$this->config->item('api');?>/css/editor.css" rel="stylesheet">
 	<!-- API 2.0 -->
-	<script type="text/javascript" src="http://api-maps.yandex.ru/2.0-stable/?coordorder=longlat&amp;load=package.full&amp;lang=ru-RU"></script>
+	<script type="text/javascript" src="http://api-maps.yandex.ru/2.0-stable/?coordorder=longlat&amp;mode=debug&amp;load=package.full&amp;lang=ru-RU"></script>
 	<!-- 	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/map_calc.js" type="text/javascript"></script> -->
 	<script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/map_styles2.js"></script>
 	<!-- EOT API 2.0 -->

@@ -18,12 +18,12 @@ class Editormodel extends CI_Model{
 		ORDER BY `images`.`order`, `images`.`id`", array($location));
 		if($result->num_rows()){
 			foreach($result->result() as $row){
-				$sizes = explode(",", $row->small);
-				$string	= '<li class="locationImg" ref='.$row->hash.'><img src="/uploads/small/'.$location."/".$row->filename.'" height="'.$sizes[0].'"	width="'.$sizes[0].'"><i class="icon-remove	icon-white"></i></li>';
-				array_push($output,	$string);
+				$sizes  = explode(",", $row->small);
+				$string = '<li class="locationImg" ref='.$row->hash.'><img src="/uploads/small/'.$location."/".$row->filename.'" height="'.$sizes[0].'" width="'.$sizes[0].'"><i class="icon-remove	icon-white"></i></li>';
+				array_push($output, $string);
 			}
 		}
-		return implode($output,	"\n");
+		return implode($output, "\n");
 	}
 
 	private function fill_in_type_mode($type_id) {
@@ -31,7 +31,8 @@ class Editormodel extends CI_Model{
 		$result	= $this->db->query("SELECT
 		locations_types.object_group,
 		locations_types.attributes,
-		locations_types.pr_type
+		locations_types.pr_type,
+		locations_types.`name`
 		FROM
 		locations_types
 		WHERE
@@ -51,7 +52,7 @@ class Editormodel extends CI_Model{
 				'address'		=> 'Новый адрес',
 				'active'		=> 0,
 				'typelist'		=> 0,
-				'description'	=> 'Новое описание',
+				'description'	=> $row->name,
 				'coord_y'		=> 0,
 				'comments'		=> 0,
 				'images'		=> ''
@@ -69,9 +70,11 @@ class Editormodel extends CI_Model{
 		locations.active,
 		locations.`type`,
 		locations.coord_y,
+		locations.coord_obj,
+		locations.coord_array,
 		locations.contact_info,
 		`locations_types`.name AS `description`,
-		IF(LENGTH(locations.style_override) > 0, locations.style_override,`locations_types`.attributes)	AS attributes,
+		IF(LENGTH(locations.style_override) > 0, locations.style_override,`locations_types`.attributes) AS attributes,
 		`locations_types`.pr_type,
 		`locations_types`.object_group,
 		`locations`.comments
@@ -151,6 +154,7 @@ class Editormodel extends CI_Model{
 		if ($type === "location") {
 			$output = $this->fill_in_location_mode($id);
 		}
+		$output["coord_y"] = (in_array($output["pr_type"], array(2, 3) )) ? "'".$output["coord_y"]."'" : "[".$output["coord_y"]."]";
 		$output['typelist']     = $this->get_object_types_of_group($output['object_group'],	$output['type']);
 		$output['liblink']      = implode(array($output['object_group'], $output['type']), "/");
 		$buttons                = $this->generate_buttons_lists($output);
@@ -171,7 +175,7 @@ class Editormodel extends CI_Model{
 					'images'			=> $this->get_images($id),
 					'lid'				=> $id,
 					'keywords'			=> '',
-					'shedule'			=> $this->load->view("editor/shedule",	array(), true),
+					'schedule'			=> $this->load->view("editor/schedule",	array(), true),
 					'pr_type'			=> $data['pr_type'],
 					'content'			=> $this->load->view('editor/summary',	$data, true),
 					'panel'				=> $this->load->view('editor/altcontrols', $data, true),
@@ -186,7 +190,7 @@ class Editormodel extends CI_Model{
 			$output	= array(
 				'lid'				=> 0,
 				'keywords'			=> '',
-				'shedule'			=> $this->load->view("editor/shedule", array(), true),
+				'schedule'			=> $this->load->view("editor/schedule", array(), true),
 				'pr_type'			=> $data['pr_type'],
 				'content'			=> $this->load->view('editor/summary', $data, true),
 				'panel'				=> $this->load->view('editor/altcontrols', $data, true),
@@ -264,8 +268,12 @@ class Editormodel extends CI_Model{
 		.$points
 		.$ids);
 		if($result->num_rows()){
-			foreach($result->result() as $row){
-				$object = $row->id.": { coords: '".$row->coord_y."', description: '".$row->loc_name."', pr: ".$row->pr_type." , attributes: '".$row->attributes."' }";
+			foreach($result->result() as $row) {
+				$coords = "[".$row->coord_y."]";
+				if ($row->pr_type === "2" || $row->pr_type === "3") {
+					$coords = "'".$row->coord_y."'";
+				}
+				$object = $row->id.": { coords: ".$coords.", description: '".$row->loc_name."', pr: ".$row->pr_type." , attributes: '".$row->attributes."' }";
 				array_push($output, $object);
 			}
 		}
@@ -274,13 +282,16 @@ class Editormodel extends CI_Model{
 
 	public function get_objects_by_type() {
 		$run	= 0;
+		if (!is_array($this->input->post("points"))) {
+			return "data = {  }";
+		}
 		$points	= "";
 		$ids	= "";
 		if($this->input->post("points") && sizeof($this->input->post("points"))){
 			$points	= 'AND (locations.`type` IN ('.implode($this->input->post("points"), ",").'))';
 			$run++;
 		}
-		if($this->input->post("ids") &&	sizeof($this->input->post("ids"))){
+		if($this->input->post("ids") && sizeof($this->input->post("ids"))){
 			$ids = ((!$run) ? "AND" : "OR").' (locations.`id` IN ('.implode($this->input->post("ids"), ",").'))';
 			$run++;
 		}
@@ -292,21 +303,21 @@ class Editormodel extends CI_Model{
 	}
 
 	private function get_assigned_properties($location_id) {
-		$assigned =	array();
+		$assigned = array();
 		if($location_id){
-			$result	= $this->db->query("SELECT
+			$result = $this->db->query("SELECT
 			IF(properties_list.fieldtype = 'select', `properties_assigned`.value, `properties_assigned`.property_id) AS	property_id,
 			IF(`properties_list`.coef <> 1,
-				((`properties_assigned`.value %	`properties_list`.divider) / `properties_list`.multiplier),
+				((`properties_assigned`.value % `properties_list`.divider) / `properties_list`.multiplier),
 				`properties_assigned`.value
 			) AS value
 			FROM
 			`properties_assigned`
 			INNER JOIN properties_list ON (`properties_assigned`.property_id = properties_list.id)
 			WHERE
-			`properties_assigned`.`location_id`	= ?", array($location_id));
+			`properties_assigned`.`location_id` = ?", array($location_id));
 			if($result->num_rows()){
-				foreach	($result->result() as $row){
+				foreach ($result->result() as $row){
 					$assigned[$row->property_id] = $row->value;
 				}
 			}
@@ -315,9 +326,9 @@ class Editormodel extends CI_Model{
 	}
 
 	public function show_form_content($object_group = 1, $location_id = 0, $page = 1, $columns = 2) {
-		$assigned =	($location_id) ? $this->get_assigned_properties($location_id) :	array();
-		$output	  =	array();
-		$query	  =	$this->db->query('SELECT 
+		$assigned = ($location_id) ? $this->get_assigned_properties($location_id) : array();
+		$output   = array();
+		$query    = $this->db->query('SELECT 
 		properties_list.id,
 		CONCAT(properties_list.page, properties_list.`row`, properties_list.element) AS marker,
 		properties_list.label,
@@ -330,8 +341,8 @@ class Editormodel extends CI_Model{
 		RIGHT OUTER	JOIN properties_list ON (`properties_bindings`.property_id = properties_list.id)
 		WHERE
 		`properties_bindings`.`groups` = ?
-		AND	properties_list.active
-		AND	properties_list.page = ?
+		AND properties_list.active
+		AND properties_list.page = ?
 		ORDER BY
 		marker,
 		properties_list.selfname', array($object_group,	$page));
@@ -360,12 +371,14 @@ class Editormodel extends CI_Model{
 			$values			= array();//	исключительно для случая, если элемент типа	select
 			$options		= array();
 			$backcounter	= sizeof($controls);
-			$linked			= 0;
+			$linked			= false;
 			foreach ($controls as $object => $data) {
 				$value    = (isset($assigned[$object])) ? $assigned[$object]     : "";
 				$checked  = (isset($assigned[$object])) ? ' checked="checked"'   : "";
 				$selected = (isset($assigned[$object])) ? ' selected="selected"' : "";
-				$linked   = ($data['linked'] != 0)      ? $data['linked']        : 0;
+				if ($data['linked']){
+					$linked = true;
+				}
 				switch ($data['fieldtype']){
 					case 'text':
 						$string = '<div><div class="input-prepend"><label class="add-on" for="param_'.$object.'">'.$data['name'].'</label><input type="text" id="ogp4" ref="'.$object.'" id="param_'.$object.'" '.$data['parameters'].'	value="'.$value.'"></div></div>';
@@ -385,7 +398,7 @@ class Editormodel extends CI_Model{
 						}
 					break;
 					case 'checkbox':
-						$string	= '<label title="'.$label.'	- '.$data['name'].'" for="p'.$object.'"><input type="checkbox" id="p'.$object.'" name="param[]"	'.$checked.' value="'.$object.'">'.$data['name'].'</label>';
+						$string = '<label title="'.$label.'	- '.$data['name'].'" for="p'.$object.'"><input type="checkbox" id="p'.$object.'" name="param[]"	'.$checked.' value="'.$object.'">'.$data['name'].'</label>';
 						array_push($elementarray, $string);
 						--$backcounter;
 						if (!$backcounter){

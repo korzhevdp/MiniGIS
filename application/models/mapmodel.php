@@ -15,19 +15,25 @@ class Mapmodel extends CI_Model{
 			$row = $result->row();
 		}
 		$this->load->config('translations_m');
-		$maps = $this->config->item('maps');
-		$lang = $this->session->userdata('lang');
+		$maps   = $this->config->item('maps');
+		$brands = $this->config->item("brand");
+		$lang   = $this->session->userdata('lang');
+		$mapconfig  = array(
+			'map_center'	=> $this->config->item('map_center'),
+			'switches'		=> $this->load->view('cache/selectors/selector_'.$mapset."_switches_".$lang, array(), true),
+			'group'			=> 0,
+			'otype'			=> 0,
+			'mapset'		=> $mapset
+		);
 		return array(
-			'otype'      => 0,
-			'map_center' => $this->config->item('map_center'),
+			'brand'      => $brands[$lang],
 			'keywords'   => $this->config->item('maps_keywords'),
 			'map_header' => (strlen($maps[$mapset][$lang])) ? $maps[$mapset][$lang] : $row->name,
 			'content'    => "",
 			'footer'     => $this->load->view('shared/page_footer', array(), true),
-			'mapset'     => $mapset,
 			'menu'       => $this->load->view('cache/menus/menu_'.$lang, array(), true).$this->usefulmodel->admin_menu(),
 			'selector'   => $this->load->view('cache/selectors/selector_'.$mapset."_".$lang, array(), true),
-			'switches'   => $this->load->view('cache/selectors/selector_'.$mapset."_switches_".$lang, array(), true),
+			'mapconfig'	=> $this->load->view("shared/mapconfig", $mapconfig, true),
 			'title'      => $this->config->item('site_title_start')." Интерактивная карта"
 		);
 	}
