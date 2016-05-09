@@ -186,22 +186,17 @@ class Editormodel extends CI_Model{
 		);
 	}
 
-	private function get_point_types(){
-		$output = array();
-		$result = $this->db->query("SELECT 
-		`locations_types`.name,
-		`locations_types`.id
-		FROM
-		`locations_types`
-		WHERE `locations_types`.`pr_type` = 1
-		ORDER BY `locations_types`.name");
-		if($result->num_rows()){
-			foreach($result->result() as $row){
+	private function get_point_types() {
+		$result = $this->db->query("SELECT `locations_types`.name, `locations_types`.id FROM `locations_types` WHERE `locations_types`.`pr_type` = 1 ORDER BY `locations_types`.name");
+		if ($result->num_rows()) {
+			$output = array();
+			foreach($result->result() as $row) {
 				$string = '<option value="'.$row->id.'">'.$row->name.'</option>';
 				array_push($output, $string);
 			}
+			return implode($output, "");
 		}
-		return implode($output, "");
+		return "";
 	}
 
 	public function get_bas_points_types() {
@@ -244,15 +239,16 @@ class Editormodel extends CI_Model{
 	}
 
 	public function get_object_list_by_type() {
-		$output	= array();
-		$result	= $this->db->query("SELECT `locations`.id, `locations`.location_name FROM `locations` WHERE `locations`.`type` = ?", array($this->input->post("type")));
-		if($result->num_rows()){
-			foreach($result->result() as $row){
-				$string	= '<tr><td colspan="5" style="background-color:	#f6fff6;padding-left:42px;"><label><input type="checkbox" style="margin-top:-4px;" class="selectedObjects" value="'.$row->id.'">'.$row->location_name.'</label></td></tr>';
-				array_push($output,	$string);
+		$result = $this->db->query("SELECT `locations`.id, `locations`.location_name FROM `locations` WHERE `locations`.`type` = ?", array($this->input->post("type")));
+		if ($result->num_rows()) {
+			$output = array();
+			foreach ($result->result() as $row) {
+				$string = '<tr><td colspan="5" style="background-color:#f6fff6;padding-left:42px;"><label><input type="checkbox" style="margin-top:-4px;" class="selectedObjects" value="'.$row->id.'">'.$row->location_name.'</label></td></tr>';
+				array_push($output, $string);
 			}
+			return implode($output, "\n");
 		}
-		return implode($output,	"\n");
+		return "";
 	}
 	
 	private function select_objects_by_type($points, $ids) {
@@ -262,7 +258,7 @@ class Editormodel extends CI_Model{
 		locations_types.pr_type,
 		IF(LENGTH(locations.style_override)	> 0, locations.style_override, locations_types.attributes) AS attributes,
 		locations.coord_y,
-		CONCAT_WS('	', locations_types.name, locations.location_name) as loc_name
+		CONCAT_WS(' ', locations_types.name, locations.location_name) as loc_name
 		FROM
 		locations
 		INNER JOIN locations_types ON (locations.`type`	= locations_types.id)
