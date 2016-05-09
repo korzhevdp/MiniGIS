@@ -91,35 +91,36 @@ class Mapsetmodel extends CI_Model{
 		return $output;
 	}
 
+	private function getCacheArray($result) {
+		$output = array();
+		if ($result !== "No data") {
+			if ($result->num_rows()) {
+				foreach ($result->result() as $row) {
+					foreach ($this->config->item("lang") as $lang=>$langname) {
+						if (!isset($output[$lang])) {
+							$output[$lang] = array();
+						}
+						$output[$lang][$row->id] = $this->get_cache_string( $row, $composites, $translation, $lang );
+					}
+				}
+			}
+		}
+		return $output;
+	}
+
 	private function pack_results($input) {
 		$output = array(
 			'cdata' => array(),
 			'pdata' => array()
 		);
 		$this->load->config("translations_c");
-		$translation = $this->config->item("categories");
-		$composites  = $this->get_composites_array($input);
-		$result      = $this->get_properties_by_ids($input);
-		if ($result !== "No data") {
-			if ($result->num_rows()) {
-				foreach ($result->result() as $row) {
-					foreach ($this->config->item("lang") as $lang=>$langname) {
-						$output['pdata'][$lang][$row->id] = $this->get_cache_string( $row, $composites, $translation, $lang );
-					}
-				}
-			}
-		}
+		$translation     = $this->config->item("categories");
+		$composites      = $this->get_composites_array($input);
+		$result          = $this->get_properties_by_ids($input);
+		$output['pdata'] = $this->getCacheArray($result);
 		$result->free_result();
-		$result = $this->get_child_nodes($input);
-		if ($result !== "No data") {
-			if ($result->num_rows()) {
-				foreach ($result->result() as $row) {
-					foreach ($this->config->item("lang") as $lang=>$langname) {
-						$output['cdata'][$lang][$row->id] = $this->get_cache_string( $row, $composites, $translation, $lang );
-					}
-				}
-			}
-		}
+		$result          = $this->get_child_nodes($input);
+		$output['cdata'] = $this->getCacheArray($result);
 		return $output;
 	}
 
