@@ -9,6 +9,24 @@ class Map extends CI_Controller {
 		}
 	}
 
+	private function select_by_type($type) {
+		if(!file_exists(getcwd()."/application/views/cache/mapsets/type".$type."_".$this->session->userdata('lang').".src")){
+			$this->load->model("mapsetmodel");
+			$this->mapsetmodel->cache_type($type);
+		}
+		$this->load->helper("file");
+		return read_file("application/views/cache/mapsets/type".$type."_".$this->session->userdata('lang').".src");
+	}
+
+	private function select_by_group($group) {
+		if(!file_exists(getcwd()."/application/views/cache/mapsets/group".$group."_".$this->session->userdata('lang').".src")){
+			$this->load->model("mapsetmodel");
+			$this->mapsetmodel->cache_group($group);
+		}
+		$this->load->helper("file");
+		return read_file("application/views/cache/mapsets/group".$group."_".$this->session->userdata('lang').".src");
+	}
+
 	public function index(){
 		$this->simple(1);
 	}
@@ -25,15 +43,10 @@ class Map extends CI_Controller {
 		redirect($this->input->post('redirect'));
 	}
 
-	public function type($type){
-		$this->load->config('translations_g');
-		$this->load->config('translations_c');
-		$map_header = "";
+	private function getMapName ($type) {
 		$groups		= $this->config->item('groups');
 		$categories = $this->config->item('categories');
 		$lang		= $this->session->userdata('lang');
-		$headers	= $this->config->item("balloon_headers");
-		$brands		= $this->config->item("brand");
 		$result = $this->db->query("SELECT
 			`objects_groups`.id,
 			`locations_types`.id as type
@@ -45,26 +58,42 @@ class Map extends CI_Controller {
 		if($result->num_rows()) {
 			$row = $result->row(0);
 			$map_header = $groups[$row->id][$lang]." - ".$categories[$row->type][$lang];
+			return array( 'map_header' => $map_header, 'group' => $row->id );
 		}
-		$mapconfig = array(
+		return array( 'map_header' => '', 'group' => 1 );
+	}
+
+	public function type($type){
+		$this->load->config('translations_g');
+		$this->load->config('translations_c');
+		$lang		= $this->session->userdata('lang');
+		$headers	= $this->config->item("balloon_headers");
+		$mapdata	= $this->getMapName($type);
+		$mapconfig  = array(
 			'map_center'	=> $this->config->item('map_center'),
 			'switches'		=> 'switches = {}',
-			'group'			=> $row->id,
+			'group'			=> $mapdata['group'],
 			'otype'			=> $type,
 			'mapset'		=> 0,
-			'headers'		=> $headers[$lang]
+			'headers'		=> $headers[$lang],
+			'map_header'	=> $mapdata['map_header']
 		);
-		$act = array(
+		$act = $this->returnActArray($mapconfig);
+		$this->load->view($this->session->userdata('lang').'/frontend/frontend_map2', $act);
+	}
+
+	private function returnActArray($mapconfig) {
+		$brands		= $this->config->item("brand");
+		return $act = array(
 			'footer'		=> $this->load->view('shared/page_footer', array(), true),
 			'brand'			=> $brands[$this->session->userdata("lang")],
 			'menu'			=> $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true).$this->usefulmodel->admin_menu(),
 			'keywords'		=> $this->config->item('map_keywords'),
-			'map_header'	=> $map_header,
-			'selector'		=> '<div class="altSelector">'.$map_header.'</div>',
+			'map_header'	=> $mapconfig['map_header'],
+			'selector'		=> '<div class="altSelector">'.$mapconfig['map_header'].'</div>',
 			'mapconfig'		=> $this->load->view("shared/mapconfig", $mapconfig, true),
 			'title'			=> $this->config->item('site_title_start')." Интерактивная карта"
 		);
-		$this->load->view($this->session->userdata('lang').'/frontend/frontend_map2', $act);
 	}
 
 	public function get_map_content() {
@@ -84,44 +113,17 @@ class Map extends CI_Controller {
 		$lang       = $this->session->userdata('lang');
 		$headers	= $this->config->item("balloon_headers");
 		$map_header = $groups[$group][$lang];
-		$brands     = $this->config->item("brand");
 		$mapconfig  = array(
 			'map_center'	=> $this->config->item('map_center'),
 			'switches'		=> 'switches = {}',
 			'group'			=> $group,
 			'otype'			=> 0,
 			'mapset'		=> 0,
-			'headers'		=> $headers[$lang]
+			'headers'		=> $headers[$lang],
+			'map_header'	=> $groups[$group][$lang]
 		);
-		$act = array(
-			'footer'		=> $this->load->view('shared/page_footer', array(), true),
-			'brand'			=> $brands[$this->session->userdata("lang")],
-			'menu'			=> $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true).$this->usefulmodel->admin_menu(),
-			'keywords'		=> $this->config->item('map_keywords'),
-			'map_header'	=> $map_header,
-			'selector'		=> '<div class="altSelector">'.$map_header.'</div>',
-			'mapconfig'		=> $this->load->view("shared/mapconfig", $mapconfig, true),
-			'title'			=> $this->config->item('site_title_start')." Интерактивная карта"
-		);
+		$act = $this->returnActArray($mapconfig);
 		$this->load->view($this->session->userdata('lang').'/frontend/frontend_map2', $act);
-	}
-
-	private function select_by_type($type){
-		if(!file_exists(getcwd()."/application/views/cache/mapsets/type".$type."_".$this->session->userdata('lang').".src")){
-			$this->load->model("mapsetmodel");
-			$this->mapsetmodel->cache_type($type);
-		}
-		$this->load->helper("file");
-		return read_file("application/views/cache/mapsets/type".$type."_".$this->session->userdata('lang').".src");
-	}
-
-	private function select_by_group($group){
-		if(!file_exists(getcwd()."/application/views/cache/mapsets/group".$group."_".$this->session->userdata('lang').".src")){
-			$this->load->model("mapsetmodel");
-			$this->mapsetmodel->cache_group($group);
-		}
-		$this->load->helper("file");
-		return read_file("application/views/cache/mapsets/group".$group."_".$this->session->userdata('lang').".src");
 	}
 
 	public function msearch(){
