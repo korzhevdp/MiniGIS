@@ -15,15 +15,17 @@ class Mapmodel extends CI_Model{
 			$row = $result->row();
 		}
 		$this->load->config('translations_m');
-		$maps   = $this->config->item('maps');
-		$brands = $this->config->item("brand");
-		$lang   = $this->session->userdata('lang');
+		$maps    = $this->config->item('maps');
+		$brands  = $this->config->item("brand");
+		$lang    = $this->session->userdata('lang');
+		$headers = $this->config->item("balloon_headers");
 		$mapconfig  = array(
 			'map_center'	=> $this->config->item('map_center'),
 			'switches'		=> $this->load->view('cache/selectors/selector_'.$mapset."_switches_".$lang, array(), true),
 			'group'			=> 0,
 			'otype'			=> 0,
-			'mapset'		=> $mapset
+			'mapset'		=> $mapset,
+			'headers'		=> $headers[$lang]
 		);
 		return array(
 			'brand'      => $brands[$lang],
@@ -33,7 +35,7 @@ class Mapmodel extends CI_Model{
 			'footer'     => $this->load->view('shared/page_footer', array(), true),
 			'menu'       => $this->load->view('cache/menus/menu_'.$lang, array(), true).$this->usefulmodel->admin_menu(),
 			'selector'   => $this->load->view('cache/selectors/selector_'.$mapset."_".$lang, array(), true),
-			'mapconfig'	=> $this->load->view("shared/mapconfig", $mapconfig, true),
+			'mapconfig'  => $this->load->view("shared/mapconfig", $mapconfig, true),
 			'title'      => $this->config->item('site_title_start')." Интерактивная карта"
 		);
 	}

@@ -32,6 +32,7 @@ class Map extends CI_Controller {
 		$groups		= $this->config->item('groups');
 		$categories = $this->config->item('categories');
 		$lang		= $this->session->userdata('lang');
+		$headers	= $this->config->item("balloon_headers");
 		$brands		= $this->config->item("brand");
 		$result = $this->db->query("SELECT
 			`objects_groups`.id,
@@ -50,7 +51,8 @@ class Map extends CI_Controller {
 			'switches'		=> 'switches = {}',
 			'group'			=> $row->id,
 			'otype'			=> $type,
-			'mapset'		=> 0
+			'mapset'		=> 0,
+			'headers'		=> $headers[$lang]
 		);
 		$act = array(
 			'footer'		=> $this->load->view('shared/page_footer', array(), true),
@@ -80,6 +82,7 @@ class Map extends CI_Controller {
 		$this->load->config('translations_g');
 		$groups     = $this->config->item('groups');
 		$lang       = $this->session->userdata('lang');
+		$headers	= $this->config->item("balloon_headers");
 		$map_header = $groups[$group][$lang];
 		$brands     = $this->config->item("brand");
 		$mapconfig  = array(
@@ -87,7 +90,8 @@ class Map extends CI_Controller {
 			'switches'		=> 'switches = {}',
 			'group'			=> $group,
 			'otype'			=> 0,
-			'mapset'		=> 0
+			'mapset'		=> 0,
+			'headers'		=> $headers[$lang]
 		);
 		$act = array(
 			'footer'		=> $this->load->view('shared/page_footer', array(), true),

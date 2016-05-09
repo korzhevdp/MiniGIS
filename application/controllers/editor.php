@@ -45,24 +45,26 @@ class Editor extends CI_Controller{
 	}
 
 	private function check_aux_points(){
-		$data      = array();
-		$auxpoints = explode(",", $this->input->post('coords_aux'));
-		$contour   = explode(";", $this->input->post('coords_array'));
 		$output    = array();
-		$result    = $this->db->query("SELECT 
-		`locations`.id,
-		`locations`.coord_y
-		FROM
-		`locations`
-		WHERE `locations`.`id` IN (".$this->input->post('coords_aux').")");
-		if($result->num_rows()){
-			foreach($result->result() as $row){
-				$data[$row->id] = $row->coord_y;
+		if(strlen($this->input->post('coords_aux'))) {
+			$data      = array();
+			$auxpoints = explode(",", $this->input->post('coords_aux'));
+			$contour   = explode(";", $this->input->post('coords_array'));
+			$result    = $this->db->query("SELECT 
+			`locations`.id,
+			`locations`.coord_y
+			FROM
+			`locations`
+			WHERE `locations`.`id` IN (".$this->input->post('coords_aux').")");
+			if($result->num_rows()){
+				foreach($result->result() as $row){
+					$data[$row->id] = $row->coord_y;
+				}
 			}
-		}
-		foreach ($auxpoints as $val){
-			if(in_array($data[$val], $contour)) {
-				$output[$val] = $val;;
+			foreach ($auxpoints as $val){
+				if(in_array($data[$val], $contour)) {
+					$output[$val] = $val;
+				}
 			}
 		}
 		return implode($output, ",");
@@ -75,7 +77,8 @@ class Editor extends CI_Controller{
 		$attr      = str_replace("'", "&quot;", $this->input->post('attr'));
 		$type      = preg_replace("[^0-9]", "", $this->input->post('type'));
 		$type      = (strlen($type)) ? $type : 1;
-		$auxpoints = $this->check_aux_points();
+		//$auxpoints = $this->check_aux_points();
+		$auxpoints = $this->input->post("coords_aux");
 		$this->db->query("INSERT INTO
 		`locations`(
 			`locations`.location_name,
@@ -126,7 +129,8 @@ class Editor extends CI_Controller{
 		$attr    = str_replace("'", "&quot;", $this->input->post('attr'));
 		$type    = preg_replace("[^0-9]", "", $this->input->post('type'));
 		$type    = (strlen($type)) ? $type : 1;
-		$auxpoints = $this->check_aux_points();
+		//$auxpoints = $this->check_aux_points();
+		$auxpoints = $this->input->post("coords_aux");
 		$this->db->query("UPDATE
 		`locations` 
 		SET
@@ -297,6 +301,7 @@ class Editor extends CI_Controller{
 		$this->load->model('mapsetmodel');
 		$this->mapsetmodel->recache_datasets($location_id);
 		$this->usefulmodel->insert_audit("Объект: #".$location_id." - успешно сохранён и кэширован");
+		//print $this->input->post('coords_aux');
 		print "data = { ttl : ".$location_id." }";
 	}
 

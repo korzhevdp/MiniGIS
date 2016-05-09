@@ -70,7 +70,7 @@ class Transmodel extends CI_Model{
 		foreach($val as $lang=>$word) {
 			array_push($input, "'".addslashes(trim($lang))."' => '".addslashes(trim($word))."'");
 		}
-		return "\t".$key." => array( ".implode($input, ",")." )";
+		return "\t'".$key."' => array( ".implode($input, ",")." )";
 	}
 
 	public function trans_save(){

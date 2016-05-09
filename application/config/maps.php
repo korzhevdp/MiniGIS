@@ -17,6 +17,12 @@
 		"de" => 'Deutsch',
 		"es" => 'Español'
 	);
+	$config['balloon_headers'] = array(
+		'ru' => "['Адрес', 'Контакты', 'Подробности здесь']",
+		'en' => "['Address', 'Contact info', 'More information']",
+		'de' => "['Adresse', 'Kontaktdaten', 'Mehr sehen']",
+		'es' => "['Dirección', 'Datos de contacto', 'Ver más']",
+	);
 	$config['brand'] = array(
 		'ru' =>'<a class="brand" href="/">ПРОЕКТ&nbsp;&nbsp;Minigis.NET <img src="'.$config['api'].'/images/minigis24.png" alt="MiniGIS" title="MiniGIS Project"></a>',
 		'en' =>'<a class="brand" href="/">The PROJECT&nbsp;&nbsp;<img src="'.$config['api'].'/images/minigis24.png" alt="MiniGIS" title="MiniGIS Project"></a>',

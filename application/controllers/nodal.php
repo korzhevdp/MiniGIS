@@ -108,6 +108,44 @@ class Nodal extends CI_Controller{
 		}
 	}
 
+	public function get_trapping(){
+		//$this->output->enable_profiler(TRUE);
+		$output = array();
+		$points = array();
+		foreach($this->input->post('geometry') as $order=>$val){
+			$tolerance    = $this->input->post("tolerance");
+			$key          = substr($val[0], 0, (strpos($val[0], ".") + $tolerance + 1)).",".substr($val[1], 0, (strpos($val[1], ".") + $tolerance + 1));
+			$coord        = substr($val[0], 0, (strpos($val[0], ".") + $tolerance + 1))."%,".substr($val[1], 0, (strpos($val[1], ".") + $tolerance + 1))."%";
+			$output[$key] = "`locations`.`coord_y` LIKE '".$coord."'";
+			$points[$key] = $order;
+		}
+		$result = $this->db->query("SELECT
+		locations.id,
+		locations.location_name,
+		`locations_types`.name,
+		locations.coord_y,
+		SUBSTR(locations.coord_y, 1, LOCATE('.', locations.coord_y) + ?) AS lon,
+		SUBSTR(locations.coord_y,
+			LOCATE(',', locations.coord_y) + 1,
+			LOCATE('.', locations.coord_y, LOCATE(',', locations.coord_y)) - LOCATE(',', locations.coord_y) + ?
+		) AS lat
+		FROM
+		`locations_types`
+		RIGHT OUTER JOIN locations ON (`locations_types`.id = locations.`type`)
+		WHERE
+		`locations_types`.id = ? AND (
+		".implode($output, "\n OR ").")
+		ORDER BY `locations`.id", array($tolerance, $tolerance, $this->input->post("types")));
+		if ($result->num_rows()) {
+			$out = array();
+			foreach($result->result() as $row) {
+				$vertex = (isset($points[$row->lon.",".$row->lat])) ? $points[$row->lon.",".$row->lat] : "";
+				array_push($out, $row->id.": { real: [".$row->coord_y."], matched: '".$row->lon.",".$row->lat."', vertex: ".$vertex.", name: '".preg_replace("/'/","&quot;", $row->location_name)."', tn: '".preg_replace("/'/", "&quot;", $row->name)."'}");
+			}
+			print "data = {\n".implode($out, ",\n")."}";
+		}
+	}
+
 	function moraleup(){ //запрос из main_page_content.js 
 		$file = "./morale.txt";
 		$sum = implode(file($file),'');

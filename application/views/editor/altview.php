@@ -32,6 +32,7 @@
 		<ul class="nav nav-tabs">
 			<?=$pagelist_alt;?>
 			<li class="schedule"><a href="#schedule" data-toggle="tab">Расписание</a></li>
+			<li class="commutes"><a href="#commutes" data-toggle="tab">Улавливание</a></li>
 		</ul>
 	</td>
 </tr>
@@ -66,13 +67,12 @@
 		<label class="checkbox" title="Включить возможность комментирования" for="l_comm"><input type="checkbox" class="l_comm" style="margin-top:4px;" id="l_comm">Комментарии</label>
 		<hr>
 		<button type="button" class="btn btn-primary btn-block" id="saveBtn" title="Сохранить данные объекта">Сохранить</button>
-
-		
 	</td>
 	<td class="rightColumn tab-content">
 		<div class="tab-pane active"   id="YMapsID"></div>
 		<div class="tab-pane propPage" id="propPage"></div>
 		<div class="tab-pane"          id="schedule"><?=$schedule;?></div>
+		<div class="tab-pane"          id="commutes"><?=$commutes;?></div>
 	</td>
 </tr>
 </table>

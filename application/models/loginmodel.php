@@ -140,7 +140,7 @@ class Loginmodel extends CI_Model{
 	public function	new_user_data_test(){
 		$errors	 = array();
 		$errors	= $this->check_unique($errors);
-		$errors	= $this->password_check();
+		$errors	= $this->user_and_password_check();
 		if (!preg_match("/([a-z\-_\.0-9])@([a-z\-_\.0-9]+)\.(.+)/",	$this->input->post('email',	true)))	{
 			array_push($errors,	"Адрес электронной почты не	похож на настоящий");
 		}

@@ -5,8 +5,11 @@ class Editormodel extends CI_Model{
 	}
 	
 	private function get_images($location) {
-		$output	= array();
-		$result	= $this->db->query("SELECT
+		if ($location === 0){
+			return "";
+		}
+		$output = array();
+		$result = $this->db->query("SELECT
 		`images`.`filename`,
 		`images`.`hash`,
 		`images`.`small`
@@ -14,7 +17,7 @@ class Editormodel extends CI_Model{
 		`images`
 		WHERE
 		`images`.`location_id` = ?
-		AND	`images`.`active`
+		AND `images`.`active`
 		ORDER BY `images`.`order`, `images`.`id`", array($location));
 		if($result->num_rows()){
 			foreach($result->result() as $row){
@@ -27,43 +30,50 @@ class Editormodel extends CI_Model{
 	}
 
 	private function fill_in_type_mode($type_id) {
-		$output	= array();
-		$result	= $this->db->query("SELECT
+		$output = $this->get_null_instance();
+		$result = $this->db->query("SELECT
 		locations_types.object_group,
 		locations_types.attributes,
+		locations_types.attributes AS style_override,
 		locations_types.pr_type,
-		locations_types.`name`
+		locations_types.`name` AS description
 		FROM
 		locations_types
 		WHERE
-		(locations_types.id	= ?)
+		(locations_types.id = ?)
 		LIMIT 1", array($type_id));
 		if($result->num_rows()){
-			$row = $result->row(0);
-			$output = array(
-				'object_group'	=> $row->object_group,
-				'pr_type'		=> $row->pr_type,
-				'attributes'	=> $row->attributes,
-				'style_override'=> $row->attributes,
-				'type'			=> $type_id,
-				'id'			=> 0,
-				'location_name'	=> 'Новое имя',
-				'contact_info'	=> 'Контактная информация',
-				'address'		=> 'Новый адрес',
-				'active'		=> 0,
-				'typelist'		=> 0,
-				'description'	=> $row->name,
-				'coord_y'		=> 0,
-				'comments'		=> 0,
-				'images'		=> ''
-			);
+			$row = $result->row_array(0);
+			$output = $row + $output;
 		}
 		return $output;
 	}
 
+	private function get_null_instance(){
+		return array(
+			'object_group'	=> 0,
+			'pr_type'		=> 1,
+			'attributes'	=> '',
+			'style_override'=> '',
+			'type'			=> 0,
+			'id'			=> 0,
+			'location_name'	=> 'Новое название',
+			'contact_info'	=> 'Контактная информация',
+			'address'		=> 'Новый адрес',
+			'active'		=> 0,
+			'typelist'		=> 0,
+			'description'	=> '',
+			'coord_y'		=> 0,
+			'coord_array'	=> '',
+			'coord_obj'		=> '',
+			'comments'		=> 0,
+			'images'		=> ''
+		);
+	}
+
 	private function fill_in_location_mode($location_id) {
-		$output	= array();
-		$result	= $this->db->query("SELECT 
+		$output = $this->get_null_instance();
+		$result = $this->db->query("SELECT 
 		locations.id, 
 		locations.location_name,
 		locations.address,
@@ -133,21 +143,6 @@ class Editormodel extends CI_Model{
 	}
 
 	private function get_summary($type = "type", $id = 0) {
-		$output = array(
-			'id' =>	0,
-			'location_name'		=> 'Новое имя',
-			'contact_info'		=> 'Контактная информация',
-			'address'			=> 'Новый адрес',
-			'active'			=> 0,
-			'type'				=> 0,
-			'typelist'			=> 0,
-			'description'		=> 'Новое описание',
-			'pr_type'			=> 1,
-			'attributes'		=> "not	defined",
-			'style_override'	=> "not	defined",
-			'coord_y'			=> 0,
-			'comments'			=> 0
-		);
 		if ($type === "type") {
 			$output = $this->fill_in_type_mode($id);
 		}
@@ -171,36 +166,44 @@ class Editormodel extends CI_Model{
 					redirect("admin/library");
 				}
 				$data = $this->get_summary("location", $id);
-				$output = array(
-					'images'			=> $this->get_images($id),
-					'lid'				=> $id,
-					'keywords'			=> '',
-					'schedule'			=> $this->load->view("editor/schedule",	array(), true),
-					'pr_type'			=> $data['pr_type'],
-					'content'			=> $this->load->view('editor/summary',	$data, true),
-					'panel'				=> $this->load->view('editor/altcontrols', $data, true),
-					'baspointstypes'	=> $this->get_bas_points_types(),
-					'menu'				=> $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true).$this->usefulmodel->admin_menu()
-				);
 			}
-			$this->session->set_userdata('c_l',	$id);
 		}
-		if ($mode == "add")	{
-			$data =	$this->get_summary("type", $id);
-			$output	= array(
-				'lid'				=> 0,
-				'keywords'			=> '',
-				'schedule'			=> $this->load->view("editor/schedule", array(), true),
-				'pr_type'			=> $data['pr_type'],
-				'content'			=> $this->load->view('editor/summary', $data, true),
-				'panel'				=> $this->load->view('editor/altcontrols', $data, true),
-				'baspointstypes'	=> $this->get_bas_points_types(),
-				'menu'				=> $this->load->view('admin/menu', array(), true)
-			);
+		if ($mode == "add") {
+			$data = $this->get_summary("type", $id);
 		}
-		return $output;
+		$this->session->set_userdata('c_l', $id);
+		return array(
+			'images'			=> $this->get_images($id),
+			'lid'				=> $id,
+			'keywords'			=> '',
+			'schedule'			=> $this->load->view("editor/schedule", array(), true),
+			'commutes'			=> $this->load->view("editor/commutes", array('pointstypes'=> $this->get_point_types()), true),
+			'pr_type'			=> $data['pr_type'],
+			'content'			=> $this->load->view('editor/summary', $data, true),
+			'panel'				=> $this->load->view('editor/altcontrols', $data, true),
+			'baspointstypes'	=> $this->get_bas_points_types(),
+			'pointstypes'		=> $this->get_point_types()
+		);
 	}
-	
+
+	private function get_point_types(){
+		$output = array();
+		$result = $this->db->query("SELECT 
+		`locations_types`.name,
+		`locations_types`.id
+		FROM
+		`locations_types`
+		WHERE `locations_types`.`pr_type` = 1
+		ORDER BY `locations_types`.name");
+		if($result->num_rows()){
+			foreach($result->result() as $row){
+				$string = '<option value="'.$row->id.'">'.$row->name.'</option>';
+				array_push($output, $string);
+			}
+		}
+		return implode($output, "");
+	}
+
 	public function get_bas_points_types() {
 		$output	= array();
 		$result	= $this->db->query("SELECT 
@@ -449,7 +452,7 @@ class Editormodel extends CI_Model{
 				array_push($output,	$object);
 			}
 		}
-		return implode($output,	"\n");
+		return implode($output, "\n");
 	}
 }
 /* End of file editormodel.php */
