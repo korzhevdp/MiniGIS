@@ -15,42 +15,26 @@ class Mapsetmodel extends CI_Model{
 		return $this->pack_results($input);
 	}
 
-	public function cache_layers($layers) {
+	private function cache_affected_mapsets($group, $type) {
 		$result = $this->db->query("SELECT
-		locations.id
+		`map_content`.id,
+		`map_content`.a_layers,
+		`map_content`.a_types,
+		`map_content`.b_layers,
+		`map_content`.b_types
 		FROM
-		locations_types
-		RIGHT OUTER JOIN locations ON (locations_types.id = locations.`type`)
-		WHERE
-		LENGTH(locations.coord_y)
-		AND locations.active
-		AND (locations_types.pr_type IS NOT NULL)
-		AND (locations_types.object_group IN (".$layers."))");
-		return $this->make_common_caching($result);
-	}
-
-	public function cache_types($types, $output) {
-		$result = $this->db->query("SELECT 
-		locations.id
-		FROM
-		locations
-		WHERE
-		LENGTH(locations.coord_y)
-		AND locations.active
-		AND (locations.`type` IN (".$types."))");
-		return $this->make_common_caching($result, $output);
-	}
-
-	public function cache_objects($objects, $output) {
-		$result = $this->db->query("SELECT
-		locations.id
-		FROM
-		locations
-		WHERE
-		LENGTH(locations.coord_y)
-		AND locations.active
-		AND (locations.id IN (".$objects."))");
-		$this->make_common_caching($result, $output);
+		`map_content`");
+		if ($result->num_rows()) {
+			foreach ($result->result() as $row) {
+				$a_layers = explode(",", $row->a_layers);
+				$a_types  = explode(",", $row->a_types);
+				$b_layers = explode(",", $row->a_layers);
+				$b_types  = explode(",", $row->b_types);
+				if (in_array($group, $a_layers) || in_array($group, $b_layers) || in_array($type, $a_types) || in_array($type, $b_types)) {
+					$this->cache_mapset($row->id);
+				}
+			}
+		}
 	}
 
 	private function get_child_nodes($input) {
@@ -91,8 +75,11 @@ class Mapsetmodel extends CI_Model{
 		return $output;
 	}
 
-	private function getCacheArray($result) {
+	private function getCacheArray($result, $composites) {
 		$output = array();
+		$this->load->config("translations_c");
+		$translation     = $this->config->item("categories");
+		
 		if ($result !== "No data") {
 			if ($result->num_rows()) {
 				foreach ($result->result() as $row) {
@@ -113,18 +100,16 @@ class Mapsetmodel extends CI_Model{
 			'cdata' => array(),
 			'pdata' => array()
 		);
-		$this->load->config("translations_c");
-		$translation     = $this->config->item("categories");
 		$composites      = $this->get_composites_array($input);
 		$result          = $this->get_properties_by_ids($input);
-		$output['pdata'] = $this->getCacheArray($result);
+		$output['pdata'] = $this->getCacheArray($result, $composites);
 		$result->free_result();
 		$result          = $this->get_child_nodes($input);
-		$output['cdata'] = $this->getCacheArray($result);
+		$output['cdata'] = $this->getCacheArray($result, $composites);
 		return $output;
 	}
 
-	private function get_cache_string( $row, $composites, $translation, $lang ){
+	private function get_cache_string( $row, $composites, $translation, $lang ) {
 		$comp = (isset($composites[$row->id])) ? implode($composites[$row->id], ",") : "";
 		$type = (isset($translation[$row->type_id][$lang]) && strlen($translation[$row->type_id][$lang]))
 			? $translation[$row->type_id][$lang]
@@ -156,6 +141,37 @@ class Mapsetmodel extends CI_Model{
 		locations.id IN (".implode($ids, ",").")
 		ORDER BY locations.id");
 		return $result;
+	}
+
+	private function write_mapset_cache($mapset, $a_output, $b_output) {
+		$this->load->helper("file");
+		foreach ($a_output['pdata'] as $lang=>$data) {
+			$content = (isset($a_output['pdata'][$lang])) ? implode($a_output['pdata'][$lang], ",\n") : "";
+			$ac_filepart = "ac = {\n".$content."\n};\n";
+			$content = (isset($b_output['pdata'][$lang])) ? implode($b_output['pdata'][$lang], ",\n") : "";
+			$bg_filepart = "bg = {\n".$content."\n};";
+			$content  = (isset($a_output['ñdata'][$lang])) ? implode($a_output['ñdata'][$lang], ",\n") : "";
+			$content .= (isset($b_output['ñdata'][$lang])) ? implode($b_output['ñdata'][$lang], ",\n") : "";
+			$cn_filepart = "\ncdata = {\n".$content."\n}";
+			write_file("application/views/cache/mapsets/mapset".$mapset."_".$lang.".src", $ac_filepart.$bg_filepart.$cn_filepart);
+		}
+	}
+
+	private function check_directories() {
+		if (!file_exists(getcwd()."/application/views/cache/mapsets")) {
+			mkdir( getcwd()."/application/views/cache/mapsets", 0775, true );
+		}
+	}
+
+	private function write_cache($output, $filename) {
+		$this->load->helper("file");
+		$this->check_directories();
+		foreach ($output['pdata'] as $lang=>$data) {
+			$points   = (isset($output['pdata'][$lang])) ? implode($output['pdata'][$lang], ",\n\t") : "" ;
+			$children = (isset($output['cdata'][$lang])) ? implode($output['cdata'][$lang], ",\n\t") : "" ;
+			$output_file = "data = {\n\t".$points."\n};\ncdata = {\n\t".$children."\n};";
+			write_file("application/views/cache/mapsets/".$filename."_".$lang.".src", $output_file);
+		}
 	}
 
 	public function cache_mapset($mapset) {
@@ -191,37 +207,6 @@ class Mapsetmodel extends CI_Model{
 		$this->write_mapset_cache($mapset, $a_output, $b_output);
 	}
 
-	private function write_mapset_cache($mapset, $a_output, $b_output) {
-		$this->load->helper("file");
-		foreach ($a_output['pdata'] as $lang=>$data) {
-			$content = (isset($a_output['pdata'][$lang])) ? implode($a_output['pdata'][$lang], ",\n") : "";
-			$ac_filepart = "ac = {\n".$content."\n};\n";
-			$content = (isset($b_output['pdata'][$lang])) ? implode($b_output['pdata'][$lang], ",\n") : "";
-			$bg_filepart = "bg = {\n".$content."\n};";
-			$content  = (isset($a_output['ñdata'][$lang])) ? implode($a_output['ñdata'][$lang], ",\n") : "";
-			$content .= (isset($b_output['ñdata'][$lang])) ? implode($b_output['ñdata'][$lang], ",\n") : "";
-			$cn_filepart = "\ncdata = {\n".$content."\n}";
-			write_file("application/views/cache/mapsets/mapset".$mapset."_".$lang.".src", $ac_filepart.$bg_filepart.$cn_filepart);
-		}
-	}
-
-	private function check_directories() {
-		if (!file_exists(getcwd()."/application/views/cache/mapsets")) {
-			mkdir( getcwd()."/application/views/cache/mapsets", 0775, true );
-		}
-	}
-
-	private function write_cache($output, $filename) {
-		$this->load->helper("file");
-		$this->check_directories();
-		foreach ($output['pdata'] as $lang=>$data) {
-			$points   = (isset($output['pdata'][$lang])) ? implode($output['pdata'][$lang], ",\n\t") : "" ;
-			$children = (isset($output['cdata'][$lang])) ? implode($output['cdata'][$lang], ",\n\t") : "" ;
-			$output_file = "data = {\n\t".$points."\n};\ncdata = {\n\t".$children."\n};";
-			write_file("application/views/cache/mapsets/".$filename."_".$lang.".src", $output_file);
-		}
-	}
-
 	public function cache_type($type) {
 		$output = array();
 		$output = $this->cache_types($type, $output);
@@ -233,28 +218,6 @@ class Mapsetmodel extends CI_Model{
 		$output = $this->cache_layers($group, $output);
 		//print_r($output);
 		$this->write_cache($output, "group".$group);
-	}
-
-	private function cache_affected_mapsets($group, $type) {
-		$result = $this->db->query("SELECT
-		`map_content`.id,
-		`map_content`.a_layers,
-		`map_content`.a_types,
-		`map_content`.b_layers,
-		`map_content`.b_types
-		FROM
-		`map_content`");
-		if ($result->num_rows()) {
-			foreach ($result->result() as $row) {
-				$a_layers = explode(",", $row->a_layers);
-				$a_types  = explode(",", $row->a_types);
-				$b_layers = explode(",", $row->a_layers);
-				$b_types  = explode(",", $row->b_types);
-				if (in_array($group, $a_layers) || in_array($group, $b_layers) || in_array($type, $a_types) || in_array($type, $b_types)) {
-					$this->cache_mapset($row->id);
-				}
-			}
-		}
 	}
 
 	public function recache_datasets($location) {
@@ -282,6 +245,45 @@ class Mapsetmodel extends CI_Model{
 		}
 		$this->cache_affected_mapsets($group, $type);
 	}
+
+	public function cache_layers($layers) {
+		$result = $this->db->query("SELECT
+		locations.id
+		FROM
+		locations_types
+		RIGHT OUTER JOIN locations ON (locations_types.id = locations.`type`)
+		WHERE
+		LENGTH(locations.coord_y)
+		AND locations.active
+		AND (locations_types.pr_type IS NOT NULL)
+		AND (locations_types.object_group IN (".$layers."))");
+		return $this->make_common_caching($result);
+	}
+
+	public function cache_types($types, $output) {
+		$result = $this->db->query("SELECT 
+		locations.id
+		FROM
+		locations
+		WHERE
+		LENGTH(locations.coord_y)
+		AND locations.active
+		AND (locations.`type` IN (".$types."))");
+		return $this->make_common_caching($result, $output);
+	}
+
+	public function cache_objects($objects, $output) {
+		$result = $this->db->query("SELECT
+		locations.id
+		FROM
+		locations
+		WHERE
+		LENGTH(locations.coord_y)
+		AND locations.active
+		AND (locations.id IN (".$objects."))");
+		$this->make_common_caching($result, $output);
+	}
+
 }
 #
 /* End of file mapsetmodel.php */

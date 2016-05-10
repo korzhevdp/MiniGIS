@@ -180,16 +180,29 @@ class Adminmodel extends CI_Model{
 		if($result->num_rows()){
 			foreach($result->result() as $row){
 				$fio = (strlen($row->fio)) ? $row->fio : '<em class="muted">ФИО не указано</em>';
+				$states = array(
+					1 => "Администратор",
+					2 => "Пользователь",
+					3 => "Freehand"
+				);
 				if ($row->id == $id){
 					$access = $row->access;
 					$output['admin']  = (($row->class_id === "1") ? ' checked="checked"' : '');
-					$output['valid']  = (($row->valid) ? ' checked="checked"' : '');
+					$output['valid']  = (($row->valid)  ? ' checked="checked"' : '');
 					$output['active'] = (($row->active) ? ' checked="checked"' : '');
 					$output['rating'] = $row->rating;
 					$output['name']   = $row->nick."&nbsp;&nbsp;&nbsp;&nbsp;<small>".$row->fio.",&nbsp;".$row->info."</small>";
 					$output['id']     = $row->id;
 				}
-				$string = '<tr><td>'.$row->nick.'</td><td><small>'.$fio.'<br>'.$row->info.'</small></td><td>'.$row->rating.'</td><td>'.(($row->class_id === "1") ? 'Да' : 'Нет').'</td><td>'.(($row->active)   ? 'Да' : 'Нет').'</td><td>'.(($row->valid)    ? 'Да' : 'Нет').'</td><td><a href="/admin/usermanager/'.$row->id.'" class="btn btn-primary btn-mini">Редактировать</span></td></tr>';
+				$string = '<tr>
+					<td>'.$row->nick.'</td>
+					<td><small>'.$fio.'<br>'.$row->info.'</small></td>
+					<td>'.$row->rating.'</td>
+					<td>'.$states[$row->class_id].'</td>
+					<td>'.(($row->active)   ? 'Да' : 'Нет').'</td>
+					<td>'.(($row->valid)    ? 'Да' : 'Нет').'</td>
+					<td><a href="/admin/usermanager/'.$row->id.'" class="btn btn-primary btn-mini">Редактировать</span></td>
+				</tr>';
 				array_push($users, $string);
 			}
 		}

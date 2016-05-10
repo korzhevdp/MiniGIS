@@ -31,9 +31,9 @@
 	<th style="width:150px;">Пользователь</th>
 	<th>Информация</th>
 	<th style="width:100px;">Рейтинг</th>
-	<th style="">Админ</th>
-	<th style="width:15px;"><i class="icon-ok-sign"       title="Активен"></i></th>
-	<th style="width:15px;"><i class="icon-question-sign" title="Проверен"></i></th>
+	<th style="width:150px;">Класс пользователя</th>
+	<th style="width:45px;"><i class="icon-ok-sign"       title="Активен"></i></th>
+	<th style="width:45px;"><i class="icon-question-sign" title="Проверен"></i></th>
 	<th style="width:100px;">Действие</th>
 </tr>
 <?=$table;?>

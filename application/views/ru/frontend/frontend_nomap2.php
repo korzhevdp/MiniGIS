@@ -50,6 +50,5 @@
 
 	<div style="display:none;"><?=$links_heap;?></div>
 	<?=$footer;?>
-	<script type="text/javascript" src="<?=$this->config->item("api");?>/jscript/mapUI.js"></script>
 </body>
 </html>

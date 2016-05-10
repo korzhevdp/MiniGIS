@@ -166,14 +166,18 @@ class Editor extends CI_Controller{
 	private function insert_composites($source, $data) {
 		$obj_nodes = explode(",", $data);
 		$composites = array();
-		foreach($obj_nodes as $obj){
-			array_push($composites, "(".$source.", ".$obj.")");
+		foreach($obj_nodes as $obj) {
+			if (strlen($obj)) {
+				array_push($composites, "(".$source.", ".$obj.")");
+			}
 		}
-		$this->db->query("DELETE FROM composites WHERE `composites`.parent = ?", array($source));
-		$this->db->query("INSERT INTO `composites`( 
-			`composites`.parent,
-			`composites`.location
-		) VALUES ".implode($composites, ",\n"));
+		if (sizeof($composites)) {
+			$this->db->query("DELETE FROM composites WHERE `composites`.parent = ?", array($source));
+			$this->db->query("INSERT INTO `composites`( 
+				`composites`.parent,
+				`composites`.location
+			) VALUES ".implode($composites, ",\n"));
+		}
 	}
 
 	private function insert_main_property($location_id) {

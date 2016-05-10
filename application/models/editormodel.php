@@ -256,16 +256,23 @@ class Editormodel extends CI_Model{
 		$result	= $this->db->query("SELECT
 		locations.id,
 		locations_types.pr_type,
-		IF(LENGTH(locations.style_override)	> 0, locations.style_override, locations_types.attributes) AS attributes,
+		CASE
+			WHEN locations_types.pr_type = 2 THEN 'routes#thinRedLine'
+			WHEN locations_types.pr_type = 3 THEN 'area#thinRedLine'
+			WHEN LENGTH(locations.style_override) > 0 THEN locations.style_override
+			WHEN LENGTH(locations.style_override) = 0 THEN locations_types.attributes
+		END AS attributes,
 		locations.coord_y,
 		CONCAT_WS(' ', locations_types.name, locations.location_name) as loc_name
 		FROM
 		locations
 		INNER JOIN locations_types ON (locations.`type`	= locations_types.id)
 		WHERE
-		(locations.active) "
+		(locations.active)
+		AND locations.id <> ?
+		"
 		.$points
-		.$ids);
+		.$ids, array($this->input->post("ttl")));
 		if($result->num_rows()){
 			foreach($result->result() as $row) {
 				$coords = "[".$row->coord_y."]";

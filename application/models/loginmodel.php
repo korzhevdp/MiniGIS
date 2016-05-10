@@ -61,7 +61,7 @@ class Loginmodel extends CI_Model{
 		$result	= $this->db->query("SELECT 
 		users_admins.passw,
 		users_admins.uid,
-		CONCAT_WS('	', users_admins.name_i,	users_admins.name_o) AS	io,
+		CONCAT_WS(' ', users_admins.name_i, users_admins.name_o) AS io,
 		users_admins.class_id,
 		users_admins.valid,
 		users_admins.active,
@@ -73,7 +73,11 @@ class Loginmodel extends CI_Model{
 		MIN(locations.id) AS init_loc
 		FROM locations 
 		RIGHT OUTER	JOIN users_admins ON (locations.owner =	users_admins.uid) 
-		WHERE (users_admins.nick = ?) 
+		WHERE (users_admins.nick = ?)
+		GROUP BY users_admins.passw,
+		users_admins.uid,
+		users_admins.name_i, 
+		users_admins.name_o
 		LIMIT 1", array($this->input->post('name', true)));
 		if($result->num_rows())	{
 			$row = $result->row();

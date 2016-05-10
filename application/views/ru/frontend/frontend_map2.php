@@ -54,7 +54,6 @@
 
 <?=$mapconfig;?>
 
-
 <script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/maps_frontend3.js"></script>
 <script type="text/javascript" src="<?=$this->config->item('api');?>/jscript/mapUI.js"></script>
 <?=$footer;?>

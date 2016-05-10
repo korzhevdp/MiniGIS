@@ -56,7 +56,9 @@ class Cachecatalogmodel extends CI_Model{
 		INNER JOIN properties_list ON (properties_assigned.property_id = properties_list.id)
 		WHERE
 		properties_assigned.location_id = ?
-		GROUP BY properties_assigned.property_id
+		GROUP BY 
+		properties_assigned.property_id,
+		properties_assigned.value
 		ORDER BY properties_list.label, properties_list.selfname", array($location));
 	}
 
