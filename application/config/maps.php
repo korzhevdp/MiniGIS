@@ -23,6 +23,18 @@
 		'de' => "['Adresse', 'Kontaktdaten', 'Mehr sehen']",
 		'es' => "['Dirección', 'Datos de contacto', 'Ver más']",
 	);
+	$config['site_title'] = array(
+		'ru' => "Менеджер Геоточек:",
+		'en' => "Geopoint's Manager:",
+		'de' => "Sammlung von Geodaten:",
+		'es' => "Gestor De Puntos De Geo:",
+	);
+	$config['navigator'] = array(
+		'ru' => array("Менеджер Геоточек:"),
+		'en' => array("Менеджер Геоточек:"),
+		'de' => array("Менеджер Геоточек:"),
+		'es' => array("Navegador", "Estoy buscando", "He encontrado", "Filtro", "Seleccionar objetos por el contenido de esta línea", "escriba el nombre"),
+	);
 	$config['brand'] = array(
 		'ru' =>'<a class="brand" href="/">ПРОЕКТ&nbsp;&nbsp;Minigis.NET <img src="'.$config['api'].'/images/minigis24.png" alt="MiniGIS" title="MiniGIS Project"></a>',
 		'en' =>'<a class="brand" href="/">The PROJECT&nbsp;&nbsp;<img src="'.$config['api'].'/images/minigis24.png" alt="MiniGIS" title="MiniGIS Project"></a>',
@@ -53,11 +65,9 @@
 	
 	############################################################################################################################
 	############################################################################################################################
-	$config['site_friendly_url'] = "mapS.KorzhevDP.COM"; // имя сайта для отправки почты. URL некритично. Это просто имя.
+	$config['site_friendly_url'] = "maps.korzhevdp.com"; // имя сайта для отправки почты. URL некритично. Это просто имя.
 	$config['site_reg_email']    = "korzhevdp@gmail.com"; // адрес отправки почты. Корректность критична.
-	$config['site_reg_hello']    = "<!-- <P>Зарегистрировавшись на сайте как владельцы жилья, Вы получаете возможность разместить Ваше предложение на карте-схеме города. К Вашим услугам будет полностью автоматизированный поиск, удобные средства для размещения и подробного описания вашего предложения, комплекс средств для управления предложениями для крупных предприятий и равные возможности для частных владельцев. </P>
-	<P>Использование интерактивной карты, постоянное пополнение информации об объектах инфраструктуры отдыха, развлекательных и оздоровительных центрах, малых предприятиях города сферы услуг позволит максимально раскрыть выгоды именно Вашего предложения. Чем больше информации о вас мы сможем сообщить нашим гостям, тем скорее они выберут именно Вас.</P>
-	<P>Спрос есть всегда, помогите ему встретить своё Предложение!</P> --> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<small>Регистрация? Всегда пожалуйста. Мы ценим ваше участие.</small>"; // приветственное слово при регистрации.
+	$config['site_reg_hello']    = ""; // приветственное слово при регистрации.
 	$config['support_email'] = 'register@korzhevdp.com';
 	$config['reg_active']    = TRUE;
 

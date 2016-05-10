@@ -14,21 +14,22 @@ class Page extends CI_Controller {
 
 	function index(){
 		$brands = $this->config->item("brand");
+		$title  = $this->config->item('site_title');
 		$act = array(
 			'userid'     => $this->session->userdata('common_user'),
 			'brand'      => $brands[$this->session->userdata("lang")],
 			'comment'    => '',
 			'keywords'   => $this->config->item('maps_keywords'),
-			'title'      => $this->config->item('site_title_start'),
+			'title'      => $title[$this->session->userdata("lang")],
 			'menu'       => $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), true).$this->usefulmodel->admin_menu(),
 			'header'     => '', //$this->load->view($this->session->userdata('lang').'/frontend/page_header', array(), true),
 			'footer'     => $this->load->view('shared/page_footer', array(), true),
-			'links_heap' => $this->load->view('cache/links/links_heap', array(), true),
+			'links_heap' => '', //$this->load->view('cache/links/links_heap', array(), true),
 			'content'    => $this->load->view($this->session->userdata('lang')."/frontend/main_page_content", array(), true)
 		);
-		$this->load->view($this->session->userdata('lang').'/frontend/frontend_nomap2', $act);
+		$this->load->view('shared/nomap', $act);
 	}
-
+	/*
 	function map($mapset = 1){
 		$result = $this->db->query("SELECT 
 		`map_content`.name
@@ -53,8 +54,9 @@ class Page extends CI_Controller {
 			'footer'     => $this->load->view('shared/page_footer', array(), true),
 			'links_heap' => $this->load->view('cache/links/links_heap',			array(), true)
 		);
-		$this->load->view($this->session->userdata('lang').'/frontend/frontend_map2', $act);
+		$this->load->view('shared/map', $act);
 	}
+	*/
 
 	function gis($location_id = 0){
 		//$this->output->enable_profiler(TRUE);
@@ -71,7 +73,7 @@ class Page extends CI_Controller {
 			'menu'     => $this->load->view('cache/menus/menu_'.$this->session->userdata('lang'), array(), TRUE).$this->usefulmodel->admin_menu(),
 			'footer'   => $this->load->view('shared/page_footer', array(), true),
 		);
-		$this->load->view($this->session->userdata('lang').'/frontend/frontend_nomap2', $act);
+		$this->load->view('shared/nomap', $act);
 	}
 
 	public function addcomment(){
@@ -101,7 +103,7 @@ class Page extends CI_Controller {
 			'title'			=> $this->config->item('site_title_start')." Интерактивная карта",
 			'content'		=> $this->frontendmodel->show_doc($docid)
 		);
-		$this->load->view($this->session->userdata('lang').'/frontend/frontend_nomap2', $act);
+		$this->load->view('shared/nomap', $act);
 	}
 
 	public function comment_control(){
@@ -137,9 +139,10 @@ class Page extends CI_Controller {
 					print $row->status;
 				}
 			}
-		} else {
-			print "alert('An owner was forged!')";
+			return true;
 		}
+		print "alert('An owner has been forged!')";
+		return false;
 	}
 
 	public function comment_delete(){
@@ -167,9 +170,10 @@ class Page extends CI_Controller {
 			if($this->db->affected_rows()){
 				print "D";
 			}
-		} else {
-			print "alert('An owner was forged!')";
+			return true;
 		}
+		print "alert('An owner has been forged!')";
+		return false;
 	}
 
 }

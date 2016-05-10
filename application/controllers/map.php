@@ -33,7 +33,7 @@ class Map extends CI_Controller {
 
 	public function simple($mapset = 1){
 		$act = $this->mapmodel->map_data_get($mapset);
-		$this->load->view($this->session->userdata('lang').'/frontend/frontend_map2', $act);
+		$this->load->view('shared/map', $act);
 	}
 
 	public function set_language(){
@@ -79,7 +79,7 @@ class Map extends CI_Controller {
 			'map_header'	=> $mapdata['map_header']
 		);
 		$act = $this->returnActArray($mapconfig);
-		$this->load->view($this->session->userdata('lang').'/frontend/frontend_map2', $act);
+		$this->load->view('shared/map', $act);
 	}
 
 	private function returnActArray($mapconfig) {
