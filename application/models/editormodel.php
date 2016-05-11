@@ -33,6 +33,7 @@ class Editormodel extends CI_Model{
 		$output = $this->get_null_instance();
 		$result = $this->db->query("SELECT
 		locations_types.object_group,
+		locations_types.id AS type,
 		locations_types.attributes,
 		locations_types.attributes AS style_override,
 		locations_types.pr_type,

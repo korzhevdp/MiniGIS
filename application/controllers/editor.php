@@ -110,7 +110,8 @@ class Editor extends CI_Controller{
 		));
 		$ttl = $this->db->insert_id();
 		$this->insert_composites($this->input->post('ttl'), $auxpoints);
-		$this->recache_datasets();
+		$this->load->model('mapsetmodel');
+		$this->mapsetmodel->recache_datasets($ttl);
 		return $ttl;
 	}
 

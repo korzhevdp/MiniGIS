@@ -13,7 +13,7 @@ class Login extends CI_Controller{
 		}
 	}
 
-	function index($mode = 'auth'){
+	public function index($mode = 'auth'){
 		$this->login($mode);
 	}
 
@@ -25,34 +25,53 @@ class Login extends CI_Controller{
 		}
 	}
 
-	function register(){
+	public function viewtest() {
+		$act = array(
+			"username" => "zzzzz",
+			"pass"     => "passwordЪ",
+			'valcode'  => $this->config->item('base_url').'/login/activate/'."c1d5a14".md5(date("DMYU")),
+			"errors"   => ""
+		);
+		//$this->load->view('login/login_regresult', $act);
+		//$this->load->view('login/login_regresult_nomail', $act);
+		//$this->load->view('login/login_regcomplete', $act);
+		$this->load->view('login/mail_activation', $act);
+	}
+
+	public function register(){
 		if (!$this->config->item('reg_active')) {
-			print "Регистрация новых пользователей не производится.<br>User registration was disabled";
+			print "Регистрация новых пользователей не производится.<br>User registration has been disabled";
 			return false;
 		}
-		if($this->loginmodel->new_user_data_test()){
+		if ($this->loginmodel->new_user_data_test()) {
 			//send mail
 			$valcode="c1d5a14".md5(date("DMYU"));
 			$this->loginmodel->user_add($valcode);
-			$act = array(
-				'valcode'  => $this->config->item('base_url').'/login/activate/'.$valcode,
-				'errors'   => "",
-				'username' => $this->input->post('name', true),
-				'pass'     => $this->input->post('pass', true)
-			);
-			//отсылка почты
-			mail($this->input->post('email'),
-				"Активация учётной записи на ".$this->config->item('site_friendly_url'),
-				$this->load->view('login/mail_activation' , $act, true),
-			"From: ".$this->config->item('site_reg_email')."\r\n"
-			."Reply-To: ".$this->config->item('site_reg_email')."\r\n"
-			."X-Mailer: PHP/" . phpversion());
-			// итог работы
-			$this->load->view('login/login_regresult', $act);
+			if (!$this->config->item("instant_register")) {
+				$act = array(
+					'valcode'  => $this->config->item('base_url').'/login/activate/'.$valcode,
+					'errors'   => "",
+					'username' => $this->input->post('name', true),
+					'pass'     => $this->input->post('pass', true)
+				);
+				//отсылка почты
+				mail(
+					$this->input->post('email'),
+					"Активация учётной записи на ".$this->config->item('site_friendly_url'),
+					$this->load->view('login/mail_activation' , $act, true),
+					"From: ".$this->config->item('site_reg_email')."\r\n"
+					."Reply-To: ".$this->config->item('site_reg_email')."\r\n"
+					."X-Mailer: PHP/" . phpversion()
+				);
+				$this->load->view('login/login_regresult', $act);
+				return true;
+			}
+			$this->load->view('login/login_regresult_nomail', array("username" => $this->input->post('name', true)));
+			return true;
 		}
 	}
 
-	function activate($code){
+	public function activate($code){
 		$act = array();
 		$result = $this->db->query("SELECT 
 		`users_admins`.nick,
@@ -100,7 +119,7 @@ class Login extends CI_Controller{
 		}
 	}
 
-	function rpass($mode = "form"){
+	public function rpass($mode = "form"){
 		if (!$this->config->item('reg_active')) {
 			print "Регистрация новых пользователей не производится.<br>User registration was disabled";
 			return false;
